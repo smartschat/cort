@@ -1,6 +1,6 @@
 # crtk
 
-__crtk__ is a __c__oreference __r__esolution __t__ool__k__it. It implements the 
+__crtk__ is a <b>c</b>oreference <b>r</b>esolution <b>t</b>ool<b>k</b>it. It implements the 
 coreference resolution error analysis framework described in our 
 [EMNLP'14 paper](#references), and also ships with a well-performing 
 deterministic coreference resolution system. It needs Python 2.6+ and 
