@@ -112,7 +112,7 @@ You can access an attribute of a mention `m` via
 `m.attributes['attribute_name']`.
 
 Name | Type | Description
------------- | -------------
+---- | ---- | -----------
 tokens | list(str) | the tokens of the mention
 head | list(str) | the head words of the mention
 pos | list(str) | the part-of-speech tags of the mention
