@@ -1,7 +1,7 @@
 """ Manage mentions and their attributes. """
 
-from crtk.core import mention_property_computer
-from crtk.core import spans
+from cort.core import mention_property_computer
+from cort.core import spans
 
 
 __author__ = 'smartschat'

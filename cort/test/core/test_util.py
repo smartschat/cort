@@ -1,4 +1,4 @@
-from crtk.core.util import clean_via_pos
+from cort.core.util import clean_via_pos
 
 __author__ = 'smartschat'
 

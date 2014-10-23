@@ -1,8 +1,8 @@
 import unittest
 
-from crtk.core.mentions import Mention
-from crtk.core.spans import Span
-from crtk.core.documents import CoNLLDocument
+from cort.core.mentions import Mention
+from cort.core.spans import Span
+from cort.core.documents import CoNLLDocument
 
 
 __author__ = 'smartschat'

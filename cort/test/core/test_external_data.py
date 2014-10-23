@@ -1,4 +1,4 @@
-from crtk.core.external_data import GenderData
+from cort.core.external_data import GenderData
 
 __author__ = 'smartschat'
 

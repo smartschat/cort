@@ -5,10 +5,10 @@ import sys
 
 from nltk.corpus import wordnet as wn
 
-from crtk.core import external_data
-from crtk.core import head_finders
-from crtk.core import nltk_util
-from crtk.core import spans
+from cort.core import external_data
+from cort.core import head_finders
+from cort.core import nltk_util
+from cort.core import spans
 
 
 __author__ = 'smartschat'

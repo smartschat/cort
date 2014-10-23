@@ -1,9 +1,9 @@
 import unittest
 
-from crtk.core.spans import Span
-from crtk.core.documents import CoNLLDocument
-from crtk.core import mention_property_computer
-from crtk.core import nltk_util
+from cort.core.spans import Span
+from cort.core.documents import CoNLLDocument
+from cort.core import mention_property_computer
+from cort.core import nltk_util
 
 
 __author__ = 'smartschat'

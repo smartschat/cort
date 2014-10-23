@@ -1,7 +1,7 @@
 """ Represent errors made by a system w.r.t. a reference corpus. """
 
 
-from crtk.analysis import coref_structures
+from cort.analysis import coref_structures
 
 
 __author__ = 'smartschat'

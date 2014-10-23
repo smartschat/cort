@@ -3,10 +3,10 @@ import logging
 import os
 import pickle
 
-from crtk.core import util
-from crtk.multigraph import features
-from crtk.multigraph import multigraphs
-from crtk.multigraph import weighting_functions
+from cort.core import util
+from cort.multigraph import features
+from cort.multigraph import multigraphs
+from cort.multigraph import weighting_functions
 
 
 __author__ = 'smartschat'

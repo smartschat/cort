@@ -1,9 +1,9 @@
 import unittest
 
-from crtk.analysis import coref_structures
-from crtk.analysis import spanning_tree_algorithms
-from crtk.core import mentions
-from crtk.core import spans
+from cort.analysis import coref_structures
+from cort.analysis import spanning_tree_algorithms
+from cort.core import mentions
+from cort.core import spans
 
 
 __author__ = 'smartschat'

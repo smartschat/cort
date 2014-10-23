@@ -2,8 +2,8 @@
 
 import re
 
-from crtk.core import nltk_util
-from crtk.core import spans
+from cort.core import nltk_util
+from cort.core import spans
 
 __author__ = 'smartschat'
 

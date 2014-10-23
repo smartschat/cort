@@ -3,8 +3,8 @@
 import os
 import pickle
 
-from crtk.core import singletons
-from crtk.core import util
+from cort.core import singletons
+from cort.core import util
 
 
 __author__ = 'smartschat'

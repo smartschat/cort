@@ -3,9 +3,9 @@
 from collections import defaultdict
 import re
 
-from crtk.core import mentions
-from crtk.core import spans
-from crtk.core import nltk_util
+from cort.core import mentions
+from cort.core import spans
+from cort.core import nltk_util
 
 
 __author__ = 'smartschat'

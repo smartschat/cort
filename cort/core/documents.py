@@ -8,9 +8,9 @@ from collections import defaultdict
 import logging
 import re
 
-from crtk.core import mentions
-from crtk.core import nltk_util
-from crtk.core import spans
+from cort.core import mentions
+from cort.core import nltk_util
+from cort.core import spans
 
 
 logging.basicConfig(level=logging.INFO)

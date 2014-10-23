@@ -1,8 +1,8 @@
 import unittest
 
-from crtk.core.mentions import Mention
-from crtk.core.spans import Span
-from crtk.multigraph import features
+from cort.core.mentions import Mention
+from cort.core.spans import Span
+from cort.multigraph import features
 
 
 __author__ = 'smartschat'

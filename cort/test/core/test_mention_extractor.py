@@ -1,10 +1,10 @@
 import unittest
 
-from crtk.core import documents
-from crtk.core import mention_extractor
-from crtk.core import mentions
-from crtk.core import nltk_util
-from crtk.core import spans
+from cort.core import documents
+from cort.core import mention_extractor
+from cort.core import mentions
+from cort.core import nltk_util
+from cort.core import spans
 
 
 __author__ = 'smartschat'

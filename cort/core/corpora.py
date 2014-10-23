@@ -2,8 +2,8 @@
 
 from collections import defaultdict
 
-from crtk.core import documents
-from crtk.core import spans
+from cort.core import documents
+from cort.core import spans
 
 __author__ = 'smartschat'
 

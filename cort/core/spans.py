@@ -1,6 +1,6 @@
 """ Manage spans in documents. """
 
-from crtk.core import mixins
+from cort.core import mixins
 
 
 __author__ = 'smartschat'

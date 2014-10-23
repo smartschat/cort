@@ -1,6 +1,6 @@
 import unittest
 
-from crtk.core.spans import Span
+from cort.core.spans import Span
 
 
 __author__ = 'smartschat'

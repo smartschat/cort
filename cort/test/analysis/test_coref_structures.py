@@ -1,10 +1,10 @@
 from collections import defaultdict
 import unittest
 
-from crtk.analysis import coref_structures
-from crtk.core import documents
-from crtk.core import mentions
-from crtk.core import spans
+from cort.analysis import coref_structures
+from cort.core import documents
+from cort.core import mentions
+from cort.core import spans
 
 
 __author__ = 'smartschat'

@@ -1,11 +1,11 @@
 from collections import namedtuple
 import unittest
 
-from crtk.analysis import error_representations
-from crtk.analysis import spanning_tree_algorithms
-from crtk.core import corpora
-from crtk.core import mentions
-from crtk.core import spans
+from cort.analysis import error_representations
+from cort.analysis import spanning_tree_algorithms
+from cort.core import corpora
+from cort.core import mentions
+from cort.core import spans
 
 __author__ = 'smartschat'
 

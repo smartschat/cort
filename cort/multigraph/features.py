@@ -1,8 +1,8 @@
 import re
 
-from crtk.core import external_data
-from crtk.core import spans
-from crtk.core import util
+from cort.core import external_data
+from cort.core import spans
+from cort.core import util
 
 
 __author__ = 'smartschat'
