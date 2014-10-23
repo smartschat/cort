@@ -131,7 +131,7 @@ antecedent | crtk.core.mentions.Mention | the antecedent of the mention (intiall
 annotated_set_id | str | the set id of the mention as found in the data
 set_id | str | the set id of the mention computed by a coreference resolution approach (initially None)
 head_span | crtk.core.spans.Span | the span of the head (in the document)
-head_index | int | the mention-internal index of the start of the head,
+head_index | int | the mention-internal index of the start of the head
 is_apposition | bool| whether the mention contains an apposition
 
 
