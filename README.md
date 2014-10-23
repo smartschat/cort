@@ -1,7 +1,7 @@
-# crtk
+# cort
 
-__crtk__ is a <b>c</b>oreference <b>r</b>esolution <b>t</b>ool<b>k</b>it. It implements the 
-coreference resolution error analysis framework described in our 
+__cort__ is a <b>co</b>reference <b>r</b>esolution <b>t</b>oolkit. It
+implements the coreference resolution error analysis framework described in our 
 [EMNLP'14 paper](#references), and also ships with a well-performing 
 deterministic coreference resolution system. It needs Python 2.6+ and 
 NLTK 2.0.4+. 
@@ -12,11 +12,11 @@ If you have any questions or comments, drop me an e-mail at
 
 ## Error Analysis
 
-With __crtk__, you can analyze recall and precision errors of your coreference 
+With __cort__, you can analyze recall and precision errors of your coreference 
 resolution systems just with a few lines in python. Let us go through an 
 example.
 
-So far, __crtk__ only supports data in [the format from the CoNLL shared tasks 
+So far, __cort__ only supports data in [the format from the CoNLL shared tasks 
 on coreference resolution](http://conll.cemantix.org/2012/data.html). Let us 
 assume that you have some data in this format: all documents with reference 
 annotations are in the file `reference.data`, while the system output is in the 
@@ -26,7 +26,7 @@ file `antecedents.data` with antecedent decisions of the system.
 First, let us load the data:
 
 ```python
-from crtk.core import corpora
+from cort.core import corpora
 
 reference = corpora.Corpus.from_file("reference corpus", open("reference.data"))
 output = corpora.Corpus.from_file("output corpus", open("output.data"))
@@ -41,8 +41,8 @@ algorithms it should use to extract recall and precision errors. We stick to
 the algorithms described in the EMNLP'14 paper.
 
 ```python
-from crtk.analysis import error_representations
-from crtk.analysis import spanning_tree_algorithms
+from cort.analysis import error_representations
+from cort.analysis import spanning_tree_algorithms
 
 errors = error_representations.ErrorAnalysis(
 	reference,
@@ -127,10 +127,10 @@ semantic_class | str | either PERSON, OBJECT or UNKNOWN
 sentence_id | int | the sentence id of the mention's sentence (starting at 0)
 parse_tree | nltk.ParentedTree | the parse tree of the mention
 speaker | str | the speaker of the mention
-antecedent | crtk.core.mentions.Mention | the antecedent of the mention (intially None)
+antecedent | cort.core.mentions.Mention | the antecedent of the mention (intially None)
 annotated_set_id | str | the set id of the mention as found in the data
 set_id | str | the set id of the mention computed by a coreference resolution approach (initially None)
-head_span | crtk.core.spans.Span | the span of the head (in the document)
+head_span | cort.core.spans.Span | the span of the head (in the document)
 head_index | int | the mention-internal index of the start of the head
 is_apposition | bool| whether the mention contains an apposition
 
