@@ -91,7 +91,10 @@ in this readme](#attributes).
 ## Coreference Resolution
 
 This toolkit also contains a well-performing deterministic coreference 
-resolution system. You can run this system using the script `run-coref` as 
+resolution system. So far, the system is restricted to input that follows [the 
+format from the CoNLL shared tasks on coreference resolution](http://conll.cemantix.org/2012/data.html).
+
+You can run this system using the script `run-coref` as 
 follows:
 
 ```shell
