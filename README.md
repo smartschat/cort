@@ -168,8 +168,8 @@ Methods in Natural Language Processing (EMNLP)*, Doha, Qatar, 25-29 October
 
 ## Changelog
 
-__Thursday, 30 October 2014__
+__Thursday, 30 October 2014__  
 Fixed data structure bug in documents.py. The results from the paper are not affected by this bug.
 
-__Wednesday, 22 October 2014__
+__Wednesday, 22 October 2014__  
 Initial release.
