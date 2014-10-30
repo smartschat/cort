@@ -99,7 +99,6 @@ class Mention:
             "tokens": document.tokens[span.begin:span.end + 1],
             "pos": document.pos[span.begin:span.end + 1],
             "ner": document.ner[span.begin:span.end + 1],
-            "annotated_set_id": document.coref[span],
             "sentence_id": document.sentence_spans_to_id[
                 document.get_embedding_sentence(span)],
             "parse_tree": mention_property_computer.get_relevant_subtree(
@@ -108,6 +107,11 @@ class Mention:
             "antecedent": None,
             "set_id": None
         }
+
+        if span in document.coref:
+            attributes["annotated_set_id"] = document.coref[span]
+        else:
+            attributes["annotated_set_id"] = None
 
         attributes["is_apposition"] = \
             mention_property_computer.is_apposition(attributes)
