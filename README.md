@@ -121,7 +121,7 @@ head | list(str) | the head words of the mention
 pos | list(str) | the part-of-speech tags of the mention
 ner | list(str) | the named entity tags of the mention, as found in the data
 type | str | the mention type, one of NAM (proper name), NOM (common noun), PRO (pronoun), DEM (demonstrative pronoun), VRB (verb)
-fine_type | str | only set when the mention is a nominal or a pronoun, for nominals values DEF (definite noun phrase) or INDEF (bare plural ore indefinite), for pronouns values PERS_NOM (personal pronoun, nominative case), PERS_ACC (personal pronoun, accusative), REFL (reflexive pronoun), POSS (possessive pronoun) or POSS_ADJ (possessive adjective, e.g. 'his')
+fine_type | str | only set when the mention is a nominal or a pronoun, for nominals values DEF (definite noun phrase) or INDEF (bare plural or indefinite), for pronouns values PERS_NOM (personal pronoun, nominative case), PERS_ACC (personal pronoun, accusative), REFL (reflexive pronoun), POSS (possessive pronoun) or POSS_ADJ (possessive adjective, e.g. 'his')
 citation_form | str | only set if the mention is a pronoun, then the canonical form of the pronoun, i.e. one of i, you, he, she, it, we, they
 grammatical_function | str | either SUBJECT, OBJECT or OTHER
 number | str | either SINGULAR, PLURAL or UNKNOWN
