@@ -44,7 +44,7 @@ class CoNLLDocument:
         speakers (list(str)) = All speaker ids,
         sentence_spans_to_id (dict(Span, int)): A mapping of sentence spans to
             sentence ids.
-        coref (defaultdict(span, int)): A mapping of mention spans to their
+        coref (dict(span, int)): A mapping of mention spans to their
             coreference set id.
         spans_to_annotated_mentions (dict(Span, Mention)): A mapping of
             mention spans of the mentions annotated in the document to the
@@ -226,7 +226,7 @@ class CoNLLDocument:
 
     @staticmethod
     def __get_span_to_id(column):
-        span_to_id = defaultdict(int)
+        span_to_id = {}
 
         ids_to_stack = defaultdict(list)
 
