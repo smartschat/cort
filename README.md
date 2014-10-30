@@ -165,3 +165,11 @@ If you use this toolkit in your research, please cite the following publication:
 Coreference Resolution. In *Proceedings of the 2014 Conference on Empirical 
 Methods in Natural Language Processing (EMNLP)*, Doha, Qatar, 25-29 October 
 2014, pages 2070-2081. http://aclweb.org/anthology/D/D14/D14-1221.pdf
+
+## Changelog
+
+__Thursday, 30 October 2014__
+Fixed data structure bug in documents.py. The results from the paper are not affected by this bug.
+
+__Wednesday, 22 October 2014__
+Initial release.
