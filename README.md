@@ -161,7 +161,7 @@ where
 
 If you use this toolkit in your research, please cite the following publication:
 
-**Sebastian Martschat and Michael Strube (2013).** Recall Error Analysis for 
+**Sebastian Martschat and Michael Strube (2014).** Recall Error Analysis for 
 Coreference Resolution. In *Proceedings of the 2014 Conference on Empirical 
 Methods in Natural Language Processing (EMNLP)*, Doha, Qatar, 25-29 October 
 2014, pages 2070-2081. http://aclweb.org/anthology/D/D14/D14-1221.pdf
