@@ -119,7 +119,7 @@ class Corpus:
         where
             - doc_id is the id as in the first column of the CoNLL original
               data,
-            - doc_part is the part number (without trailing 0s),
+            - doc_part is the part number (with trailing 0s),
             - anaphor_start is the position in the document where the anaphor
               begins (counting from 0),
             - anaphor_end is the position where the anaphor ends (inclusive),

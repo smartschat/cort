@@ -395,7 +395,7 @@ class CoNLLDocument:
             folderid    part    anaphor_span    antecedent_span
 
         For example
-            bn/voa/02/voa_0220  0   (10,11) (1,1)
+            bn/voa/02/voa_0220  000   (10,11) (1,1)
 
         Args:
             file (file): The file to write antecedent decisions to.

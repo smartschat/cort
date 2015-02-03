@@ -150,7 +150,7 @@ Files should have one antecedent decision per line, in the format
 where
 
 * `doc_id` is the id as in the first column of the CoNLL original data,
-* `doc_part` is the part number (without trailing 0s),
+* `doc_part` is the part number (with trailing 0s),
 * `anaphor_start` is the position in the document where the anaphor begins 
   (counting from 0),
 * `anaphor_end` is the position where the anaphor ends (inclusive),
@@ -167,6 +167,9 @@ Methods in Natural Language Processing (EMNLP)*, Doha, Qatar, 25-29 October
 2014, pages 2070-2081. http://aclweb.org/anthology/D/D14/D14-1221.pdf
 
 ## Changelog
+
+__Tuesday, 3 February 2015__
+Fixed a bug in the documentation: part no. in antecedent file must be with trailing 0s.
 
 __Thursday, 30 October 2014__  
 Fixed data structure bug in documents.py. The results from the paper are not affected by this bug.
