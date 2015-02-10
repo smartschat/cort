@@ -168,7 +168,7 @@ Methods in Natural Language Processing (EMNLP)*, Doha, Qatar, 25-29 October
 
 ## Changelog
 
-__Tuesday, 3 February 2015__
+__Tuesday, 3 February 2015__  
 Fixed a bug in the documentation: part no. in antecedent file must be with trailing 0s.
 
 __Thursday, 30 October 2014__  
