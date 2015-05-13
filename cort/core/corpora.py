@@ -112,9 +112,9 @@ class Corpus:
 
         The attribute annotated_mentions is overwritten by mentions read in
         from the antecedents file. Input files should have one antecedent
-        decision per line, in the format
+        decision per line, where entries are separated by tabs. The format is
 
-            doc_id doc_part anaphor_start anaphor_end ante_start ante_end
+            doc_id  doc_part    (anaphor_start, anaphor_end)    (ante_start, ante_end)
 
         where
             - doc_id is the id as in the first column of the CoNLL original
