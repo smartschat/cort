@@ -143,9 +143,10 @@ is_apposition | bool| whether the mention contains an apposition
 There is no standardized format for storing antecedent decisions on CoNLL 
 coreference data. The toolkit expects the following format:
 
-Files should have one antecedent decision per line, in the format
+Files should have one antecedent decision per line. Entries in each line are
+seperated by tabs. The format is
 
-	doc_id doc_part anaphor_start anaphor_end ante_start ante_end
+	doc_id	doc_par	(anaphor_start, anaphor_end)	(ante_start, ante_end)
 
 where
 
@@ -167,6 +168,9 @@ Methods in Natural Language Processing (EMNLP)*, Doha, Qatar, 25-29 October
 2014, pages 2070-2081. http://aclweb.org/anthology/D/D14/D14-1221.pdf
 
 ## Changelog
+
+__Wednesday, 13 May 2015__  
+Fixed another bug in the documentation regarding format of antecedent data.
 
 __Tuesday, 3 February 2015__  
 Fixed a bug in the documentation: part no. in antecedent file must be with trailing 0s.
