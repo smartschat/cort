@@ -1,0 +1,247 @@
+html, body {
+    margin: 0;
+    font-family: Sans-Serif;
+}
+
+h1 {
+    padding: 5px;
+    margin: 0;
+    text-align: left;
+}
+
+h3 {
+    margin: 0 0 0 10px;
+    padding: 0;
+    font-family: Sans-Serif;
+    font-size: 1em;
+}
+
+#header {
+    background-color: rgb(1,70,153);
+    margin: 0;
+    padding: 5px;
+    height: 70px;
+    width: 100%;
+    color: white;
+}
+
+#documentsNavi {
+    margin: 10px 0 0 0;
+    padding: 0;
+    width: 225px; /* Must be same as .navcontainer*/
+    position: fixed;
+    float: left;
+}
+
+#documentsNavi ul {
+    margin: 5px 0 0 10px;
+    padding: 5px 0;
+    list-style-type: none;
+    height: 150px;
+    overflow: auto;
+    font-size: .8em;
+    background-color: #bbbbbb;
+}
+
+#documentsNavi ul li {
+    margin: 0;
+    padding: 5px;
+    cursor: pointer;
+}
+
+#documentsNavi li:nth-child(even) {
+    background-color: #bbbbbb;
+}
+
+#documentsNavi li:nth-child(odd) {
+    background-color: #cccccc;
+}
+
+#documentsNavi ul li:hover, #documentsNavi ul li:active {
+    background-color: gray;
+}
+
+#documentsNavi ul li.highlight {
+    font-weight: bolder;
+}
+
+/* Contains navigation bars and the document text itself */
+.document {
+    margin: 0 10px 0 0;
+    padding: 0;
+    display: none;
+    min-height: 600px;
+}
+
+#documentsNavi + .document {
+    display: block;
+}
+
+.navcontainer {
+    margin: 0;
+    padding: 0;
+    position: fixed;
+    top: 285px;
+    width: 225px;
+}
+
+.navcontainer > div {
+    margin-top: 20px;
+    padding: 0;
+}
+
+.tease {
+    display: none;
+    opacity: .8;
+    margin: 0 0 0 5px;
+    padding: 0;
+    font-family: Sans-Serif;
+    font-size: .8em;
+}
+
+.navcontainer > div h3:hover {
+	display: inline-block;
+    cursor: pointer;
+}
+
+.navcontainer > div h3:hover + .tease {
+    display: inline-block;
+}
+
+/* Gold and system navigation boxes */
+.navcontainer > div > ul {
+    margin: 5px 0 0 10px;
+    padding: 5px 0;
+    list-style-type: none;
+    overflow-y: auto;
+    max-height: 150px;
+    font-size: .8em;
+    background-color: #bbbbbb;
+}
+
+div.navcontainer div ul li:nth-child(even) {
+	background-color: #bbbbbb;
+}
+
+div.navcontainer div ul li:nth-child(odd) {
+	background-color: #cccccc;
+}
+
+.navcontainer > div ul li {
+    margin: 0;
+    padding: 2px;
+}
+
+.navcontainer > div ul li:hover {
+    cursor: pointer;
+}
+
+/* Errors navigation box */
+div.errorsNavi {
+
+}
+
+div.errorsNavi h4 {
+	margin: 0;
+	padding: 2px;
+	font-size: .9em;
+	font-weight: light;
+}
+
+div.errorsNavi h4:hover {
+	display: inline-block;
+    cursor: pointer;
+}
+
+div.errorsNavi h4:hover + .tease {
+    display: inline-block;
+}
+
+div.errorsNavi > div {
+    margin: 0 0 0 10px;
+    padding: 5px 0;
+    background-color: #eeeeee;
+}
+
+.precisionErrors, .recallErrors {
+	margin: 0;
+	padding: 5px 0;
+	list-style-type: none;
+	font-size: .8em;
+    height: 100px;
+    overflow: auto;
+}
+
+ol.text {
+    margin: 10px 0 0 250px;
+    padding: 5px;
+    line-height: 250%;
+    font-family: Sans-Serif;
+    font-size: .9em;
+    background-color: #eeeeee;
+}
+
+ol.text {
+    counter-reset: li;
+    display: table;
+}
+
+ol.text li.sentence {
+    margin: 0;
+    padding: 0;
+}
+
+ol.text > li {
+    margin: 0 0 6px 2em;
+    padding: 4px 8px;
+    list-style: none;
+    counter-increment: li;
+    display: table-row;    
+}
+
+ol.text > li:before {
+    content: counter(li) ".";
+    font-size: .7em;
+    color: gray;
+    display: inline-block;
+    width: 20px;
+    text-align: right;
+    padding-right: 5px;
+    display: table-cell;   
+}
+
+ol.text span.mention {
+    margin: 0;
+    padding: 2px;
+    display: inline;
+    border-radius: 0.5em;
+}
+
+ol.text span.mention:hover {
+    cursor: pointer;
+}
+
+.goldBorder {
+	border: 3px solid gold;
+}
+
+.blueBorder {
+	border: 3px solid blue;
+}
+/*
+span.transparentBg, .goldNavi ul li.transparentBg, .systemNavi ul li.transparentBg {
+	background-color: transparent;
+	border: 3px solid transparent;
+}
+*/
+.label {
+    line-height: 100%;
+    background-color: #F1F101;
+    z-index: 24;
+    opacity: .9;
+    box-shadow: 2px 2px 13px #aaa;
+}
+
+.label:hover {
+    display: block;
+}

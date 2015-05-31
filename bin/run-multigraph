@@ -1,0 +1,93 @@
+#!/usr/bin/env python
+
+import argparse
+import logging
+
+from cort.core import corpora
+from cort.core import mention_extractor
+from cort.coreference.multigraph import multigraphs, features, decoders, \
+    weighting_functions
+
+
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s %(levelname)s %(message)s')
+
+parser = argparse.ArgumentParser(description='Run the multigraph coreference '
+                                             'resolution system..')
+parser.add_argument('-in',
+                    required=True,
+                    dest='input_filename',
+                    help='The input file. Must follow the format of the CoNLL '
+                         'shared tasks on coreference resolution (see '
+                         'http://conll.cemantix.org/2012/data.html).)')
+parser.add_argument('-out',
+                    dest='output_filename',
+                    required=True,
+                    help='The output file.')
+parser.add_argument('-ante',
+                    dest='antecedents_output_filename',
+                    default=None,
+                    help='The file where antecedent information should be'
+                         'written to. Defaults to None.')
+
+args = parser.parse_args()
+
+logging.info("Reading in corpus")
+
+corpus = corpora.Corpus.from_file("my corpus",
+                                  open(args.input_filename))
+
+logging.info("Extracting system mentions")
+for doc in corpus:
+    doc.system_mentions = mention_extractor.extract_system_mentions(doc)
+
+negative_features = [features.not_modifier,
+                     features.not_compatible,
+                     features.not_embedding,
+                     features.not_speaker,
+                     features.not_singleton,
+                     features.not_pronoun_distance,
+                     features.not_anaphoric]
+
+positive_features = [features.alias,
+                     features.non_pronominal_string_match,
+                     features.head_match,
+                     features.pronoun_same_canonical_form,
+                     features.anaphor_pronoun,
+                     features.speaker,
+                     features.antecedent_is_subject,
+                     features.antecedent_is_object,
+                     features.substring,
+                     features.lexical]
+
+cmc = multigraphs.CorefMultigraphCreator(
+    positive_features,
+    negative_features,
+    weighting_functions.for_each_relation_with_distance,
+    {})
+
+relation_weights = {}
+
+for relation in positive_features:
+    relation_weights[relation] = 1
+
+relation_weights[features.antecedent_is_object] = 0.5
+
+cmc.relation_weights = relation_weights
+
+logging.info("Decoding")
+
+decoder = decoders.MultigraphDecoder(cmc)
+
+decoder.decode(corpus)
+
+logging.info("Writing coreference to file")
+
+corpus.write_to_file(open(args.output_filename, 'w'))
+
+if args.antecedents_output_filename:
+    logging.info("Writing antecedent decisions to file")
+    corpus.write_antecedent_decisions_to_file(
+        open(args.antecedents_output_filename, 'w'))
+
+logging.info("Finished")

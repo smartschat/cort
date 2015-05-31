@@ -1,0 +1,7 @@
+Python:
+    - use python http server in order to avoid multi-megabyte html blobs (simplehttpserver)
+    !- use discernible colours: https://github.com/gtaylor/python-colormath
+
+jQuery/javascript:
+    - improve mentionhead tooltip behaviour
+	- Dynamic computation of heights, etc. in scroll()
