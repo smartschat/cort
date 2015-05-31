@@ -19,6 +19,7 @@ def extract_system_mentions(document, filter_mentions=True):
             extracted.
         filter_mentions (bool): Indicates whether extracted mentions should
             be filtered. If set to True, filters:
+
                 - mentions with the same head (retains one with largest span),
                 - mentions whose head is embedded in another mention's head,
                 - mentions whose head as POS tag JJ,
@@ -29,11 +30,11 @@ def extract_system_mentions(document, filter_mentions=True):
                 - pleonastic "it" and "you" detected via heuristics
 
     Returns:
-        list(Mention): the sorted list of extracted system mentions.
+        list(Mention): the sorted list of extracted system mentions. Includes a
+        "dummy mention".
     """
-    system_mentions = [
-        mentions.Mention.from_document(span, document)
-        for span in __extract_system_mention_spans(document)]
+    system_mentions = [mentions.Mention.from_document(span, document)
+                       for span in __extract_system_mention_spans(document)]
 
     if filter_mentions:
         for post_processor in [
@@ -47,9 +48,21 @@ def extract_system_mentions(document, filter_mentions=True):
         ]:
             system_mentions = post_processor(system_mentions)
 
-    # update set id
+    seen = set()
+
+    # update set id and whether it is the first mention in gold entity
     for mention in system_mentions:
         mention.attributes["set_id"] = None
+
+        annotated_set_id = mention.attributes["annotated_set_id"]
+
+        mention.attributes["first_in_gold_entity"] = \
+            annotated_set_id not in seen
+
+        seen.add(annotated_set_id)
+
+    system_mentions = [mentions.Mention.dummy_from_document(document)] \
+        + system_mentions
 
     return system_mentions
 

@@ -1,6 +1,6 @@
 import unittest
 
-from cort.analysis import coref_structures
+from cort.analysis import data_structures
 from cort.analysis import spanning_tree_algorithms
 from cort.core import mentions
 from cort.core import spans
@@ -102,7 +102,7 @@ class TestSpanningTreeAlgorithms(unittest.TestCase):
         self.maxDiff = None
 
     def test_recall_closest(self):
-        gold_graph = coref_structures.EntityGraph.from_mentions(
+        gold_graph = data_structures.EntityGraph.from_mentions(
             self.gold_first_cluster, "annotated_set_id")[0]
 
         spanning_tree_edges = [
@@ -118,11 +118,11 @@ class TestSpanningTreeAlgorithms(unittest.TestCase):
             spanning_tree_algorithms.recall_closest(
                 gold_graph,
                 gold_graph.partition(
-                    coref_structures.EntityGraph.from_mentions(
+                    data_structures.EntityGraph.from_mentions(
                         self.system1_mentions, "set_id"))))
 
     def test_recall_type(self):
-        gold_graph = coref_structures.EntityGraph.from_mentions(
+        gold_graph = data_structures.EntityGraph.from_mentions(
             self.gold_first_cluster, "annotated_set_id")[0]
 
         spanning_tree_edges = [
@@ -138,11 +138,11 @@ class TestSpanningTreeAlgorithms(unittest.TestCase):
             spanning_tree_algorithms.recall_accessibility(
                 gold_graph,
                 gold_graph.partition(
-                    coref_structures.EntityGraph.from_mentions(
+                    data_structures.EntityGraph.from_mentions(
                         self.system1_mentions, "set_id"))))
 
     def test_precision_system_output(self):
-        gold_graph = coref_structures.EntityGraph.from_mentions(
+        gold_graph = data_structures.EntityGraph.from_mentions(
             self.system2_cluster, "set_id")[0]
 
         spanning_tree_edges = [
@@ -156,7 +156,7 @@ class TestSpanningTreeAlgorithms(unittest.TestCase):
             spanning_tree_algorithms.precision_system_output(
                 gold_graph,
                 gold_graph.partition(
-                    coref_structures.EntityGraph.from_mentions(
+                    data_structures.EntityGraph.from_mentions(
                         self.gold_first_cluster, "annotated_set_id"))))
 
 

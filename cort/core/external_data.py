@@ -3,6 +3,8 @@
 import os
 import pickle
 
+
+import cort
 from cort.core import singletons
 from cort.core import util
 
@@ -23,8 +25,7 @@ class GenderData:
         """
         self.word_to_gender = {}
 
-        directory = os.path.dirname(
-            os.path.realpath(__file__)) + "/../resources/"
+        directory = cort.__path__[0] + "/resources/"
 
         lists = [
             open(directory + "male.list"),
@@ -79,8 +80,8 @@ class LexicalData:
         """ Initialize the set of pairs from
             package_root/resources/coreferent_pairs.obj.
         """
-        directory = os.path.dirname(
-            os.path.realpath(__file__)) + "/../resources/"
+        directory = cort.__path__[0] + "/resources/"
+
         self.pairs = pickle.load(
             open(directory + "coreferent_pairs.obj", "rb"))
 
@@ -123,7 +124,7 @@ class SingletonMentions:
         """ Initialize the set of pairs from
             package_root/resources/singletons_not_cleaned.obj.
         """
-        directory = os.path.dirname(
-            os.path.realpath(__file__)) + "/../resources/"
+        directory = cort.__path__[0] + "/resources/"
+
         self.singletons = pickle.load(
             open(directory + "singletons_not_cleaned.obj", "rb"))

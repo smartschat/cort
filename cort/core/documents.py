@@ -13,7 +13,6 @@ from cort.core import nltk_util
 from cort.core import spans
 
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -24,10 +23,10 @@ class CoNLLDocument:
     """Represents a document in CoNLL format.
 
     For a specification of the format, see
-        http://conll.cemantix.org/2012/data.html.
+    http://conll.cemantix.org/2012/data.html.
 
     Attributes:
-        folder: do we really need this?
+        folder (str): The folder of the document in the ConLL data.
         id (str): The id of the document,
         part (str): The part number of the document.
         genre (str): The genre the document belongs to.
@@ -39,9 +38,9 @@ class CoNLLDocument:
         pos (list(str)): All part-of-speech tags.
         ner (list(str)): All named entity tags (if a token does not have a
             tag, the tag is set to NONE).
-        parse (list(str): All parse trees (in string list representation, as
+        parse (list(str)): All parse trees (in string list representation, as
             in the ConLL data).
-        speakers (list(str)) = All speaker ids,
+        speakers (list(str)): All speaker ids,
         sentence_spans_to_id (dict(Span, int)): A mapping of sentence spans to
             sentence ids.
         coref (dict(span, int)): A mapping of mention spans to their
@@ -112,40 +111,44 @@ class CoNLLDocument:
         self.antecedent_decisions = {}
 
     def __repr__(self):
-        return self.id + ", part " + self.part
+        return self.folder + self.id + ", part " + self.part
 
     def __hash__(self):
-        return hash((self.id, self.part))
+        return hash((self.folder, self.id, self.part))
 
     def __lt__(self, other):
         """ Check whether this document is less than another document.
 
         It is less than another document if and only if
-            (self.id, self.part) < (another.id, another.part),
-        where the ids are compared lexicographically.
+        ``(self.folder, self.id, self.part) <
+        (another.folder, another.id, another.part)``,
+        where the folders and ids are compared lexicographically.
 
         Args:
             other (ConLLDocument): A document.
 
         Returns:
-            (bool): True if this document is less than other, False otherwise.
+            True if this document is less than other, False otherwise.
         """
-        return (self.id, self.part) < (other.id, other.part)
+        return (self.folder, self.id, self.part) < (other.folder, other.id,
+                                                    other.part)
 
     def __eq__(self, other):
         """ Check for document equality.
 
-        Two documents are considered equal is they have the same id and the
-        same part.
+        Two documents are considered equal is they have the same folder, id and
+        the part.
 
         Args:
             other (ConLLDocument): A document.
 
         Returns:
-            (bool): True if id and part of the documents are equal.
+            True if id and part of the documents are equal.
         """
         if isinstance(other, self.__class__):
-            return self.id == other.id and self.part == other.part
+            return self.folder == other.folder \
+                and self.id == other.id \
+                and self.part == other.part
         else:
             return False
 
@@ -257,8 +260,13 @@ class CoNLLDocument:
         mention_spans = sorted(mention_spans)
         span_to_mentions = {}
 
+        seen = set()
+
         for span in mention_spans:
-            span_to_mentions[span] = mentions.Mention.from_document(span, self)
+            set_id = self.coref[span]
+            span_to_mentions[span] = mentions.Mention.from_document(
+                span, self, first_in_gold_entity=set_id not in seen)
+            seen.add(set_id)
 
         return span_to_mentions
 
@@ -269,8 +277,7 @@ class CoNLLDocument:
             span (Span): A span corresponding to a fragment of the document.
 
         Returns:
-            (str): A string representation of the parse tree of
-                the span.
+            str: A string representation of the parse tree of the span.
         """
         parse_tree = ""
         for i in range(span.begin, span.end+1):
@@ -288,39 +295,20 @@ class CoNLLDocument:
             span (Span): A span corresponding to a fragment of the document.
 
         Returns:
-            (Span): The span of the sentence which embeds the
-                text corresponding to the span.
+            Span: The span of the sentence which embeds the text corresponding
+            to the span.
         """
         for sentence_span in self.sentence_spans_to_id.keys():
             if sentence_span.embeds(span):
                 return sentence_span
 
-    def are_coreferent(self, m, n):
-        """ Return whether to mentions are coreferent.
-
-        Args:
-            m (Mention): A mention.
-            n (Mention): Another mention.
-
-        Returns:
-            True if m and n are coreferent (are in the same document and have
-            the same annotated set id), False otherwise.
-        """
-        return (m.document == n.document
-                and m.document == self
-                and m.span in self.spans_to_annotated_mentions
-                and n.span in self.spans_to_annotated_mentions
-                and self.spans_to_annotated_mentions[m.span].attributes[
-                    "annotated_set_id"] == self.spans_to_annotated_mentions[
-                        n.span].attributes["annotated_set_id"])
-
     def get_string_representation(self):
         """ Get a string representation of the document.
 
         Returns:
-            (str): A string representation of the document which conforms to
-                the CoNLL format specifications
-                (http://conll.cemantix.org/2012/data.html).
+            str: A string representation of the document which conforms to the
+            CoNLL format specifications
+            (http://conll.cemantix.org/2012/data.html).
         """
         mention_string_representation = \
             CoNLLDocument.__get_string_representation_of_mentions(
@@ -392,10 +380,10 @@ class CoNLLDocument:
 
         One decision is represented as one line in the file in the following
         format:
-            folderid    part    anaphor_span    antecedent_span
 
-        For example
-            bn/voa/02/voa_0220  000   (10,11) (1,1)
+        ``folderid    part    anaphor_span    antecedent_span``
+
+        For example ``bn/voa/02/voa_0220  000   (10, 11) (1, 1)``
 
         Args:
             file (file): The file to write antecedent decisions to.
@@ -446,3 +434,31 @@ class CoNLLDocument:
             for span in self.spans_to_annotated_mentions:
                 self.coref[span] = self.spans_to_annotated_mentions[
                     span].attributes["annotated_set_id"]
+
+    def get_antecedent_decisions(self, which_mentions="annotated"):
+        """ Get all antecedent decisions in this document.
+
+        Args:
+            which_mentions (str): Either "annotated" or "system". Defaults to
+                "system". Signals whether to consider annotated mentions or
+                system mentions.
+
+        Returns:
+            dict(Mention, Mention): The mapping of antecedent decisions.
+        """
+        antecedent_decisions = {}
+
+        doc_mentions = None
+
+        if which_mentions == "annotated":
+            doc_mentions = self.annotated_mentions
+        elif which_mentions == "system":
+            doc_mentions = self.system_mentions
+
+        for mention in doc_mentions:
+            antecedent = mention.attributes["antecedent"]
+
+            if antecedent:
+                antecedent_decisions[mention] = antecedent
+
+        return antecedent_decisions

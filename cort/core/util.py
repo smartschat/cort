@@ -14,8 +14,8 @@ def clean_via_pos(tokens, pos):
         pos (list(str)): A list of corresponding part-of-speech tags.
 
     Returns:
-        (list(str)): The list of tokens which do not have part-of-speech tag
-            DT or POS.
+        list(str): The list of tokens which do not have part-of-speech tag
+        DT or POS.
     """
     return [token for token, pos in zip(tokens, pos)
             if pos not in ["DT", "POS"]]

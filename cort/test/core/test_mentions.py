@@ -160,6 +160,13 @@ nw/wsj/24/wsj_2413   0   31             .      .               *))         -    
                 Span(33, 34),
                 self.real_document).attributes["tokens"])
 
+        expected = "the massacre"
+        self.assertEqual(
+            expected,
+            Mention.from_document(
+                Span(33, 34),
+                self.real_document).attributes["tokens_as_lowercase_string"])
+
     def test_mention_type(self):
         self.assertEqual(
             "NAM",
@@ -220,6 +227,13 @@ nw/wsj/24/wsj_2413   0   31             .      .               *))         -    
             Mention.from_document(
                 Span(3, 3),
                 self.for_head_document).attributes["head"])
+
+        expected = "wedding"
+        self.assertEqual(
+            expected,
+            Mention.from_document(
+                Span(3, 3),
+                self.for_head_document).attributes["head_as_lowercase_string"])
 
     def test_mention_get_head_span(self):
         self.assertEqual(
@@ -283,6 +297,59 @@ nw/wsj/24/wsj_2413   0   31             .      .               *))         -    
             Mention.from_document(
                 Span(21, 27),
                 self.date_mention_document).get_context(1000))
+
+    def test_is_coreferent_with(self):
+
+        self.assertEqual(True,
+            Mention(
+                None, Span(0, 0), {"annotated_set_id": 1}
+            ).is_coreferent_with(
+                Mention(None, Span(3, 4), {"annotated_set_id": 1})
+            )
+        )
+
+        self.assertEqual(False,
+            Mention(
+                None, Span(0, 0), {"annotated_set_id": 1}
+            ).is_coreferent_with(
+                Mention(None, Span(3, 4), {"annotated_set_id": 0})
+            )
+        )
+
+        self.assertEqual(False,
+            Mention(
+                None, Span(0, 0), {"annotated_set_id": None}
+            ).is_coreferent_with(
+                Mention(None, Span(3, 4), {"annotated_set_id": None})
+            )
+        )
+
+        self.assertEqual(True,
+            Mention(
+                self.complicated_mention_document, Span(0, 0), {"annotated_set_id": 1}
+            ).is_coreferent_with(
+                Mention(self.complicated_mention_document, Span(3, 4), {"annotated_set_id": 1})
+            )
+        )
+
+        self.assertEqual(False,
+            Mention(
+                self.complicated_mention_document, Span(0, 0),
+                {"annotated_set_id": None}
+            ).is_coreferent_with(
+                Mention(self.complicated_mention_document, Span(3, 4),
+                        {"annotated_set_id": None})
+            )
+        )
+
+        self.assertEqual(False,
+            Mention(
+                self.complicated_mention_document, Span(0, 0), {"annotated_set_id": 1}
+            ).is_coreferent_with(
+                Mention(self.real_document, Span(13, 20),
+                        {"annotated_set_id": 1})
+            )
+        )
 
 
 if __name__ == '__main__':

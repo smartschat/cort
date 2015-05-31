@@ -116,7 +116,7 @@ mz/sinorama/10/ectb_1050        6       12      ?       .       *))     -       
         self.assertEqual(expected_spans,
                          [mention.span for
                           mention in mention_extractor.extract_system_mentions(
-                             self.real_document, filter_mentions=False)])
+                             self.real_document, filter_mentions=False)[1:]])
 
         expected_spans = sorted([
             spans.Span(2, 2),
@@ -131,7 +131,7 @@ mz/sinorama/10/ectb_1050        6       12      ?       .       *))     -       
                          [mention.span for
                           mention in mention_extractor.extract_system_mentions(
                              self.another_real_document,
-                             filter_mentions=False)])
+                             filter_mentions=False)[1:]])
 
         expected_spans = sorted([
             spans.Span(2, 2),
@@ -145,7 +145,7 @@ mz/sinorama/10/ectb_1050        6       12      ?       .       *))     -       
                          [mention.span for
                           mention in mention_extractor.extract_system_mentions(
                              self.another_real_document,
-                             filter_mentions=True)])
+                             filter_mentions=True)[1:]])
 
     def test_post_process_same_head_largest_span(self):
         all_mentions = {

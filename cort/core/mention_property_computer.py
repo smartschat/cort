@@ -1,7 +1,6 @@
 """ Compute attributes of mentions. """
 
 import re
-import sys
 
 from nltk.corpus import wordnet as wn
 
@@ -22,7 +21,7 @@ def compute_number(attributes):
             values for "type", "head_index" and "pos".
 
     Returns:
-        (str): the number of the mention -- one of UNKNOWN, SINGULAR and PLURAL.
+        str: the number of the mention -- one of UNKNOWN, SINGULAR and PLURAL.
     """
     number = "UNKNOWN"
     head_index = attributes["head_index"]
@@ -59,7 +58,7 @@ def compute_gender(attributes):
             pronoun, "citation_form".
 
     Returns:
-        (str): the number of the mention -- one of UNKNOWN, MALE, FEMALE,
+        str: the number of the mention -- one of UNKNOWN, MALE, FEMALE,
             NEUTRAL and PLURAL.
     """
     gender = "NEUTRAL"
@@ -108,7 +107,7 @@ def compute_semantic_class(attributes):
             pronoun, "citation_form".
 
     Returns:
-        (str): the semantic class of the mention -- one of PERSON, OBJECT and
+        str: the semantic class of the mention -- one of PERSON, OBJECT and
             UNKNOWN.
     """
     semantic_class = "UNKNOWN"
@@ -181,7 +180,7 @@ def is_apposition(attributes):
             a value for "parse_tree".
 
     Returns:
-        (bool): Whether the mention is an apposition.
+        bool: Whether the mention is an apposition.
     """
     tree = attributes["parse_tree"]
 
@@ -227,7 +226,7 @@ def compute_head_information(attributes):
 
     Returns:
         (list(str), Span, int): The head, the head span (in the document) and
-            the starting index of the head (in the mention).
+        the starting index of the head (in the mention).
     """
     mention_subtree = attributes["parse_tree"]
 
@@ -291,8 +290,8 @@ def get_relevant_subtree(span, document):
         document (CoNLLDocument): A document.
 
     Returns:
-        (nltk.ParentedTree): The fragment of the parse tree at the span in the
-            document.
+        nltk.ParentedTree: The fragment of the parse tree at the span in the
+        document.
     """
     in_sentence_ids = document.in_sentence_ids[span.begin:span.end+1]
     in_sentence_span = spans.Span(in_sentence_ids[0], in_sentence_ids[-1])
@@ -317,8 +316,8 @@ def get_grammatical_function(attributes):
             a value for "parse_tree".
 
     Returns:
-        (str): The grammatical function of the mention in its sentence, one of
-            SUBJECT, OBJECT and OTHER.
+        str: The grammatical function of the mention in its sentence, one of
+        SUBJECT, OBJECT and OTHER.
     """
     tree = attributes["parse_tree"]
     parent = tree.parent()
@@ -354,8 +353,8 @@ def get_type(attributes):
             values for "pos", "ner" and "head_index".
 
     Returns:
-        (str): The mention type, one of NAM (proper name), NOM (common noun),
-            PRO (pronoun), DEM (demonstrative pronoun) and VRB (verb).
+        str: The mention type, one of NAM (proper name), NOM (common noun),
+        PRO (pronoun), DEM (demonstrative pronoun) and VRB (verb).
     """
     pos = attributes["pos"][attributes["head_index"]]
     head_ner = attributes["ner"][attributes["head_index"]]
@@ -384,11 +383,16 @@ def get_fine_type(attributes):
             values for "type", "tokens" and "pos".
 
     Returns:
-        (str): The fine-grained mention type, one of DEF (definite noun phrase),
-            INDEF (indefinite noun phrase), PERS_NOM (personal pronoun,
-            nominative case), PERS_ACC (personal pronoun, accusative),
-            REFL (reflexive pronoun), POSS (possessive pronoun), POSS_ADJ
-            (possessive adjective) or None.
+        str: The fine-grained mention type, one of
+
+            - DEF (definite noun phrase),
+            - INDEF (indefinite noun phrase),
+            - PERS_NOM (personal pronoun, nominative case),
+            - PERS_ACC (personal pronoun, accusative),
+            - REFL (reflexive pronoun),
+            - POSS (possessive pronoun),
+            - POSS_ADJ (possessive adjective) or
+            - None.
     """
     coarse_type = attributes["type"]
     start_token = attributes["tokens"][0]
@@ -425,11 +429,11 @@ def get_citation_form(attributes):
 
     Args:
         attributes (dict(str, object)): Attributes of the mention, must contain
-            a value "tokens".
+            the key "tokens".
 
     Returns:
-        (str): The citation form of the pronoun, one of "i", "you", "he", "she",
-            "it", "we", "they" and None.
+        str: The citation form of the pronoun, one of "i", "you", "he", "she",
+        "it", "we", "they" and None.
     """
     pronoun = attributes["tokens"][0]
 

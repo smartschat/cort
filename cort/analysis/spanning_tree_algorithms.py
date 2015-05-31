@@ -18,9 +18,9 @@ def precision_system_output(entity, partitioned_entity):
             used for this algorithm.
 
     Returns:
-        (list(Mention, Mention)): A list of mention pairs, which constitute the
-            edges of the spanning tree. For a pair (m, n), n appears later in
-            the text than m.
+        list(Mention, Mention): A list of mention pairs, which constitute the
+        edges of the spanning tree. For a pair (m, n), n appears later in
+        the text than m.
     """
     edges = []
     for mention in entity.edges:
@@ -43,9 +43,9 @@ def recall_closest(entity, partitioned_entity):
             used for this algorithm.
 
     Returns:
-        (list(Mention, Mention)): A list of mention pairs, which constitute the
-            edges of the spanning tree. For a pair (m, n), n appears later in
-            the text than m.
+        list(Mention, Mention): A list of mention pairs, which constitute the
+        edges of the spanning tree. For a pair (m, n), n appears later in
+        the text than m.
     """
     edges = []
     for mention in entity.edges:
@@ -72,6 +72,7 @@ def recall_accessibility(entity, partitioned_entity):
 
     If a mention m is a proper name or a common noun, choose an antecedent as
     follows:
+
         - if a proper name antecedent exists, take the closest and output this
           pair as an edge
         - else if a common noun antecedent exists, take the closest and output
@@ -89,9 +90,9 @@ def recall_accessibility(entity, partitioned_entity):
             used for this algorithm.
 
     Returns:
-        (list(Mention, Mention)): A list of mention pairs, which constitute the
-            edges of the spanning tree. For a pair (m, n), n appears later in
-            the text than m.
+        list(Mention, Mention): A list of mention pairs, which constitute the
+        edges of the spanning tree. For a pair (m, n), n appears later in
+        the text than m.
     """
     edges = []
     for mention in entity.edges:

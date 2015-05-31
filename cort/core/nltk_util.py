@@ -15,8 +15,7 @@ def parse_parented_tree(tree_string):
         tree_string (str): A constituent parse tree in bracket notation
 
     Returns:
-        (nltk.ParentedTree): A parse tree corresponding to the parse tree
-            string.
+        nltk.ParentedTree: A parse tree corresponding to the parse tree string.
     """
     try:
         return ParentedTree(tree_string)
@@ -33,7 +32,7 @@ def get_label(tree):
         tree (nltk.ParentedTree): A parse tree.
 
     Returns:
-        (str): the label of the top node in the tree.
+        str: the label of the top node in the tree.
     """
     try:
         return tree.node
@@ -48,7 +47,7 @@ def get_lemma_name_of_first_synset(synsets):
         synsets (list(nltk.corpus.reader.wordnet)): A list of synsets.
 
     Returns:
-        (str): The first lemma of the first synset in synsets.
+        str: The first lemma of the first synset in synsets.
     """
     try:
         return synsets[0].lemma_names[0]

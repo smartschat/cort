@@ -9,12 +9,12 @@ __author__ = 'smartschat'
 
 
 class HeadFinder:
-    """
-    Compute heads of mentions.
+    """Compute heads of mentions.
 
     This class provides functions to compute heads of mentions via modified
-    version of the rules that can be found in Michael Collin's PhD thesis.
+    version of the rules that can be found in Michael Collins' PhD thesis.
     The following changes were introduced:
+
         - handle NML as NP,
         - for coordinated phrases, take the coordination token as head,
 
@@ -59,8 +59,8 @@ class HeadFinder:
             tree (nltk.ParentedTree): The parse tree of a mention.
 
         Returns:
-            (nltk.ParentedTree): The subtree of the input tree which
-                corresponds to the head of the mention.
+            nltk.ParentedTree: The subtree of the input tree which corresponds
+            to the head of the mention.
         """
         head = None
 

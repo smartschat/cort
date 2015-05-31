@@ -238,49 +238,6 @@ test2	0	6	.	NN	*)	-	-	-	-	-	-
             expected,
             self.complicated_mention_document.get_string_representation())
 
-    def test_are_coreferent(self):
-        self.complicated_mention_example = """#begin	document	(test2);	part	000
-test2	0	0	This    NN   (NP*	-   -   -   -   -   (0)
-test2	0	1	is  NN	*   -   -   -   -   -   -
-test2	0	2	just    NN   *	-   -   -   -   -   -
-test2	0	3	a   NN   *	-   -   -   -   -   (0|(1)
-test2	0	4	test    NN   *	-   -   -   -   -   0)
-test2	0	5	.   NN   *)	-   -   -   -   -   -
-
-test2	0	0	It  NN   (NP*	-   -   -   -   -   (1)|(4
-test2	0	1	shows   NN   *	-   -   -   -   -   -
-test2	0	2	that    NN   *	-   -   -   -   -   (2)
-test2	0	3	the NN   *	-   -   -   -   -   (2|(0
-test2	0	4	scorer  NN   *	-   -   -   -   -   2)|4)
-test2	0	5	works   NN   *	-   -   -   -   -   0)
-test2	0	6	.   NN   *)	-   -   -   -   -   -
-
-#end	document"""
-
-        self.assertEqual(True,
-                         self.complicated_mention_document.are_coreferent(
-                             Mention(self.complicated_mention_document,
-                                     Span(0, 0), {"set_id": 1}),
-                             Mention(self.complicated_mention_document,
-                                     Span(3, 4), {"set_id": 0}),
-                         ))
-
-        self.assertEqual(False,
-                         self.complicated_mention_document.are_coreferent(
-                             Mention(self.complicated_mention_document,
-                                     Span(0, 0), {"set_id": 1}),
-                             Mention(self.complicated_mention_document,
-                                     Span(4, 4), {"set_id": 0}),
-                         ))
-
-        self.assertEqual(False,
-                         self.complicated_mention_document.are_coreferent(
-                             Mention(self.complicated_mention_document,
-                                     Span(3, 3), {"set_id": 1}),
-                             Mention(self.complicated_mention_document,
-                                     Span(8, 8), {"set_id": 1}),
-                         ))
-
 
 if __name__ == '__main__':
     unittest.main()

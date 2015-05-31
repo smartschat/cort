@@ -32,14 +32,13 @@ class Span(mixins.ComparableMixin):
     def __lt__(self, other):
         """ Check whether this span is less than another span.
 
-        (a,b) < (c,d) if and only if
-            a < c or a = c and b < d
+        (a,b) < (c,d) if and only if a < c or a = c and b < d
 
         Args:
             other (Span): A span.
 
         Returns:
-            (bool): True if this span is less than other, False otherwise.
+            True if this span is less than other, False otherwise.
         """
         if self.begin < other.begin:
             return True
@@ -57,7 +56,7 @@ class Span(mixins.ComparableMixin):
             other (Span): A span.
 
         Returns:
-            (bool): True if this span embeds other, False otherwise.
+            True if this span embeds other, False otherwise.
         """
         return self.begin <= other.begin and self.end >= other.end
 
@@ -74,7 +73,7 @@ class Span(mixins.ComparableMixin):
             span_string (str): A string representation of a span.
 
         Returns:
-            (Span): The span corresponding to the string representation.
+            Span: The span corresponding to the string representation.
         """
         without_brackets = span_string.strip()[1:-1]
         splitted_and_stripped = [token.strip() for token

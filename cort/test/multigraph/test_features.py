@@ -2,7 +2,7 @@ import unittest
 
 from cort.core.mentions import Mention
 from cort.core.spans import Span
-from cort.multigraph import features
+from cort.coreference.multigraph import features
 
 
 __author__ = 'smartschat'
