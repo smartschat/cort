@@ -11,12 +11,6 @@ If you have any questions or comments, drop me an e-mail at
 
 ## Installation
 
-__cort__ is available on PyPi. You can install it via
-
-```
-pip install cort
-```
-
 Dependencies are [nltk](http://www.nltk.org/), [numpy](http://www.numpy.org/), 
 [matplotlib](http://matplotlib.org), 
 [mmh3](https://pypi.python.org/pypi/mmh3) and
