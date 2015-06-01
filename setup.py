@@ -1,10 +1,21 @@
 from distutils.core import setup
-import setuptools
+
 
 setup(
     name='cort',
-    version='0.1.2',
-    packages=setuptools.find_packages(),
+    version='0.1.1',
+    packages=['cort',
+              'cort.analysis',
+              'cort.core',
+              'cort.test',
+              'cort.coreference',
+              'cort.test.multigraph',
+              'cort.test.analysis',
+              'cort.test.core',
+              'cort.coreference.multigraph',
+              'cort.coreference.approaches',
+              'cort.util'],
+
     url='http://github.com/smartschat/cort',
     license='MIT',
     author='Sebastian Martschat, Thierry Goeckel',
@@ -21,10 +32,11 @@ setup(
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Text Processing',
         ],
-    install_requires=['nltk', 'numpy', 'matplotlib', 'mmh3'],
+    install_requires=['nltk', 'numpy', 'matplotlib', 'mmh3', 'future'],
     package_data={
-        'visualization': 'cort/analysis/visualization',
-        'resources': 'cort/resources'
+        'cort': ['analysis/visualization/style.css',
+                 'analysis/visualization/lib/*',
+                 'resources/*']
     },
-    scripts=['bin/cort-train', 'bin/cort-predict', 'bin/run-multigraph']
+    scripts=['bin/cort-train', 'bin/cort-predict', 'bin/run-multigraph'],
 )

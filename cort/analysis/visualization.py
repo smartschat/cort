@@ -126,7 +126,7 @@ class Visualizer:
 
         output = "temp/output/error_analysis.html"
 
-        f = open(output, "w", encoding="utf-8")
+        f = open(output, "w")
 
         abs_path = os.path.abspath(output)
 

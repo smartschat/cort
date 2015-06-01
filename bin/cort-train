@@ -2,6 +2,7 @@
 
 
 import argparse
+import codecs
 import logging
 import pickle
 
@@ -110,13 +111,13 @@ extractor = instance_extractors.InstanceExtractor(
 perceptron = import_helper.import_from_path(args.perceptron)(
     cost_scaling=int(args.cost_scaling),
     n_iter=int(args.n_iter),
-    seed= int(args.seed),
-    labels=extractor.get_labels()
+    seed=int(args.seed)
 )
 
 logging.info("Reading in data.")
 training_corpus = corpora.Corpus.from_file("training",
-                                           open(args.input_filename))
+                                           codecs.open(args.input_filename,
+                                                       "r", "utf-8"))
 
 logging.info("Extracting system mentions.")
 for doc in training_corpus:

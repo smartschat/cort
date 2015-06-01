@@ -1,6 +1,9 @@
 """ Contains perceptron learning methods for structured prediction. """
 
 
+from __future__ import division
+
+
 from collections import defaultdict
 import logging
 
@@ -35,7 +38,6 @@ class Perceptron:
                  n_iter=5,
                  seed=23,
                  cost_scaling=1,
-                 labels=None,
                  priors=None,
                  weights=None):
         """
@@ -62,8 +64,7 @@ class Perceptron:
         self.random_seed = seed
         self.cost_scaling = cost_scaling
 
-        if not labels:
-            labels = ["+"]
+        labels = self.get_labels()
 
         if not priors:
             self.priors = defaultdict(float)
@@ -312,3 +313,6 @@ class Perceptron:
                 max_cons = score
 
         return best, max_val, best_cons, max_cons, best_is_consistent
+
+    def get_labels(self):
+        return ["+"]

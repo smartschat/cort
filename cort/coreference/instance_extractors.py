@@ -12,6 +12,10 @@ import numpy
 __author__ = 'martscsn'
 
 
+def unwrap_extract_doc(arg, **kwarg):
+    return InstanceExtractor._extract_doc(*arg, **kwarg)
+
+
 class InstanceExtractor:
     """ Extract instances and their corresponding features from a corpus.
 
@@ -88,8 +92,8 @@ class InstanceExtractor:
         """
 
         pool = multiprocessing.Pool(maxtasksperchild=1)
-        results = pool.map(self._extract_doc,
-                           corpus.documents)
+        results = pool.map(unwrap_extract_doc,
+                           zip([self]*len(corpus.documents), corpus.documents))
 
         pool.close()
         pool.join()
@@ -219,10 +223,3 @@ class InstanceExtractor:
                                       in inst_feats])
 
         return all_feats
-
-    def get_labels(self):
-        return ["+"]
-
-    def get_coref_labels(self):
-        return ["+"]
-

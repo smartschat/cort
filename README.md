@@ -18,9 +18,10 @@ pip install cort
 ```
 
 Dependencies are [nltk](http://www.nltk.org/), [numpy](http://www.numpy.org/), 
-[matplotlib](http://matplotlib.org) and 
-[mmh3](https://pypi.python.org/pypi/mmh3). __cort__ is written for Python 2.7+
-and Python 3.3+.
+[matplotlib](http://matplotlib.org), 
+[mmh3](https://pypi.python.org/pypi/mmh3) and
+[future](https://pypi.python.org/pypi/future). __cort__ is written for use on 
+Linux with either Python 2.7+ or Python 3.3+.
 
 ## Error Analysis
 
@@ -210,7 +211,7 @@ run-multigraph -in my_data.data -out out.data -ante antecedents_out.data
 To train the mention pair model, use
 
 ```shell
-cort-train -in reference.data -out model.objmodel-cort-train.obj -extractor cort.coreference.approaches.mention_pairs.extract_training_substructures -perceptron cort.coreference.approaches.mention_pairs.MentionPairsPerceptron -cost_function cort.coreference.cost_functions.null_cost
+cort-train -in reference.data -out model.obj -extractor cort.coreference.approaches.mention_pairs.extract_training_substructures -perceptron cort.coreference.approaches.mention_pairs.MentionPairsPerceptron -cost_function cort.coreference.cost_functions.null_cost
 ```
 
 To predict with the mention pair model, use
@@ -276,16 +277,16 @@ Methods in Natural Language Processing (EMNLP)*, Doha, Qatar, 25-29 October
 2014, pages 2070-2081. http://aclweb.org/anthology/D/D14/D14-1221.pdf
 
 Sebastian Martschat, Thierry Göckel and Michael Strube (2015). **Analyzing and 
-Visualizing Coreference Resolution Errors**. To appear in *Proceedings of the 
-Demonstration Session of the 2015 Conference of the North American Chapter of 
-the Association for Computational Linguistics – Human Language Technologies 
-(NAACL HLT 2015)*, Denver, Colorado, USA, 31 May-5 June 2015.
+Visualizing Coreference Resolution Errors**. In *Proceedings of the 2015 
+Conference of the North American Chapter of the Association for Computational 
+Linguistics: Demonstrations*, Denver, Colorado, USA, 31 May-5 June 2015,
+pages 6-10. https://aclweb.org/anthology/N/N15/N15-3002.pdf
 
 If you use this toolkit in your research, please cite the EMNLP'14 paper.
 
 ## Changelog
 
-__Thursday, 28 May 2015__  
+__Sunday, 31 May 2015__  
 Updated to status of NAACL'15 demo paper.
 
 __Wednesday, 13 May 2015__  

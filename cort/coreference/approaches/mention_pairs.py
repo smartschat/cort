@@ -172,3 +172,6 @@ class MentionPairsPerceptron(perceptrons.Perceptron):
 
         return ([arc], [label], [score], [arc], [coref_label], [coref_score],
                 label == coref_label)
+
+    def get_labels(self):
+        return ["+", "-"]

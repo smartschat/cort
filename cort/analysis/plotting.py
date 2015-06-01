@@ -1,6 +1,8 @@
 """ Plot error analysis statistics. """
 
-from matplotlib import patches
+from __future__ import division
+
+
 from matplotlib import pyplot
 from matplotlib import cm
 

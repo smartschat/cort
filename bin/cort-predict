@@ -3,12 +3,9 @@
 
 from __future__ import print_function
 import argparse
-
-
+import codecs
 import logging
-import os
 import pickle
-import subprocess
 
 from cort.core import corpora
 from cort.core import mention_extractor
@@ -110,7 +107,6 @@ logging.info("Loading model.")
 priors, weights = pickle.load(open(args.model, "rb"))
 
 perceptron = import_helper.import_from_path(args.perceptron)(
-    labels=extractor.get_labels(),
     priors=priors,
     weights=weights,
     cost_scaling=0
@@ -121,7 +117,8 @@ logging.basicConfig(level=logging.INFO,
 
 logging.info("Reading in data.")
 testing_corpus = corpora.Corpus.from_file("testing",
-                                           open(args.input_filename))
+                                           codecs.open(args.input_filename,
+                                                       "r", "utf-8"))
 
 logging.info("Extracting system mentions.")
 for doc in testing_corpus:
