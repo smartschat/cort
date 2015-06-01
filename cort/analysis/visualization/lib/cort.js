@@ -52,18 +52,35 @@ var CortVisualisation = {
         this.scrollTo(docInNavi);
     },
 
+    getNeighbouringMentions: function (elements) {
+        "use strict";
+        var neighbours = $();
+        var docId = this.docId;
+        elements.each(function(){
+            var that = this;
+            $(this).parents(".mention").add($(this).children(".mention")).each(function(){               
+                if ($(this).attr("data-span") === $(that).attr("data-span")){
+                    neighbours = neighbours.add($(this)).add($(docId + " .navcontainer ." + $(this).attr("class").split(" ")[0]));
+                }
+            });
+        });
+
+        return neighbours;
+    },
+
     highlightElements: function (elements) {
         "use strict";
 
         this.clearHighlight();
         elements = elements || $(this.docId).find(".mention");
+        elements = elements.add(this.getNeighbouringMentions(elements));
         var that = this;
         elements.each(function() {
             // Add additional padding to nesting mentions
             if ($(this).children().hasClass("mention") && 
                 (!$(this).parents().hasClass("mention") || 
-                    $(this).parents(".mention").attr("data-mentionhead") !==
-                    $(this).attr("data-mentionhead")))
+                    $(this).parents(".mention").attr("data-span") !==
+                    $(this).attr("data-span")))
             {
                 $(this).css("padding", "4px 2px");
             }
@@ -131,25 +148,7 @@ var CortVisualisation = {
                 target: t_ant_bis
             }, jsPlumbSettings);
         });
-    },
-
-    getNeighbouringMentions: function (elements) {
-        "use strict";
-        var neighbours = $();
-        var docId = this.docId;
-        elements.each(function(){
-            var that = this;
-            $(this).parents(".mention").add($(this).children(".mention")).each(function(){
-                if ($(this).attr("data-mentionhead") === $(that).attr("data-mentionhead")){
-                    neighbours = neighbours.add($(this)).add($(docId + " .navcontainer ." + $(this).attr("class").split(" ")[0]));
-                }
-            });
-        });
-
-        return neighbours;
-
     }
-
 };
 
 $(function (){

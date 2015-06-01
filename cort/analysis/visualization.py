@@ -189,6 +189,8 @@ class Visualizer:
                 mention_type = html.escape("".join(mention.attributes[
                     'type']), True)
 
+                mention_span = str(mention.span)
+
                 if mention in annotated_mentions and \
                    mention not in processed_gold_mentions:
                     system = "gold"
@@ -222,7 +224,8 @@ class Visualizer:
                             "id=\"" + span_id + "\" " \
                             "class=\"" + chain_id + " mention\" " \
                             "data-mentiontype=\"" + mention_type + "\" " \
-                            "data-mentionhead=\"" + mention_head + "\">"
+                            "data-mentionhead=\"" + mention_head + "\" " \
+                            "data-span=\"" + mention_span + "\">"
 
                 if mention.span.begin == index and mention.span.end == index:
                     if mention_text.endswith("</span> "):

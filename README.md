@@ -286,6 +286,9 @@ If you use this toolkit in your research, please cite the EMNLP'14 paper.
 
 ## Changelog
 
+__Monday, 1 June 2015__  
+Fixed a bug in mention highlighting for visualization.
+
 __Sunday, 31 May 2015__  
 Updated to status of NAACL'15 demo paper.
 
