@@ -335,7 +335,16 @@ class StructuredCoreferenceAnalysis:
         self.mapping = mapping
 
     def __iter__(self):
-        return self.mapping.__iter__()
+        """ Iterate over all errors (recursively) contained in this
+        StructuredCoreferenceAnalysis.
+        """
+        for key, val in self.mapping.items():
+            if isinstance(val, StructuredCoreferenceAnalysis):
+                for inner_val in val.__iter__():
+                    yield inner_val
+            else:
+                for datum in val:
+                    yield datum
 
     def __len__(self):
         """ Return the number of all errors contained in this

@@ -30,8 +30,6 @@ def fine_type(mention):
         mention_fine_type = mention.attributes["type"]
 
     if not mention_fine_type:
-        logger = logging.getLogger("warnings")
-        logger.debug("Does not have fine type: " + str(mention))
         mention_fine_type = "NONE"
 
     return "fine_type=" + mention_fine_type

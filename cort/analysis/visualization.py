@@ -323,12 +323,12 @@ class Visualizer:
         precision_categories = set()
 
         if isinstance(recall_errors, data_structures.StructuredCoreferenceAnalysis):
-            for cat in recall_errors:
+            for cat in recall_errors.keys():
                 if len(recall_errors[cat]) > 0:
                     recall_categories.add(cat)
 
         if isinstance(precision_errors, data_structures.StructuredCoreferenceAnalysis):
-            for cat in precision_errors:
+            for cat in precision_errors.keys():
                 if len(precision_errors[cat]) > 0:
                     precision_categories.add(cat)
 
