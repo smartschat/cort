@@ -196,10 +196,15 @@ class Corpus:
             }
         }
 
+        all_decisions = set()
+
         for doc in self.documents:
-            antecedent_decisions[self.description]["decisions"]["all"].update(
-                doc.get_antecedent_decisions(which_mentions)
-            )
+            doc_decisions = doc.get_antecedent_decisions(which_mentions)
+            for ana, ante in doc_decisions.items():
+                all_decisions.add((ana, ante))
+
+        antecedent_decisions[self.description]["decisions"]["all"] = \
+            data_structures.EnhancedSet(all_decisions)
 
         return data_structures.StructuredCoreferenceAnalysis(
             antecedent_decisions, {self.description: self}, None)

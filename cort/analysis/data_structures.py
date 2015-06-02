@@ -476,8 +476,17 @@ class StructuredCoreferenceAnalysis:
                 elif construct_type == "filter":
                     constructed_mapping[key] = val.filter(function)
             else:
-                constructed_mapping[key] = {}
-                self._construct_helper(constructed_mapping[key],
+                if key not in constructed_mapping:
+                    new_corpora = self.corpora
+
+                    if isinstance(mapping, StructuredCoreferenceAnalysis):
+                        new_corpora.update(mapping.corpora)
+
+                    constructed_mapping[key] = \
+                        StructuredCoreferenceAnalysis({}, new_corpora,
+                                                      self.reference)
+
+                self._construct_helper(constructed_mapping[key].mapping,
                                        mapping,
                                        position + [key],
                                        function,
