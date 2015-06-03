@@ -288,7 +288,7 @@ If you use this toolkit in your research, please cite the EMNLP'14 paper.
 
 ## Changelog
 
-__Wednesday, 1 June 2015__  
+__Wednesday, 3 June 2015__  
 Improvements to visualization (mention highlighting and scrolling).
 
 __Monday, 1 June 2015__  
