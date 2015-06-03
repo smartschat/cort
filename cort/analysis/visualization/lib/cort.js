@@ -76,14 +76,6 @@ var CortVisualisation = {
         elements = elements.add(this.getNeighbouringMentions(elements));
         var that = this;
         elements.each(function() {
-            // Add additional padding to nesting mentions
-            if ($(this).children().hasClass("mention") && 
-                (!$(this).parents().hasClass("mention") || 
-                    $(this).parents(".mention").attr("data-span") !==
-                    $(this).attr("data-span")))
-            {
-                $(this).css("padding", "4px 2px");
-            }
             var mentionClass = $(this).attr("class").split(" ")[0];
             $(this).css("background-color", that.chain_to_colour[mentionClass]);
             if ($(this).attr("class").indexOf("gold") === 0){
@@ -300,16 +292,6 @@ $(function (){
         return visible;
 
     };
-
-    $(window).scroll(function(){
-        if ($(this).scrollTop() > 100){ // header height?
-            $("#documentsNavi").css("top", "5px");
-            $(cort.docId + " .navcontainer").css("top", "210px"); // 5 + documentsNavi height?
-        } else {
-            $("#documentsNavi").css("top", (100 - $(this).scrollTop()) + "px");  // header height?
-            $(cort.docId + " .navcontainer").css("top", (305 - $(this).scrollTop()) + "px"); // ??
-        }
-    });
 
     $(window).resize(function(){
         cort.jsPlumb.repaintEverything();

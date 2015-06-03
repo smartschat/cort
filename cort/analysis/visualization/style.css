@@ -20,9 +20,12 @@ h3 {
     background-color: rgb(1,70,153);
     margin: 0;
     padding: 5px;
-    height: 70px;
+    height: 50px;
     width: 100%;
     color: white;
+    position: fixed;
+    top: 0;
+    z-index: 25;
 }
 
 #documentsNavi {
@@ -30,6 +33,7 @@ h3 {
     padding: 0;
     width: 225px; /* Must be same as .navcontainer*/
     position: fixed;
+    top: 60px;
     float: left;
 }
 
@@ -37,7 +41,7 @@ h3 {
     margin: 5px 0 0 10px;
     padding: 5px 0;
     list-style-type: none;
-    height: 150px;
+    height: 100px;
     overflow: auto;
     font-size: .8em;
     background-color: #bbbbbb;
@@ -67,7 +71,7 @@ h3 {
 
 /* Contains navigation bars and the document text itself */
 .document {
-    margin: 0 10px 0 0;
+    margin: 80px 10px 0 0;
     padding: 0;
     display: none;
     min-height: 600px;
@@ -81,7 +85,7 @@ h3 {
     margin: 0;
     padding: 0;
     position: fixed;
-    top: 285px;
+    top: 200px;
     width: 225px;
 }
 
@@ -100,7 +104,7 @@ h3 {
 }
 
 .navcontainer > div h3:hover {
-	display: inline-block;
+    display: inline-block;
     cursor: pointer;
 }
 
@@ -114,17 +118,17 @@ h3 {
     padding: 5px 0;
     list-style-type: none;
     overflow-y: auto;
-    max-height: 150px;
+    max-height: 80px;
     font-size: .8em;
     background-color: #bbbbbb;
 }
 
 div.navcontainer div ul li:nth-child(even) {
-	background-color: #bbbbbb;
+    background-color: #bbbbbb;
 }
 
 div.navcontainer div ul li:nth-child(odd) {
-	background-color: #cccccc;
+    background-color: #cccccc;
 }
 
 .navcontainer > div ul li {
@@ -142,14 +146,14 @@ div.errorsNavi {
 }
 
 div.errorsNavi h4 {
-	margin: 0;
-	padding: 2px;
-	font-size: .9em;
-	font-weight: light;
+    margin: 0;
+    padding: 2px;
+    font-size: .9em;
+    font-weight: light;
 }
 
 div.errorsNavi h4:hover {
-	display: inline-block;
+    display: inline-block;
     cursor: pointer;
 }
 
@@ -164,11 +168,11 @@ div.errorsNavi > div {
 }
 
 .precisionErrors, .recallErrors {
-	margin: 0;
-	padding: 5px 0;
-	list-style-type: none;
-	font-size: .8em;
-    height: 100px;
+    margin: 0;
+    padding: 5px 0;
+    list-style-type: none;
+    font-size: .8em;
+    height: 80px;
     overflow: auto;
 }
 
@@ -212,7 +216,6 @@ ol.text > li:before {
 
 ol.text span.mention {
     margin: 0;
-    padding: 2px;
     display: inline;
     border-radius: 0.5em;
 }
@@ -221,17 +224,27 @@ ol.text span.mention:hover {
     cursor: pointer;
 }
 
-.goldBorder {
-	border: 3px solid gold;
+div ol.text .goldBorder {
+    border: 3px solid gold;
 }
 
-.blueBorder {
-	border: 3px solid blue;
+div ol.text .blueBorder {
+    border: 3px solid blue;
+}
+
+ol.text *[class^='system']{
+    border: 1px solid blue;
+    padding: 5px;
+}
+
+ol.text *[class^='gold']{
+    border: 1px solid gold;
+    padding: 2px;
 }
 /*
 span.transparentBg, .goldNavi ul li.transparentBg, .systemNavi ul li.transparentBg {
-	background-color: transparent;
-	border: 3px solid transparent;
+    background-color: transparent;
+    border: 3px solid transparent;
 }
 */
 .label {

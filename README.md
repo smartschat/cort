@@ -160,6 +160,8 @@ We use color to distinguish between entities: mentions in different entities
 have different background colors. Additionally mentions in reference entities 
 have a yellow border, while mentions in system entities have a blue border.
 
+The visualization relies on [jQuery](https://jquery.org/) and 
+[jsPlumb](http://www.jsplumb.org/). The libraries are contained in our toolkit.
 
 ### Plotting
 
@@ -285,6 +287,9 @@ pages 6-10. https://aclweb.org/anthology/N/N15/N15-3002.pdf
 If you use this toolkit in your research, please cite the EMNLP'14 paper.
 
 ## Changelog
+
+__Wednesday, 1 June 2015__  
+Improvements to visualization (mention highlighting and scrolling).
 
 __Monday, 1 June 2015__  
 Fixed a bug in mention highlighting for visualization.
