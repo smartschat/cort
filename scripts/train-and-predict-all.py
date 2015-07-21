@@ -49,7 +49,7 @@ data_sets = ["dev", "test"]
 for system in systems:
     print("Training", system, "on train.")
     subprocess.call([
-        "./cort-train",
+        "cort-train",
         "-in", "/data/nlp/martscsn/thesis/data/input/train.auto",
         "-out", "model-" + system + "train.obj",
         "-extractor", get_extractor("train", system),
@@ -59,7 +59,7 @@ for system in systems:
 
     print("Training", system, "on dev+train.")
     subprocess.call([
-        "./cort-train",
+        "cort-train",
         "-in", "/data/nlp/martscsn/thesis/data/input/train+dev.auto",
         "-out", "model-" + system + "train+dev.obj",
         "-extractor", get_extractor("train", system),
@@ -75,7 +75,7 @@ for system in systems:
             model = system + "-model-train+dev.obj"
 
         subprocess.call([
-            "./cort-predict",
+            "cort-predict",
             "-in", "/data/nlp/martscsn/thesis/data/input/" + data_set +
             ".auto",
             "-model", model,
