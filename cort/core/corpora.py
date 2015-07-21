@@ -1,13 +1,17 @@
 """ Represent and manipulate text collections as a list of documents."""
 
 from collections import defaultdict
-
+import multiprocessing
 
 from cort.analysis import data_structures
 from cort.core import documents
 from cort.core import spans
 
 __author__ = 'smartschat'
+
+
+def from_string(string):
+    return documents.CoNLLDocument(string)
 
 
 class Corpus:
@@ -18,7 +22,7 @@ class Corpus:
 
     Attributes:
         description(str): A human-readable description of the corpus.
-        documents (list(CoNLLDocument)): A list of CoNLL documents.
+        documents (list(Document)): A list of CoNLL documents.
     """
 
     def __init__(self, description, corpus_documents):
@@ -26,7 +30,7 @@ class Corpus:
 
         Args:
             description (str): A human-readable description of the corpus.
-            documents (list(CoNLLDocument)): A list of CoNLL documents.
+            documents (list(Document)): A list of documents.
         """
         self.description = description
         self.documents = corpus_documents
@@ -59,21 +63,28 @@ class Corpus:
         if coref_file is None:
             return []
 
-        documents_from_file = []
+        document_as_strings = []
 
         current_document = ""
 
         for line in coref_file.readlines():
             if line.startswith("#begin") and current_document != "":
-                doc = documents.CoNLLDocument(current_document)
-                documents_from_file.append(doc)
+                document_as_strings.append(current_document)
                 current_document = ""
             current_document += line
 
-        doc = documents.CoNLLDocument(current_document)
-        documents_from_file.append(doc)
+        document_as_strings.append(current_document)
 
-        return Corpus(description, sorted(documents_from_file))
+        pool = multiprocessing.Pool(maxtasksperchild=1)
+        results = pool.map(from_string,
+                           document_as_strings)
+
+        pool.close()
+        pool.join()
+
+        return Corpus(description, sorted(doc for doc in results))
+
+
 
     def write_to_file(self, file):
         """Write a string representation of the corpus to a file,
@@ -97,18 +108,6 @@ class Corpus:
         for document in self.documents:
             document.write_antecedent_decisions_to_file(file)
 
-    def get_genre_to_doc_map(self):
-        """Return a map from genre identifiers to a documents of such genre.
-
-        Returns:
-            defaultdict(str, list): A mapping from genres to
-            a list of documents.
-        """
-        genre_to_doc = defaultdict(list)
-        for doc in self.documents:
-            genre_to_doc[doc.genre].append(doc)
-        return genre_to_doc
-
     def read_antecedents(self, file):
         """Augment corpus with antecedent decisions read from a file.
 
@@ -116,12 +115,11 @@ class Corpus:
         from the antecedents file. Input files should have one antecedent
         decision per line, where entries are separated by tabs. The format is
 
-            doc_id  doc_part    (anaphor_start, anaphor_end)    (ante_start, ante_end)
+            doc_identifier   (anaphor_start, anaphor_end)    (ante_start, ante_end)
 
         where
-            - doc_id is the id as in the first column of the CoNLL original
-              data,
-            - doc_part is the part number (with trailing 0s),
+            - doc_id is the identifier in the first line of an CoNLL document
+              after #begin document, such as (bc/cctv/00/cctv_0000); part 000
             - anaphor_start is the position in the document where the anaphor
               begins (counting from 0),
             - anaphor_end is the position where the anaphor ends (inclusive),
@@ -135,16 +133,14 @@ class Corpus:
         for line in file.readlines():
             splitted = line.split("\t")
             doc_id = splitted[0]
-            part_id = splitted[1]
-            span_anaphor = splitted[2]
-            span_antecedent = splitted[3]
-            doc_identifier_to_pairs[(doc_id, part_id)].append(
+            span_anaphor = splitted[1]
+            span_antecedent = splitted[2]
+            doc_identifier_to_pairs[doc_id].append(
                 (spans.Span.parse(span_anaphor), spans.Span.parse(
                     span_antecedent)))
 
         for doc in self.documents:
-            pairs = sorted(doc_identifier_to_pairs[
-                (doc.folder + doc.id, doc.part)])
+            pairs = sorted(doc_identifier_to_pairs[doc.identifier])
             doc.get_annotated_mentions_from_antecedent_decisions(pairs)
 
     def read_coref_decisions(self,

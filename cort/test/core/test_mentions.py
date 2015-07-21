@@ -235,6 +235,29 @@ nw/wsj/24/wsj_2413   0   31             .      .               *))         -    
                 Span(3, 3),
                 self.for_head_document).attributes["head_as_lowercase_string"])
 
+    def test_mention_get_governor(self):
+        expected = "massacred"
+        self.assertEqual(
+            expected,
+            Mention.from_document(
+                Span(0, 1),
+                self.real_document).attributes["governor"])
+
+    def test_mention_get_ancestry(self):
+        expected = "-L-VBN-L-NONE"
+        self.assertEqual(
+            expected,
+            Mention.from_document(
+                Span(11, 11),
+                self.real_document).attributes["ancestry"])
+
+        expected = "-R-NNS-R-VBN"
+        self.assertEqual(
+            expected,
+            Mention.from_document(
+                Span(0, 0),
+                self.real_document).attributes["ancestry"])
+
     def test_mention_get_head_span(self):
         self.assertEqual(
             Span(9, 10),

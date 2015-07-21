@@ -1,9 +1,10 @@
 from distutils.core import setup
+from Cython.Build import cythonize
 
 
 setup(
     name='cort',
-    version='0.1.5.3',
+    version='0.2',
     packages=['cort',
               'cort.analysis',
               'cort.core',
@@ -14,11 +15,14 @@ setup(
               'cort.test.core',
               'cort.coreference.multigraph',
               'cort.coreference.approaches',
-              'cort.util'],
+              'cort.util',
+              'cort.preprocessing',
+              'StanfordDependencies',
+              'stanford_corenlp_pywrapper'],
 
     url='http://github.com/smartschat/cort',
     license='MIT',
-    author='Sebastian Martschat, Thierry Goeckel',
+    author='Sebastian Martschat, Thierry Goeckel, Patrick Claus',
     author_email='sebastian.martschat@gmail.com',
     description='A coreference resolution research toolkit.',
     keywords = ['NLP', 'CL', 'natural language processing',
@@ -27,16 +31,28 @@ setup(
     classifiers = [
         'Intended Audience :: Science/Research',
         'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.3',
         'Topic :: Scientific/Engineering',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Text Processing',
         ],
-    install_requires=['nltk', 'numpy', 'matplotlib', 'mmh3', 'future'],
+    install_requires=['nltk', 'numpy', 'matplotlib', 'mmh3', 'cython',
+                      'future', 'jpype1', 'beautifulsoup4'],
     package_data={
         'cort': ['analysis/visualization/style.css',
                  'analysis/visualization/lib/*',
-                 'resources/*']
+                 'resources/*',
+                 "reference-coreference-scorers/v8.01/*.*",
+                 "reference-coreference-scorers/v8.01/lib/*.pm",
+                 "reference-coreference-scorers/v8.01/lib/Algorithm/*",
+                 "reference-coreference-scorers/v8.01/lib/Data/*",
+                 "reference-coreference-scorers/v8.01/lib/Math/*"],
+        'stanford_corenlp_pywrapper': ['rcorenlp.r',
+                                       'lib/*',
+                                       'javasrc/corenlp/*',
+                                       'javasrc/util/misc/*',
+                                       'javasrc/util/*.java'],
     },
     scripts=['bin/cort-train', 'bin/cort-predict', 'bin/run-multigraph'],
+    ext_modules = cythonize("cort/coreference/perceptrons.pyx")
 )

@@ -122,12 +122,14 @@ class Mention:
             Mention: A mention extracted from the input span in the input
             document.
         """
+
+        i, sentence_span = document.get_sentence_id_and_span(span)
+
         attributes = {
             "tokens": document.tokens[span.begin:span.end + 1],
             "pos": document.pos[span.begin:span.end + 1],
             "ner": document.ner[span.begin:span.end + 1],
-            "sentence_id": document.sentence_spans_to_id[
-                document.get_embedding_sentence(span)],
+            "sentence_id": i,
             "parse_tree": mention_property_computer.get_relevant_subtree(
                 span, document),
             "speaker": document.speakers[span.begin],
@@ -180,7 +182,42 @@ class Mention:
         attributes["tokens_as_lowercase_string"] = " ".join(attributes[
             "tokens"]).lower()
 
+        dep_tree = document.dep[i]
+
+        index = span.begin + head_index - sentence_span.begin
+
+        governor_id = dep_tree[index].head - 1
+
+        if governor_id == -1:
+            attributes["governor"] = "NONE"
+        else:
+            attributes["governor"] = dep_tree[governor_id].form.lower()
+
+        attributes["ancestry"] = Mention._get_ancestry(dep_tree, index)
+
+        attributes["deprel"] = dep_tree[index].deprel
+
         return Mention(document, span, attributes)
+
+    @staticmethod
+    def _get_ancestry(dep_tree, index, level=0):
+        if level >= 2:
+            return ""
+        else:
+            governor_id = dep_tree[index].head - 1
+
+            direction = "L"
+
+            if governor_id > index:
+                direction = "R"
+
+            if governor_id == -1:
+                return  "-" + direction + "-NONE"
+            else:
+                return "-" + direction + "-" + dep_tree[governor_id].pos + \
+                    Mention._get_ancestry(dep_tree, governor_id, level+1)
+
+
 
     def __lt__(self, other):
         """ Check whether this mention is less than another mention.
@@ -232,13 +269,9 @@ class Mention:
         if self.document is None:
             return hash((self.span.begin, self.span.end))
         elif self.span is None:
-            return hash((self.document.folder,
-                         self.document.id,
-                         self.document.part))
+            return hash(self.document.identifier)
         else:
-            return hash((self.document.folder,
-                         self.document.id,
-                         self.document.part,
+            return hash((self.document.identifier,
                          self.span.begin,
                          self.span.end))
 

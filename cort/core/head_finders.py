@@ -2,7 +2,6 @@
 
 import re
 
-from cort.core import nltk_util
 from cort.core import spans
 
 __author__ = 'smartschat'
@@ -64,7 +63,7 @@ class HeadFinder:
         """
         head = None
 
-        label = nltk_util.get_label(tree)
+        label = tree.label()
 
         if len(tree) == 1:
             if tree.height() == 3:
@@ -100,7 +99,7 @@ class HeadFinder:
             return self.__collins_rule_last_word(tree)
 
     def __get_head_for_nonterminal(self, tree):
-        label = nltk_util.get_label(tree)
+        label = tree.label()
         values, traverse_reversed = self.__nonterminal_rules[label]
         if traverse_reversed:
             to_traverse = reversed(tree)
@@ -108,7 +107,7 @@ class HeadFinder:
             to_traverse = tree
         for val in values:
             for child in to_traverse:
-                label = nltk_util.get_label(child)
+                label = child.label()
                 if val == "*" or label == val:
                     if label in self.__nonterminals:
                         return self.get_head(child)
@@ -116,9 +115,9 @@ class HeadFinder:
                         return child
 
     def __rule_cc(self, tree):
-        if nltk_util.get_label(tree) == "NP":
+        if tree.label() == "NP":
             for child in tree:
-                if nltk_util.get_label(child) == "CC":
+                if child.label() == "CC":
                     return child
 
     def __collins_rule_pos(self, tree):
@@ -127,36 +126,36 @@ class HeadFinder:
 
     def __collins_rule_nn(self, tree):
         for i in range(len(tree)-1, -1, -1):
-            if re.match("NN|NNP|NNPS|JJR", nltk_util.get_label(tree[i])):
+            if re.match("NN|NNP|NNPS|JJR", tree[i].label()):
                 return tree[i]
-            elif nltk_util.get_label(tree[i]) == "NX":
+            elif tree[i].label() == "NX":
                 return self.get_head(tree[i])
 
     def __collins_rule_np(self, tree):
         for child in tree:
-            if nltk_util.get_label(child) == "NP":
+            if child.label() == "NP":
                 return child
 
     def __collins_rule_nml(self, tree):
         for child in tree:
-            if nltk_util.get_label(child) == "NML":
+            if child.label() == "NML":
                 return child
 
     def __collins_rule_prn(self, tree):
         for child in tree:
-            if nltk_util.get_label(child) == "PRN":
+            if child.label() == "PRN":
                 return self.get_head(child[0])
 
     def __collins_rule_cd(self, tree):
         for i in range(len(tree)-1, -1, -1):
-            if re.match("CD", nltk_util.get_label(tree[i])):
+            if re.match("CD", tree[i].label()):
                 return tree[i]
 
     def __collins_rule_jj(self, tree):
         for i in range(len(tree)-1, -1, -1):
-            if re.match("JJ|JJS|RB", nltk_util.get_label(tree[i])):
+            if re.match("JJ|JJS|RB", tree[i].label()):
                 return tree[i]
-            elif nltk_util.get_label(tree[i]) == "QP":
+            elif tree[i].label() == "QP":
                 return self.get_head(tree[i])
 
     def __collins_rule_last_word(self, tree):

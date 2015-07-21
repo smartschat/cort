@@ -1,9 +1,10 @@
 import unittest
 
+import nltk
+
 from cort.core import documents
 from cort.core import mention_extractor
 from cort.core import mentions
-from cort.core import nltk_util
 from cort.core import spans
 
 
@@ -75,21 +76,21 @@ mz/sinorama/10/ectb_1050        6       12      ?       .       *))     -       
         self.another_real_document = documents.CoNLLDocument(
             self.another_real_example)
 
-        self.tree = nltk_util.parse_parented_tree(
+        self.tree = nltk.ParentedTree.fromstring(
             "(NP (NP (NP (PRP$ his) (NN brother) (POS 's)) (NN wedding)) "
             "(PP (IN in) (NP (NNP Khan) (NNPS Younes))))")
 
-        self.proper_name_mention_tree = nltk_util.parse_parented_tree(
+        self.proper_name_mention_tree = nltk.ParentedTree.fromstring(
             "(NP (NNP Taiwan) (POS 's))")
         self.proper_name_mention_ner = ["GPE", "NONE"]
 
-        self.apposition_tree = nltk_util.parse_parented_tree(
+        self.apposition_tree = nltk.ParentedTree.fromstring(
             "(NP (NP (NP (NNP Secretary)) (PP (IN of) (NP (NNP State)))) "
             "(NP (NNP Madeleine) (NNP Albright)))")
 
         self.apposition_ner = ["NONE", "NONE", "NONE", "PERSON", "PERSON"]
 
-        self.more_proper_name_tree = nltk_util.parse_parented_tree(
+        self.more_proper_name_tree = nltk.ParentedTree.fromstring(
             "(NP (NP (DT the) (NNP General) (NNP Secretary)) (PP (IN of) "
             "(NP (DT the) (NNP CCP))))")
 
@@ -290,7 +291,7 @@ mz/sinorama/10/ectb_1050        6       12      ?       .       *))     -       
                 all_mentions_1))
 
     def test_post_process_appositions(self):
-        three_children_tree = nltk_util.parse_parented_tree(
+        three_children_tree = nltk.ParentedTree.fromstring(
             "(NP (NP (NP (NP (DT The) (NNP ROC) (POS 's)) (NN ambassador)) "
             "(PP (IN to) (NP (NNP Nicaragua)))) (, ,) (NP (NNP Antonio) "
             "(NNP Tsai)) (, ,))")
@@ -363,7 +364,7 @@ mz/sinorama/10/ectb_1050        6       12      ?       .       *))     -       
             mention_extractor.post_process_appositions(
                 three_children_all_mentions))
 
-        two_children_tree = nltk_util.parse_parented_tree(
+        two_children_tree = nltk.ParentedTree.fromstring(
             "(NP (NP (NP (NNP Secretary)) (PP (IN of) (NP (NNP State)))) "
             "(NP (NNP Madeleine) (NNP Albright)))")
 

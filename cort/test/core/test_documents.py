@@ -4,6 +4,7 @@ from cort.core.mentions import Mention
 from cort.core.spans import Span
 from cort.core.documents import CoNLLDocument
 
+import nltk
 
 __author__ = 'smartschat'
 
@@ -51,7 +52,7 @@ bn/voa/02/voa_0220   0   13              .     .            *))         -    -  
 
 #end document
 """
-        self.complicated_mention_example = """#begin document (/test2);	part 000
+        self.complicated_mention_example = """#begin document (/test2); part 000
 test2	0	0	This    NN   (NP*	-   -   -   -   -   (0)
 test2	0	1	is  NN	*   -   -   -   -   -   -
 test2	0	2	just    NN   *	-   -   -   -   -   -
@@ -130,20 +131,15 @@ bn/abc/00/abc_0030      0       28      .       .       *))     -       -       
 
         self.maxDiff = None
 
-    def test_get_id(self):
-        self.assertEqual("voa_0220", self.real_document.id)
-
-    def test_get_part(self):
-        self.assertEqual("000", self.real_document.part)
-
-    def test_get_folder(self):
-        self.assertEqual("bn/voa/02/", self.real_document.folder)
+    def test_get_identifier(self):
+        self.assertEqual("(bn/voa/02/voa_0220); part 000",
+                         self.real_document.identifier)
 
     def test_get_tokens(self):
         tokens = ["Unidentified", "gunmen", "in", "north", "western",
-                  "Colombia", "have", "massacred", "at", "least", "twelve", \
+                  "Colombia", "have", "massacred", "at", "least", "twelve",
                   "peasants", "in", "the", "second", "such", "incident", "in",
-                  "as", "many", "days", ".", "Local", "police", "say", \
+                  "as", "many", "days", ".", "Local", "police", "say",
                   "it", "'s", "not", "clear", "who", "was", "responsible",
                   "for", "the", "massacre", "."]
         self.assertEqual(tokens, self.real_document.tokens)
@@ -178,27 +174,24 @@ bn/abc/00/abc_0030      0       28      .       .       *))     -       -       
         self.assertEqual(complicated, self.complicated_mention_document.coref)
 
     def test_extract_sentence_spans(self):
-        sentence_spans_to_ids = {Span(0, 21): 0, Span(22, 35): 1}
+        sentence_spans = [Span(0, 21), Span(22, 35)]
 
-        self.assertEqual(sentence_spans_to_ids,
-                         self.real_document.sentence_spans_to_id)
+        self.assertEqual(sentence_spans,
+                         self.real_document.sentence_spans)
 
-    def test_get_embedding_sentence(self):
-        expected = Span(22, 35)
-        self.assertEqual(expected, self.real_document.get_embedding_sentence(
+    def test_get_sentence_id_and_span(self):
+        expected = 1, Span(22, 35)
+        self.assertEqual(expected, self.real_document.get_sentence_id_and_span(
             Span(23, 24)))
 
-    def test_get_parse(self):
-        expected = "(TOP (S (NP (JJ Local) (NNS police)) (VP (VBP say) " \
-                   "(SBAR (S (NP (PRP it)) (VP (VBZ 's) (RB not) " \
-                   "(ADJP (JJ clear)) (SBAR (WHNP (WP who)) (S (VP (VBD was) " \
-                   "(ADJP (JJ responsible) (PP (IN for) (NP (DT the) (NN " \
-                   "massacre))))))))))) (. .)))"
-        self.assertEqual(expected, self.real_document.get_parse(Span(22, 35)))
-
-    def test_get_genre(self):
-        self.assertEqual("bn", self.real_document.genre)
-        self.assertEqual("unknown", self.complicated_mention_document.genre)
+    def test_parse(self):
+        expected = nltk.ParentedTree.fromstring(
+            "(TOP (S (NP (JJ Local) (NNS police)) (VP (VBP say) "
+            "(SBAR (S (NP (PRP it)) (VP (VBZ 's) (RB not) "
+            "(ADJP (JJ clear)) (SBAR (WHNP (WP who)) (S (VP (VBD was) "
+            "(ADJP (JJ responsible) (PP (IN for) (NP (DT the) (NN "
+            "massacre))))))))))) (. .)))")
+        self.assertEqual(expected, self.real_document.parse[1])
 
     def test_get_string_representation(self):
         expected = """#begin document (/test2); part 000

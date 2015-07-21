@@ -3,15 +3,18 @@
 
 import array
 import multiprocessing
+import sys
 
 
 import mmh3
+from pickle import PicklingError
 import numpy
 
 
 __author__ = 'martscsn'
 
 
+# for python 2 multiprocessing
 def unwrap_extract_doc(arg, **kwarg):
     return InstanceExtractor._extract_doc(*arg, **kwarg)
 
@@ -91,46 +94,65 @@ class InstanceExtractor:
                   containing the costs of wrongly predicting an arc.
         """
 
-        pool = multiprocessing.Pool(maxtasksperchild=1)
-        results = pool.map(unwrap_extract_doc,
-                           zip([self]*len(corpus.documents), corpus.documents))
-
-        pool.close()
-        pool.join()
-
         all_substructures = []
         arc_information = {}
 
         id_to_doc_mapping = {}
         for doc in corpus:
-            id_to_doc_mapping[(doc.folder, doc.id, doc.part)] = doc
+            id_to_doc_mapping[doc.identifier] = doc
 
-        for result in results:
-            doc_identifier, anaphors, antecedents, features, costs, \
-                consistency, feature_mapping, substructures_mapping = result
+        slice_size = len(corpus.documents)
 
-            doc = id_to_doc_mapping[doc_identifier]
+        for num in range(0, len(corpus.documents), slice_size):
+            docs = corpus.documents[num:num+slice_size]
 
-            for i in range(0, len(substructures_mapping)-1):
-                struct = []
-                begin = substructures_mapping[i]
-                end = substructures_mapping[i+1]
+            pool = multiprocessing.Pool(maxtasksperchild=1)
 
-                for pair_index in range(begin, end):
-                    arc = (doc.system_mentions[anaphors[pair_index]],
-                           doc.system_mentions[antecedents[pair_index]])
+            if sys.version_info[0] == 2:
+                results = pool.map(unwrap_extract_doc,
+                                   zip([self]*len(corpus.documents),
+                                       corpus.documents))
+            else:
+                results = pool.map(self._extract_doc, docs)
 
-                    struct.append(arc)
+            pool.close()
+            pool.join()
 
-                    features_start = feature_mapping[pair_index]
-                    features_end = feature_mapping[pair_index+1]
+            for result in results:
+                doc_identifier, anaphors, antecedents, features, costs, \
+                    consistency, feature_mapping, substructures_mapping = result
 
-                    arc_information[arc] = \
-                        (numpy.array(features[features_start:features_end]),
-                         costs[pair_index],
-                         consistency[pair_index])
+                doc = id_to_doc_mapping[doc_identifier]
 
-                all_substructures.append(struct)
+                for i in range(0, len(substructures_mapping)-1):
+                    struct = []
+                    begin = substructures_mapping[i]
+                    end = substructures_mapping[i+1]
+
+                    for pair_index in range(begin, end):
+                        arc = (doc.system_mentions[anaphors[pair_index]],
+                               doc.system_mentions[antecedents[pair_index]])
+
+                        struct.append(arc)
+
+                        features_start = feature_mapping[pair_index]
+                        features_end = feature_mapping[pair_index+1]
+
+                        arc_information[arc] = \
+                            (features[features_start:features_end],
+                             costs[pair_index],
+                             consistency[pair_index])
+
+                    all_substructures.append(struct)
+
+        # in python 2, array.array does not support the buffer interface
+        if sys.version_info[0] == 2:
+            for arc in arc_information:
+                feats, cost, cons = arc_information[arc]
+                arc_information[arc] = (numpy.array(feats,
+                                                    dtype=numpy.uint32),
+                                        cost,
+                                        cons)
 
         return all_substructures, arc_information
 
@@ -143,12 +165,12 @@ class InstanceExtractor:
         for i, mention in enumerate(doc.system_mentions):
             mentions_to_ids[mention] = i
 
-        anaphors = array.array('I')
-        antecedents = array.array('I')
-        costs = array.array('I')
+        anaphors = array.array('H')
+        antecedents = array.array('H')
+        costs = array.array('H')
         consistency = array.array('B')
-        feature_mapping = array.array('l')
-        substructures_mapping = array.array('l')
+        feature_mapping = array.array('I')
+        substructures_mapping = array.array('I')
         features = array.array('I')
 
         feature_mapping.append(0)
@@ -172,7 +194,7 @@ class InstanceExtractor:
             substructures_mapping.append(substructures_mapping[-1] +
                                          len(struct))
 
-        return ((doc.folder, doc.id, doc.part),
+        return (doc.identifier,
                 anaphors,
                 antecedents,
                 features,
@@ -192,13 +214,16 @@ class InstanceExtractor:
                     cache[mention] = [feature(mention) for feature
                                       in self.mention_features]
 
-            inst_feats += ["ana_" + feat for feat in cache[anaphor]]
-            inst_feats += ["ante_" + feat for feat in cache[antecedent]]
+            ana_features = cache[anaphor]
+            ante_features = cache[antecedent]
+
+            inst_feats += ["ana_" + feat for feat in ana_features]
+            inst_feats += ["ante_" + feat for feat in ante_features]
 
             # concatenated features
             inst_feats += ["ana_" + feat_ana + "^ante_" + feat_ante
                            for feat_ana, feat_ante in
-                           zip(cache[anaphor], cache[antecedent])]
+                           zip(ana_features, ante_features)]
 
             # pairwise features
             inst_feats += [feature(anaphor, antecedent) for feature
@@ -206,20 +231,17 @@ class InstanceExtractor:
                            if feature(anaphor, antecedent)]
 
             # feature combinations
-            fine_type_indices = [len(self.mention_features)*i for i
-                                 in [0, 1, 2]]
+            fine_type_indices = {len(self.mention_features)*i for i
+                                 in [0, 1, 2]}
 
-            to_add = []
-
-            for i in fine_type_indices:
-                for j, word in enumerate(inst_feats):
-                    if j not in fine_type_indices:
-                        to_add.append(inst_feats[i] + "^" + word)
-
-            inst_feats += to_add
+            inst_feats += [
+                inst_feats[i] + "^" + word for i in fine_type_indices
+                for j, word in enumerate(inst_feats)
+                if j not in fine_type_indices
+            ]
 
         # to hash
-        all_feats = array.array('I', [mmh3.hash(word) & 2**24-1 for word
-                                      in inst_feats])
+        all_feats = array.array('I', [mmh3.hash(word.encode("utf-8")) & 2**24-1
+                                      for word in inst_feats])
 
         return all_feats

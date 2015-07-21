@@ -5,7 +5,6 @@ import re
 
 from cort.core import mentions
 from cort.core import spans
-from cort.core import nltk_util
 
 
 __author__ = 'smartschat'
@@ -69,8 +68,8 @@ def extract_system_mentions(document, filter_mentions=True):
 
 def __extract_system_mention_spans(document):
     mention_spans = []
-    for sentence_span in document.sentence_spans_to_id:
-        sentence_tree = document.sentence_spans_to_parses[sentence_span]
+    for i, sentence_span in enumerate(document.sentence_spans):
+        sentence_tree = document.parse[i]
 
         in_sentence_spans = __extract_mention_spans_for_sentence(
             sentence_tree,
@@ -102,8 +101,7 @@ def __extract_mention_spans_from_tree(sentence_tree):
 
 
 def __tree_filter(tree):
-    return (nltk_util.get_label(tree) == "NP" or
-            nltk_util.get_label(tree) == "PRP$")
+    return tree.label() == "NP" or tree.label() == "PRP$"
 
 
 def __get_span_from_ner(pos, ner):

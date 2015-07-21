@@ -26,11 +26,11 @@ def learn(training_corpus, instance_extractor, perceptron):
         A tuple consisting of
             - **priors** (*dict(str,float)*): A prior weight for each label
               in the graphs representing the instances,
-            - **weights** (*numpy.recarray*): A numpy record array. For each
-              label ``l``, ``weights[l]`` contains weights for each feature
-              seen during training (for representing the features we employ
-              *feature hashing*). If the graphs employed are not labeled,
-              ``l`` is set to "+".
+            - **weights** (*dict(str, array)*): A mapping of labels to weight
+              vectors. For each label ``l``, ``weights[l]`` contains weights
+              for each feature seen during training (for representing the
+              features we employ *feature hashing*). If the graphs employed are
+              not labeled, ``l`` is set to "+".
     """
     logging.info("Learning.")
 
@@ -40,7 +40,9 @@ def learn(training_corpus, instance_extractor, perceptron):
 
     logging.info("\tFitting model parameters.")
 
-    return perceptron.fit(substructures, arc_information)
+    perceptron.fit(substructures, arc_information)
+
+    return perceptron.get_model()
 
 
 def predict(testing_corpus,
@@ -86,5 +88,4 @@ def predict(testing_corpus,
 
     logging.info("\tClustering results.")
 
-    return coref_extractor(arcs, labels, scores,
-                           coref_labels=instance_extractor.get_coref_labels())
+    return coref_extractor(arcs, labels, scores, perceptron.get_coref_labels())

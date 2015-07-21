@@ -21,16 +21,13 @@ arcs as decribed above. For training, arcs are filtered using a procedure
 similar to the procedure decribed in Soon et al. (2001).
 
 Reference:
-
     - Wee Meng Soon, Hwee Tou Ng, and Daniel Chung Yong Lim. 2001. A machine
       learning approach to coreference resolution of noun phrases.
-      *Computational Linguistics*, 27(4):521–544.
+      *Computational Linguistics*, 27(4):521-544.
       http://www.aclweb.org/anthology/J01-4004
-
 """
 
 
-from cort.coreference import instance_extractors
 from cort.coreference import perceptrons
 
 
@@ -124,12 +121,12 @@ class MentionPairsPerceptron(perceptrons.Perceptron):
             substructure (list((Mention, Mention))): The list of mention pairs
                 which define the search space for one substructure. For the
                 mention pair model, the list contains only one mention pair.
-            arc_information (dict((Mention, Mention), (numpy.array, int,
-                bool)): A mapping of arcs (= mention pairs) to information
-                about these arcs. The information consists of the features
-                (represented as an int array via feature hashing), the costs
-                for the arc, and whether predicting the arc to be coreferent is
-                consistent with the gold annotation).
+            arc_information (dict((Mention, Mention), (array, int, bool)): A
+                mapping of arcs (= mention pairs) to information about these
+                arcs. The information consists of the features (represented as
+                an int array via feature hashing), the costs for the arc, and
+                whether predicting the arc to be coreferent is consistent with
+                the gold annotation).
 
         Returns:
             A 6-tuple describing the highest-scoring label for the pair, and

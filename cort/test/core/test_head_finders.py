@@ -3,7 +3,6 @@ import unittest
 import nltk
 
 from cort.core import head_finders
-from cort.core import nltk_util
 from cort.core import spans
 
 
@@ -15,27 +14,27 @@ class TestHeadFinder(unittest.TestCase):
         self.head_finder = head_finders.HeadFinder()
 
     def test_get_head_np(self):
-        self.assertEqual(nltk.ParentedTree("NNS", ["police"]), self.head_finder.get_head(nltk_util.parse_parented_tree("(NP (JJ Local) (NNS police))")))
-        self.assertEqual(nltk.ParentedTree("NN", ["shop"]), self.head_finder.get_head(nltk_util.parse_parented_tree("(NP (JJ Local) (NN shop))")))
-        self.assertEqual(nltk.ParentedTree("NNP", ["NBC"]), self.head_finder.get_head(nltk_util.parse_parented_tree("(NP (NNP NBC) (POS 's))")))
-        self.assertEqual(nltk.ParentedTree("NN", ["wedding"]), self.head_finder.get_head(nltk_util.parse_parented_tree("(NP (NP (NP (PRP$ his) (NN brother) (POS 's)) (NN wedding)) (PP (IN in) (NP (NNP Khan) (NNPS Younes))))")))
-        self.assertEqual(nltk.ParentedTree("NNP", ["Taiwan"]), self.head_finder.get_head(nltk_util.parse_parented_tree("(NP (NNP Taiwan) (POS 's))")))
-        self.assertEqual(nltk.ParentedTree("NN", ["port"]), self.head_finder.get_head(nltk_util.parse_parented_tree("(NP (NP (NP (NNP Yemen) (POS 's)) (NN port)) (PP (IN of) (NP (NNP Aden))))")))
+        self.assertEqual(nltk.ParentedTree("NNS", ["police"]), self.head_finder.get_head(nltk.ParentedTree.fromstring("(NP (JJ Local) (NNS police))")))
+        self.assertEqual(nltk.ParentedTree("NN", ["shop"]), self.head_finder.get_head(nltk.ParentedTree.fromstring("(NP (JJ Local) (NN shop))")))
+        self.assertEqual(nltk.ParentedTree("NNP", ["NBC"]), self.head_finder.get_head(nltk.ParentedTree.fromstring("(NP (NNP NBC) (POS 's))")))
+        self.assertEqual(nltk.ParentedTree("NN", ["wedding"]), self.head_finder.get_head(nltk.ParentedTree.fromstring("(NP (NP (NP (PRP$ his) (NN brother) (POS 's)) (NN wedding)) (PP (IN in) (NP (NNP Khan) (NNPS Younes))))")))
+        self.assertEqual(nltk.ParentedTree("NNP", ["Taiwan"]), self.head_finder.get_head(nltk.ParentedTree.fromstring("(NP (NNP Taiwan) (POS 's))")))
+        self.assertEqual(nltk.ParentedTree("NN", ["port"]), self.head_finder.get_head(nltk.ParentedTree.fromstring("(NP (NP (NP (NNP Yemen) (POS 's)) (NN port)) (PP (IN of) (NP (NNP Aden))))")))
 
     def test_get_head_vp(self):
-        self.assertEqual(nltk.ParentedTree("VB", ["shoot"]), self.head_finder.get_head(nltk_util.parse_parented_tree("(VP (VB shoot))")))
+        self.assertEqual(nltk.ParentedTree("VB", ["shoot"]), self.head_finder.get_head(nltk.ParentedTree.fromstring("(VP (VB shoot))")))
 
     def test_get_head_nml(self):
-        self.assertEqual(nltk.ParentedTree("NN", ["curtain"]), self.head_finder.get_head(nltk_util.parse_parented_tree("(NML (NN air) (NN curtain))")))
+        self.assertEqual(nltk.ParentedTree("NN", ["curtain"]), self.head_finder.get_head(nltk.ParentedTree.fromstring("(NML (NN air) (NN curtain))")))
 
     def test_get_head_adjp(self):
-        self.assertEqual(nltk.ParentedTree("JJ" ,["twelfth"]), self.head_finder.get_head(nltk_util.parse_parented_tree("(ADJP (JJ twelfth) (CC and) (JJ thirteenth))")))
+        self.assertEqual(nltk.ParentedTree("JJ" ,["twelfth"]), self.head_finder.get_head(nltk.ParentedTree.fromstring("(ADJP (JJ twelfth) (CC and) (JJ thirteenth))")))
 
     def test_get_head_qp(self):
-        self.assertEqual(nltk.ParentedTree("CD", ["forty"]), self.head_finder.get_head(nltk_util.parse_parented_tree("(QP (CD forty) (HYPH -) (CD five))")))
+        self.assertEqual(nltk.ParentedTree("CD", ["forty"]), self.head_finder.get_head(nltk.ParentedTree.fromstring("(QP (CD forty) (HYPH -) (CD five))")))
 
     def test_get_head_whadvp(self):
-        self.assertEqual(nltk.ParentedTree("WRB", ["how"]), self.head_finder.get_head(nltk_util.parse_parented_tree("(WHADVP (WRB how))")))
+        self.assertEqual(nltk.ParentedTree("WRB", ["how"]), self.head_finder.get_head(nltk.ParentedTree.fromstring("(WHADVP (WRB how))")))
 
     def test_get_head_s(self):
         parse = """(S
@@ -57,19 +56,19 @@ class TestHeadFinder(unittest.TestCase):
       (PP (IN to) (NP (JJ many)))))
   (. .))"""
 
-        self.assertEqual(nltk.ParentedTree("VBD", ["was"]), self.head_finder.get_head(nltk_util.parse_parented_tree(parse)))
+        self.assertEqual(nltk.ParentedTree("VBD", ["was"]), self.head_finder.get_head(nltk.ParentedTree.fromstring(parse)))
 
         parse_2 = "(S (`` `) (NP (NNP Bus) (NNP Stop) (POS ')))"
 
         self.assertEqual(nltk.ParentedTree("NNP", ["Stop"]),
                          self.head_finder.get_head(
-                             nltk_util.parse_parented_tree(parse_2)))
+                             nltk.ParentedTree.fromstring(parse_2)))
 
     def test_get_head_advp(self):
-        self.assertEqual(nltk.ParentedTree("RB", ["here"]), self.head_finder.get_head(nltk_util.parse_parented_tree("(ADVP (RB here))")))
+        self.assertEqual(nltk.ParentedTree("RB", ["here"]), self.head_finder.get_head(nltk.ParentedTree.fromstring("(ADVP (RB here))")))
 
     def test_get_head_whnp(self):
-        self.assertEqual(nltk.ParentedTree("WP", ["who"]), self.head_finder.get_head(nltk_util.parse_parented_tree("(WHNP (WP who))")))
+        self.assertEqual(nltk.ParentedTree("WP", ["who"]), self.head_finder.get_head(nltk.ParentedTree.fromstring("(WHNP (WP who))")))
 
     def test_get_head_sbar(self):
         parse = """(SBAR
@@ -81,7 +80,7 @@ class TestHeadFinder(unittest.TestCase):
         (VBN had)
         (NP (NP (JJ enough)) (PP (IN of) (NP (NN schooling))))))))"""
 
-        self.assertEqual(nltk.ParentedTree("WP", ["who"]), self.head_finder.get_head(nltk_util.parse_parented_tree(parse)))
+        self.assertEqual(nltk.ParentedTree("WP", ["who"]), self.head_finder.get_head(nltk.ParentedTree.fromstring(parse)))
 
     def test_get_head_pp(self):
         parse = """(PP
@@ -90,19 +89,19 @@ class TestHeadFinder(unittest.TestCase):
     (NP (NNS thousands))
     (PP (IN of) (NP (JJ non-profit) (NNS institutions)))))"""
 
-        self.assertEqual(nltk.ParentedTree("IN", ["of"]), self.head_finder.get_head(nltk_util.parse_parented_tree(parse)))
+        self.assertEqual(nltk.ParentedTree("IN", ["of"]), self.head_finder.get_head(nltk.ParentedTree.fromstring(parse)))
 
     def test_get_head_intj(self):
-        self.assertEqual(nltk.ParentedTree("UH", ["oh"]), self.head_finder.get_head(nltk_util.parse_parented_tree("(INTJ (UH oh) (PRP$ my) (NNP god))")))
+        self.assertEqual(nltk.ParentedTree("UH", ["oh"]), self.head_finder.get_head(nltk.ParentedTree.fromstring("(INTJ (UH oh) (PRP$ my) (NNP god))")))
 
     def test_get_head_sq(self):
-        self.assertEqual(nltk.ParentedTree("VBP", ["are"]), self.head_finder.get_head(nltk_util.parse_parented_tree("(SQ (VBP are) (NP (PRP they)) (NP (DT all) (NNS liars)))")))
+        self.assertEqual(nltk.ParentedTree("VBP", ["are"]), self.head_finder.get_head(nltk.ParentedTree.fromstring("(SQ (VBP are) (NP (PRP they)) (NP (DT all) (NNS liars)))")))
 
     def test_get_head_ucp(self):
-        self.assertEqual(nltk.ParentedTree("NN", ["trade"]), self.head_finder.get_head(nltk_util.parse_parented_tree("(UCP (JJ economic) (CC and) (NN trade))")))
+        self.assertEqual(nltk.ParentedTree("NN", ["trade"]), self.head_finder.get_head(nltk.ParentedTree.fromstring("(UCP (JJ economic) (CC and) (NN trade))")))
 
     def test_get_head_x(self):
-        self.assertEqual(nltk.ParentedTree(":", ["--"]), self.head_finder.get_head(nltk_util.parse_parented_tree("(X (NNS Men) (CC or) (: --))")))
+        self.assertEqual(nltk.ParentedTree(":", ["--"]), self.head_finder.get_head(nltk.ParentedTree.fromstring("(X (NNS Men) (CC or) (: --))")))
 
     def test_get_head_sbarq(self):
         parse = """(SBARQ
@@ -110,7 +109,7 @@ class TestHeadFinder(unittest.TestCase):
   (SQ (MD Should) (NP (NNP Chinese) (NNP Music)) (VP (VB Go)))
   (. ?))"""
 
-        self.assertEqual(nltk.ParentedTree("MD", ["Should"]), self.head_finder.get_head(nltk_util.parse_parented_tree(parse)))
+        self.assertEqual(nltk.ParentedTree("MD", ["Should"]), self.head_finder.get_head(nltk.ParentedTree.fromstring(parse)))
 
     def test_get_head_frag(self):
         parse = """(FRAG
@@ -125,7 +124,7 @@ class TestHeadFinder(unittest.TestCase):
   (. .))"""
 
         self.assertEqual(nltk.ParentedTree(".", ["."]), self.head_finder.get_head(
-            nltk_util.parse_parented_tree(
+            nltk.ParentedTree.fromstring(
             parse)))
 
     def test_adjust_head_for_nam(self):
@@ -187,7 +186,7 @@ class TestHeadFinder(unittest.TestCase):
         """
 
         self.assertEqual(nltk.ParentedTree("CC", ["and"]),
-                         self.head_finder.get_head(nltk_util.parse_parented_tree(
+                         self.head_finder.get_head(nltk.ParentedTree.fromstring(
                 parse)))
 
     def test_get_difficult_heads(self):
@@ -243,10 +242,10 @@ class TestHeadFinder(unittest.TestCase):
   (CC and)
   (S (NP (PRP you)) (VP (MD can) (VP (ADVP (RB also))))))"""
 
-        self.assertEqual(nltk.ParentedTree("FW", ["etc"]), self.head_finder.get_head(nltk_util.parse_parented_tree(parse)))
-        self.assertEqual(nltk.ParentedTree("NNS", ["Tens"]), self.head_finder.get_head(nltk_util.parse_parented_tree(parse2)))
-        self.assertEqual(nltk.ParentedTree("-LRB-", ["-LRB-"]), self.head_finder.get_head(nltk_util.parse_parented_tree(parse3)))
-        self.assertEqual(nltk.ParentedTree("MD", ["can"]), self.head_finder.get_head(nltk_util.parse_parented_tree(parse4)))
+        self.assertEqual(nltk.ParentedTree("FW", ["etc"]), self.head_finder.get_head(nltk.ParentedTree.fromstring(parse)))
+        self.assertEqual(nltk.ParentedTree("NNS", ["Tens"]), self.head_finder.get_head(nltk.ParentedTree.fromstring(parse2)))
+        self.assertEqual(nltk.ParentedTree("-LRB-", ["-LRB-"]), self.head_finder.get_head(nltk.ParentedTree.fromstring(parse3)))
+        self.assertEqual(nltk.ParentedTree("MD", ["can"]), self.head_finder.get_head(nltk.ParentedTree.fromstring(parse4)))
 
 if __name__ == '__main__':
     unittest.main()

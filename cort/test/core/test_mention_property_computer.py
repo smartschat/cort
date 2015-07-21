@@ -1,9 +1,12 @@
 import unittest
 
+
+import nltk
+
+
 from cort.core.spans import Span
 from cort.core.documents import CoNLLDocument
 from cort.core import mention_property_computer
-from cort.core import nltk_util
 
 
 __author__ = 'smartschat'
@@ -181,7 +184,7 @@ bn/voa/02/voa_0220   0   13              .     .            *))         -    -  
         real_document = CoNLLDocument(self.real_example)
 
         expected = 0
-        head = nltk_util.parse_parented_tree("(WHNP (WP who))")
+        head = nltk.ParentedTree.fromstring("(WHNP (WP who))")
         mention_subtree = mention_property_computer.get_relevant_subtree(
             Span(29, 34), real_document)
         self.assertEqual(expected, mention_property_computer.get_head_index(
@@ -191,36 +194,36 @@ bn/voa/02/voa_0220   0   13              .     .            *))         -    -  
         self.assertEqual(
             True,
             mention_property_computer.is_apposition({
-                "parse_tree": nltk_util.parse_parented_tree(
+                "parse_tree": nltk.ParentedTree.fromstring(
                     "(NP (NP (NP (NNP Secretary)) (PP (IN of) (NP "
                     "(NNP State)))) (NP (NNP Madeleine) (NNP Albright)))")}))
         self.assertEqual(
             False,
             mention_property_computer.is_apposition({
-                "parse_tree": nltk_util.parse_parented_tree(
+                "parse_tree": nltk.ParentedTree.fromstring(
                     "(NP (NP (NNP Secretary)) (PP (IN of) "
                     "(NP (NNP State))))")}))
         self.assertEqual(
             False,
             mention_property_computer.is_apposition({
-                "parse_tree": nltk_util.parse_parented_tree(
+                "parse_tree": nltk.ParentedTree.fromstring(
                     "(NP (NP (NP (NNP Al) (NNP Gore) (POS 's)) (NN campaign) "
                     "(NN manager)) (, ,) (NP (NNP Bill) (NNP Daley)) (, ,))")}))
         self.assertEqual(
             False,
             mention_property_computer.is_apposition({
-                "parse_tree": nltk_util.parse_parented_tree(
+                "parse_tree": nltk.ParentedTree.fromstring(
                     "(NP (NP (NNS news)) (NP (CD today)))")}))
         self.assertEqual(
             False,
             mention_property_computer.is_apposition({
-                "parse_tree": nltk_util.parse_parented_tree(
+                "parse_tree": nltk.ParentedTree.fromstring(
                     "(NP (NP (PRP$ his) (NN brother)) (, ,) (NP (PRP$ his) "
                     "(NN sister)))")}))
         self.assertEqual(
             True,
             mention_property_computer.is_apposition({
-                "parse_tree":  nltk_util.parse_parented_tree(
+                "parse_tree":  nltk.ParentedTree.fromstring(
                     "(NP (NP (NNP Barack) (NNP Obama)) (, ,) (NP (DT the) "
                     "(NN president)))")}))
 

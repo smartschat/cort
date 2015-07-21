@@ -6,7 +6,6 @@ from nltk.corpus import wordnet as wn
 
 from cort.core import external_data
 from cort.core import head_finders
-from cort.core import nltk_util
 from cort.core import spans
 
 
@@ -107,8 +106,8 @@ def compute_semantic_class(attributes):
             pronoun, "citation_form".
 
     Returns:
-        str: the semantic class of the mention -- one of PERSON, OBJECT and
-            UNKNOWN.
+        str: the semantic class of the mention -- one of PERSON, OBJECT,
+        NUMERIC and UNKNOWN.
     """
     semantic_class = "UNKNOWN"
     head_index = attributes["head_index"]
@@ -143,7 +142,7 @@ def __wordnet_lookup_semantic_class(head):
     synsets = wn.synsets(head)
 
     while synsets:
-        lemma_name = nltk_util.get_lemma_name_of_first_synset(synsets)
+        lemma_name = synsets[0].lemma_names()[0]
 
         if lemma_name == "person":
             return "PERSON"
@@ -157,7 +156,7 @@ def __wordnet_lookup_gender(head):
     synsets = wn.synsets(head)
 
     while synsets:
-        lemma_name = nltk_util.get_lemma_name_of_first_synset(synsets)
+        lemma_name = synsets[0].lemma_names()[0]
 
         if lemma_name == "man" or lemma_name == "male":
             return "MALE"
@@ -184,22 +183,22 @@ def is_apposition(attributes):
     """
     tree = attributes["parse_tree"]
 
-    if nltk_util.get_label(tree) == "NP" and len(tree) > 1:
+    if tree.label() == "NP" and len(tree) > 1:
         if len(tree) == 2:
-            return (nltk_util.get_label(tree[0]) == "NP" and
-                    nltk_util.get_label(tree[1]) == "NP" and
+            return (tree[0].label() == "NP" and
+                    tree[1].label() == "NP" and
                     __head_pos_starts_with(tree[1], "NNP"))
         elif len(tree) == 3:
-            return (nltk_util.get_label(tree[0]) == "NP" and
-                    nltk_util.get_label(tree[1]) == "," and
-                    nltk_util.get_label(tree[2]) == "NP" and
+            return (tree[0].label() == "NP" and
+                    tree[1].label() == "," and
+                    tree[2].label() == "NP" and
                     __any_child_head_starts_with(tree, "NNP") and
                     "DT" in set([child.pos()[0][1] for child in tree]))
         elif len(tree) == 4:
-            return (nltk_util.get_label(tree[0]) == "NP" and
-                    nltk_util.get_label(tree[1]) == "," and
-                    nltk_util.get_label(tree[2]) == "NP" and
-                    nltk_util.get_label(tree[3]) == "," and
+            return (tree[0].label() == "NP" and
+                    tree[1].label() == "," and
+                    tree[2].label() == "NP" and
+                    tree[3].label() == "," and
                     __any_child_head_starts_with(tree, "NNP") and
                     "DT" in set([child.pos()[0][1] for child in tree]))
 
@@ -295,9 +294,11 @@ def get_relevant_subtree(span, document):
     """
     in_sentence_ids = document.in_sentence_ids[span.begin:span.end+1]
     in_sentence_span = spans.Span(in_sentence_ids[0], in_sentence_ids[-1])
-    sentence_tree = document.sentence_spans_to_parses[
-        document.get_embedding_sentence(span)
-    ]
+
+    sentence_id, sentence_span = document.get_sentence_id_and_span(span)
+
+    sentence_tree = document.parse[sentence_id]
+
     spanning_leaves = sentence_tree.treeposition_spanning_leaves(
         in_sentence_span.begin, in_sentence_span.end+1)
     mention_subtree = sentence_tree[spanning_leaves]
@@ -325,7 +326,7 @@ def get_grammatical_function(attributes):
     if parent is None:
         return "OTHER"
     else:
-        parent_label = nltk_util.get_label(parent)
+        parent_label = parent.label()
 
         if re.match(r"^(S|FRAG)", parent_label):
             return "SUBJECT"

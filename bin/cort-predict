@@ -5,8 +5,13 @@ from __future__ import print_function
 import argparse
 import codecs
 import logging
+import os
 import pickle
+import subprocess
 
+
+import cort
+from cort.preprocessing import pipeline
 from cort.core import corpora
 from cort.core import mention_extractor
 from cort.coreference import cost_functions
@@ -18,6 +23,9 @@ from cort.util import import_helper
 
 __author__ = 'smartschat'
 
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s %(levelname)s %(''message)s')
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Predict coreference '
@@ -28,6 +36,10 @@ def parse_args():
                         help='The input file. Must follow the format of the '
                              'CoNLL shared tasks on coreference resolution '
                              '(see http://conll.cemantix.org/2012/data.html).)')
+    #parser.add_argument("-mode",
+    #                    required=True,
+    #                    dest="mode",
+    #                    help="The mode. Either conll or raw.")
     parser.add_argument('-model',
                         required=True,
                         dest='model',
@@ -39,7 +51,6 @@ def parse_args():
                              'in (in the CoNLL format.')
     parser.add_argument('-ante',
                         dest='ante',
-                        required=True,
                         help='The file where antecedent predictions will be'
                              'stored to.')
     parser.add_argument('-extractor',
@@ -54,16 +65,67 @@ def parse_args():
                         dest='clusterer',
                         required=True,
                         help='The clusterer to use.')
+    parser.add_argument('-gold',
+                        dest='gold',
+                        help='Gold data (in the CoNLL format) for evaluation.')
     parser.add_argument('-features',
                         dest='features',
                         help='The file containing the list of features. If not'
                              'provided, defaults to a standard set of'
                              'features.')
+    parser.add_argument('-corenlp',
+                        dest='corenlp',
+                        help='Where is CoreNLP?')
 
     return parser.parse_args()
 
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s %(levelname)s %(''message)s')
+
+def get_scores(output_data, gold_data):
+    cort.__path__[0]
+    scorer_output = subprocess.check_output([
+        "perl",
+        cort.__path__[0] + "/reference-coreference-scorers/v8.01/scorer.pl",
+        "all",
+        gold_data,
+        os.getcwd() + "/" + output_data,
+        "none"]).decode()
+
+    metrics = ['muc', 'bcub', 'ceafm', 'ceafe', 'blanc']
+
+    metrics_results = {}
+
+    metric = None
+
+    results_formatted = ""
+
+    for line in scorer_output.split("\n"):
+        if not line:
+            continue
+
+        splitted = line.split()
+
+        if splitted[0] == "METRIC":
+            metric = line.split()[1][:-1]
+
+        if (metric != 'blanc' and line.startswith("Coreference:")) \
+           or (metric == 'blanc' and line.startswith("BLANC:")):
+            metrics_results[metric] = (
+                float(splitted[5][:-1]),
+                float(splitted[10][:-1]),
+                float(splitted[12][:-1]),
+            )
+
+    results_formatted += "\tR\tP\tF1\n"
+
+    for metric in metrics:
+        results_formatted += metric + "\t" + \
+            "\t".join([str(val) for val in metrics_results[metric]]) + "\n"
+    results_formatted += "\n"
+    average = (metrics_results["muc"][2] + metrics_results["bcub"][2] +
+               metrics_results["ceafe"][2])/3
+    results_formatted += "conll\t\t\t" + format(average, '.2f') + "\n"
+
+    return results_formatted
 
 args = parse_args()
 
@@ -76,14 +138,16 @@ else:
         features.gender,
         features.number,
         features.sem_class,
-        features.gr_func,
+        features.deprel,
         features.head_ner,
         features.length,
         features.head,
         features.first,
         features.last,
         features.preceding_token,
-        features.next_token
+        features.next_token,
+        features.governor,
+        features.ancestry
     ]
 
     pairwise_features = [
@@ -93,7 +157,10 @@ else:
         features.alias,
         features.sentence_distance,
         features.embedding,
-        features.modifier
+        features.modifier,
+        features.tokens_contained,
+        features.head_contained,
+        features.token_distance
     ]
 
 extractor = instance_extractors.InstanceExtractor(
@@ -115,10 +182,19 @@ perceptron = import_helper.import_from_path(args.perceptron)(
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)s %(''message)s')
 
-logging.info("Reading in data.")
-testing_corpus = corpora.Corpus.from_file("testing",
-                                           codecs.open(args.input_filename,
-                                                       "r", "utf-8"))
+args.mode = "conll"
+
+if args.mode == "conll":
+    logging.info("Reading in data.")
+    testing_corpus = corpora.Corpus.from_file(
+        "testing",
+        codecs.open(args.input_filename, "r", "utf-8"))
+else:
+    logging.info("Reading in and preprocessing data.")
+    p = pipeline.Pipeline(args.corenlp)
+
+    testing_corpus = p.run_on_doc(
+        codecs.open(args.input_filename, "r", "utf-8"))
 
 logging.info("Extracting system mentions.")
 for doc in testing_corpus:
@@ -133,11 +209,24 @@ mention_entity_mapping, antecedent_mapping = experiments.predict(
 
 testing_corpus.read_coref_decisions(mention_entity_mapping, antecedent_mapping)
 
-logging.info("Write corpus to file.")
-testing_corpus.write_to_file(open(args.output_filename, "w"))
+if args.mode == "conll":
+    logging.info("Write corpus to file.")
+    testing_corpus.write_to_file(codecs.open(args.output_filename, "w", "utf-8"))
 
-if args.ante:
-    logging.info("Write antecedent decisions to file")
-    testing_corpus.write_antecedent_decisions_to_file(open(args.ante, "w"))
+    if args.ante:
+        logging.info("Write antecedent decisions to file")
+        testing_corpus.write_antecedent_decisions_to_file(open(args.ante, "w"))
+
+    if args.gold:
+        logging.info("Evaluate.")
+        print(get_scores(args.output_filename, args.gold))
+else:
+    logging.info("Write output to file.")
+
+    output = testing_corpus.documents[0].to_simple_output()
+    my_file = codecs.open(args.input_filename + ".out", "w", "utf-8")
+    my_file.write(output)
+    my_file.close()
+
 
 logging.info("Done.")

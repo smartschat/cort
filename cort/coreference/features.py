@@ -1,7 +1,6 @@
 """ Contains features for coreference resolution."""
 
 
-import logging
 import re
 
 
@@ -55,7 +54,7 @@ def number(mention):
         mention (Mention): A mention.
 
     Returns:
-        str: The string 'number=NUMBER', where GENDER is one of 'SINGULAR',
+        str: The string 'number=NUMBER', where NUMBER is one of 'SINGULAR',
         'PLURAL' and 'UNKNOWN'.
     """
     return "number=" + mention.attributes["number"]
@@ -85,6 +84,23 @@ def gr_func(mention):
         'OBJECT' and 'OTHER'.
     """
     return "gr_func=" + mention.attributes["grammatical_function"]
+
+
+def governor(mention):
+    """ Compute grammatical function of a mention.
+
+    Args:
+        mention (Mention): A mention.
+
+    Returns:
+        str: The string 'gr_func=GR_FUNC', where GR_FUNC is one of 'SUBJECT',
+        'OBJECT' and 'OTHER'.
+    """
+    return "governor=" + mention.attributes["governor"].lower()
+
+
+def deprel(mention):
+    return "deprel=" + mention.attributes["deprel"]
 
 
 def head(mention):
@@ -189,6 +205,10 @@ def next_token(mention):
         return "next=NONE"
 
 
+def ancestry(mention):
+    return "ancestry=" + mention.attributes["ancestry"]
+
+
 def exact_match(anaphor, antecedent):
     """ Compute whether the tokens of two mentions match exactly.
 
@@ -221,8 +241,24 @@ def head_match(anaphor, antecedent):
         return "head_match"
 
 
+def tokens_contained(anaphor, antecedent):
+    ana_tokens = anaphor.attributes["tokens_as_lowercase_string"]
+    ante_tokens = antecedent.attributes["tokens_as_lowercase_string"]
+
+    if ana_tokens in ante_tokens or ante_tokens in ana_tokens:
+        return "tokens_contained"
+
+
+def head_contained(anaphor, antecedent):
+    ana_head = anaphor.attributes["head_as_lowercase_string"]
+    ante_head = antecedent.attributes["head_as_lowercase_string"]
+
+    if ana_head in ante_head or ante_head in ana_head:
+        return "head_contained"
+
+
 def sentence_distance(anaphor, antecedent):
-    """ Compute the sentence distance between two mentions (capped at 5)..
+    """ Compute the sentence distance between two mentions (capped at 5).
 
     Args:
         anaphor (Mention): A mention.
@@ -232,8 +268,21 @@ def sentence_distance(anaphor, antecedent):
         str: 'sentence_distance=DIST', where DIST is one of '0', '1',
         '2', '3', '4' and '>=5'.
     """
-    return "sentence_distance=" + __distance(anaphor, antecedent)
+    return "sentence_distance=" + __compute_sentence_distance(anaphor, antecedent)
 
+
+def token_distance(anaphor, antecedent):
+    """ Compute the token distance between two mentions (capped at 10).
+
+    Args:
+        anaphor (Mention): A mention.
+        antecedent (Mention): Another mention, preceding the anaphor.
+
+    Returns:
+        str: 'sentence_distance=DIST', where DIST is one of '0', '1',
+        '2', '3', '4' and '>=5'.
+    """
+    return "token_distance=" + __compute_token_distance(anaphor, antecedent)
 
 def alias(anaphor, antecedent):
     """ Compute whether the mentions are aliases of each other.
@@ -267,11 +316,19 @@ def same_speaker(anaphor, antecedent):
         return "same_speaker"
 
 
-def __distance(anaphor, antecedent):
+def __compute_sentence_distance(anaphor, antecedent):
     dist = anaphor.attributes['sentence_id'] - antecedent.attributes[
         'sentence_id']
     if dist >= 5:
         return ">=5"
+    else:
+        return str(dist)
+
+
+def __compute_token_distance(anaphor, antecedent):
+    dist = anaphor.span.begin - antecedent.span.end
+    if dist >= 10:
+        return ">=10"
     else:
         return str(dist)
 

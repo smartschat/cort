@@ -6,6 +6,14 @@ var jsPlumbSettings = {
     overlays: [["Label", {cssClass: "label", label: ""}],["PlainArrow", {width: 6, length: 5, id: "arrow", location: -1}]]
 };
 
+var jsPlumbSettingsDecisions = {
+    connector: ['Bezier', {curviness:20}],
+    paintStyle: {strokeStyle:'blue', lineWidth:2},
+    endpoint: "Blank",
+    anchors: ['Left', 'Right'],
+    overlays: [["PlainArrow", {width: 6, length: 5, id: "arrow", location: -1}]]
+};
+
 var CortVisualisation = {
 
     init: function () {
@@ -134,12 +142,30 @@ var CortVisualisation = {
             var t_ana_bis = document.createElement("span");
             t_ana_bis.id = error.anaphor + "bis";
             $(t_ana_bis).insertAfter("#" + error.anaphor);
-            jsPlumbSettings.overlays[0][1].label = error.type;
-            that.jsPlumb.connect({
-                source: t_ana_bis,
-                target: t_ant_bis
-            }, jsPlumbSettings);
+            if (error.type === "Decision"){
+                that.jsPlumb.connect({
+                    source: t_ana_bis,
+                    target: t_ant_bis
+                }, jsPlumbSettingsDecisions);
+            }
         });
+
+        errors.forEach(function(error){
+            // Multi-line span hack
+            var t_ant_bis = document.createElement("span");
+            t_ant_bis.id = error.antecedent + "bis";
+            $(t_ant_bis).insertAfter("#" + error.antecedent);
+            var t_ana_bis = document.createElement("span");
+            t_ana_bis.id = error.anaphor + "bis";
+            $(t_ana_bis).insertAfter("#" + error.anaphor);
+            if (error.type !== "Decision"){
+                jsPlumbSettings.overlays[0][1].label = error.type;
+                that.jsPlumb.connect({
+                    source: t_ana_bis,
+                    target: t_ant_bis
+                }, jsPlumbSettings);
+            }
+        });        
     }
 };
 

@@ -1,10 +1,10 @@
 from __future__ import print_function
 
+import codecs
 import shutil
 import html
 import os
 import webbrowser
-from distutils.dir_util import mkpath
 from random import randint
 
 import cort
@@ -44,11 +44,12 @@ class Visualizer:
         errors_source = "\n\t\t<script>\n" \
                         "\t\t\terrors = [ "
 
-        system_corpus = self.structured_coreference_analysis.corpora[self.corpus_name]
+        system_corpus = self.structured_coreference_analysis.corpora[
+            self.corpus_name]
 
         for document in sorted(self.structured_coreference_analysis.reference.documents,
-                               key=lambda doc: (doc.id, doc.part)):
-            doc_id = document.id + "_part_" + document.part
+                               key=lambda doc: doc.get_html_friendly_identifier()):
+            doc_id = document.get_html_friendly_identifier()
             documents_navi += "\n\t\t\t\t<li>" + doc_id + "</li>"
 
             mentions = document.annotated_mentions
@@ -76,6 +77,9 @@ class Visualizer:
                             lambda err: err[0].document == document)
             precision_errors = self.structured_coreference_analysis[
                 self.corpus_name]["precision_errors"]["all"].filter(
+                            lambda err: err[0].document == document)
+            decisions = self.structured_coreference_analysis[
+                self.corpus_name]["decisions"]["all"].filter(
                             lambda err: err[0].document == document)
 
             if isinstance(recall_errors, data_structures.StructuredCoreferenceAnalysis):
@@ -106,6 +110,20 @@ class Visualizer:
                     document_mentions,
                     "Precision")
 
+            if isinstance(decisions, data_structures.StructuredCoreferenceAnalysis):
+                for category in decisions.keys():
+                    errors_source += self.__generate_errors_source(
+                        decisions[category],
+                        category,
+                        document_mentions,
+                        "Decision")
+            else:
+                errors_source += self.__generate_errors_source(
+                    decisions,
+                    "",
+                    document_mentions,
+                    "Decision")
+
         errors_source = errors_source[:-2] + " ];\n\t\t\tchain_to_colour = {"
 
         for chain in self.chain_to_colour.keys():
@@ -126,7 +144,7 @@ class Visualizer:
 
         output = "temp/output/error_analysis.html"
 
-        f = open(output, "w")
+        f = codecs.open(output, "w", "utf-8")
 
         abs_path = os.path.abspath(output)
 
@@ -158,11 +176,12 @@ class Visualizer:
                               "<span class=\"tease\">show all</span>" \
                               "\n\t\t\t\t\t<ul>"
 
-        chains = []
+        chains = set()
 
         index = 0
 
-        sentence_span = document.get_embedding_sentence(spans.Span(0, 0))
+        sentence_id, sentence_span = document.get_sentence_id_and_span(
+            spans.Span(0, 0))
 
         annotated_mentions = set(document.annotated_mentions)
 
@@ -182,6 +201,9 @@ class Visualizer:
                 if mention.span.end < index:
                     mention_id += 1
                     continue
+
+                mention_tokens = html.escape(" ".join(mention.attributes[
+                    'tokens']), True)
 
                 mention_head = html.escape(" ".join(mention.attributes[
                     'head']), True)
@@ -204,8 +226,8 @@ class Visualizer:
                 if chain_id not in chains:
                     self.navi[system] += "\n\t\t\t\t\t\t<li class=\"" + \
                                          chain_id +\
-                                         "\">" + mention_head + "</li>"
-                    chains.append(chain_id)
+                                         "\">" + mention_tokens + "</li>"
+                    chains.add(chain_id)
 
                 if chain_id not in self.chain_to_colour.keys():
                     while True:
@@ -217,8 +239,8 @@ class Visualizer:
 
                     self.chain_to_colour[chain_id] = colour
 
-                span_id = document.id + "_part_" + document.part + \
-                          "_" + str(mention_id)
+                span_id = document.get_html_friendly_identifier() + "_" + \
+                          str(mention_id)
 
                 temp_text = "<span " \
                             "id=\"" + span_id + "\" " \
@@ -251,13 +273,13 @@ class Visualizer:
 
             token_span = spans.Span(index, index)
 
-            if document.get_embedding_sentence(token_span) is None or \
-                    sentence_span != document.get_embedding_sentence(
-                            token_span):
+            if document.get_sentence_id_and_span(token_span) is None or \
+                    sentence_span != document.get_sentence_id_and_span(
+                            token_span)[1]:
                 mention_text = "</li>\n" \
                                "\t\t\t\t<li class=\"sentence\">" + mention_text
 
-                sentence_span = document.get_embedding_sentence(token_span)
+                sentence_id, sentence_span = document.get_sentence_id_and_span(token_span)
 
             document_html += mention_text
 
@@ -272,7 +294,7 @@ class Visualizer:
         errors_source = ""
 
         for error in errors:
-            doc_id = error[0].document.id + "_part_" + error[0].document.part
+            doc_id = error[0].document.get_html_friendly_identifier()
             antecedent_id = -1
             anaphor_id = -1
             mention_id = 0

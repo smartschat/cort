@@ -6,12 +6,13 @@ information present in documents.
 
 from collections import defaultdict
 import logging
-import re
 
 from cort.core import mentions
-from cort.core import nltk_util
 from cort.core import spans
 
+import StanfordDependencies
+
+import nltk
 
 logger = logging.getLogger(__name__)
 
@@ -19,102 +20,106 @@ logger = logging.getLogger(__name__)
 __author__ = 'smartschat'
 
 
-class CoNLLDocument:
-    """Represents a document in CoNLL format.
-
-    For a specification of the format, see
-    http://conll.cemantix.org/2012/data.html.
+class Document(object):
+    """Represents a document.
 
     Attributes:
-        folder (str): The folder of the document in the ConLL data.
-        id (str): The id of the document,
-        part (str): The part number of the document.
-        genre (str): The genre the document belongs to.
-        document_table (list(list(str))): A tabular representation of the
-            document (as in the CoNLL data).
-        in_sentence_ids (list(int)): All sentence ids in the document.
-        indexing_start (int): The first sentence id in the document.
+        identifier (str): A unique identifier for the document.
+        in_sentence_ids (list(int)): In-sentence indicies of all tokens in the
+            document, for example [0, 1, 2, 0, 1, 2, 3, 4, ...]
         tokens (list(str)): All tokens.
         pos (list(str)): All part-of-speech tags.
         ner (list(str)): All named entity tags (if a token does not have a
             tag, the tag is set to NONE).
-        parse (list(str)): All parse trees (in string list representation, as
-            in the ConLL data).
+        parse (list(nltk:ParentedTree)): All parse trees.
+        dep (list(list(StanfordDependencies.CoNLL.Token)): All dependencies
+            represented as lists of tokens with label information and pointers
+            to heads. One list for each sentence.
         speakers (list(str)): All speaker ids,
-        sentence_spans_to_id (dict(Span, int)): A mapping of sentence spans to
-            sentence ids.
         coref (dict(span, int)): A mapping of mention spans to their
             coreference set id.
-        spans_to_annotated_mentions (dict(Span, Mention)): A mapping of
-            mention spans of the mentions annotated in the document to the
-            corresponding mentions.
         annotated_mentions list(Mention): All annotated mentions.
         system_mentions list(Mention): The system mentions (initially empty).
-        antecedent_decisions dict(Span, Span): Maps anaphor to antecedent
-            (initially empty).
     """
-    def __init__(self, document_as_string):
-        """ Construct a document from a string representation.
-
-        The Format must follow the CoNLL format, see
-            http://conll.cemantix.org/2012/data.html.
+    def __init__(self, identifier, sentences, coref):
+        """ Construct a document from sentence and coreference information.
 
         Args:
-            document_as_string (str): A representation of a document in
-                the CoNLL format.
+            identifier (str): A unique identifier for the document.
+            sentences(list): A list of sentence information. The ith item
+                contains information about the ith sentence. We assume that
+                each ``sentences[i]`` is a 6-tuple
+                ``tokens, pos, ner, speakers, parse, dep``, where
+
+                * tokens (list(str)): All tokens in the sentence.
+                * pos (list(str)): All part-of-speech tags in the sentence.
+                * ner (list(str)): All named entity tags in the sentence (if a
+                  token does not have a tag, the tag is set to NONE).
+                * speakers (list(str)): All speaker ids in the sentence.
+                * parse (str): A string representation of the sentence's parse
+                  tree (should be readable by nltk)
+                * dep (list(StanfordDependencies.CoNLL.Token): All dependencies
+                  in the sentence represented as lists of tokens with label
+                  information and pointers to heads.
+            coref (dict(span, int)): A mapping of mention spans to their
+            coreference set id.
         """
-        begin = document_as_string.split("\n")[0]
+        self.identifier = identifier
 
-        self.folder = "/".join(begin.split()[2].split("/")[0:-1])[1:] + "/"
-        self.id = begin.split()[2].split("/")[-1][0:-2]
-        self.part = begin.split()[-1]
-        self.genre = self.__get_genre()
+        self.in_sentence_ids = []
+        self.sentence_spans = []
+        self.tokens = []
+        self.pos = []
+        self.ner = []
+        self.parse = []
+        self.dep = []
+        self.speakers = []
+        self.coref = coref
 
-        self.document_table = CoNLLDocument.__string_to_table(
-            document_as_string)
+        for sentence in sentences:
+            tokens, pos, ner, speakers, parse, dep = sentence
 
-        self.in_sentence_ids = [int(i) for i in self.__extract_from_column(2)]
-        # if in_sentence_ids are 1-based, fix this
-        self.indexing_start = self.in_sentence_ids[0]
-        if self.indexing_start != 0:
-            logger.warning("Detected " +
-                           str(self.indexing_start) +
-                           "-based indexing for tokens in sentences in input,"
-                           "transformed to 0-based indexing.")
-            self.in_sentence_ids = [i - self.indexing_start
-                                    for i in self.in_sentence_ids]
+            offset = len(self.tokens)
 
-        self.tokens = self.__extract_from_column(3)
-        self.pos = self.__extract_from_column(4)
-        self.ner = self.__extract_ner()
-        self.parse = self.__extract_from_column(5)
-        self.speakers = self.__extract_from_column(9)
-        self.sentence_spans_to_id = self.__extract_sentence_spans()
+            self.in_sentence_ids += list(range(0, len(tokens)))
 
-        self.sentence_spans_to_parses = {}
-        for span in self.sentence_spans_to_id:
-            parse = self.get_parse(span)
-            tree = nltk_util.parse_parented_tree(parse)
-            self.sentence_spans_to_parses[span] = tree
+            self.sentence_spans.append(spans.Span(
+                offset, offset + len(tokens) - 1
+            ))
 
-        self.coref = CoNLLDocument.__get_span_to_id(
-            self.__extract_from_column(-1))
+            self.tokens += tokens
+            self.pos += pos
+            self.ner += ner
+            self.parse.append(nltk.ParentedTree.fromstring(parse))
+            self.dep.append(dep)
+            self.speakers += speakers
 
-        # maps spans to mention objects
-        self.spans_to_annotated_mentions = \
-            self.__get_span_to_annotated_mentions()
-        self.annotated_mentions = sorted(
-            list(self.spans_to_annotated_mentions.values()))
-
+        self.annotated_mentions = self.__get_annotated_mentions()
         self.system_mentions = []
 
-        self.antecedent_decisions = {}
+    def __get_annotated_mentions(self):
+        mention_spans = sorted(list(self.coref.keys()))
+
+        seen = set()
+
+        annotated_mentions = []
+
+        for span in mention_spans:
+            set_id = self.coref[span]
+            annotated_mentions.append(
+                mentions.Mention.from_document(
+                    span, self, first_in_gold_entity=set_id not in seen
+                )
+            )
+            seen.add(set_id)
+
+        return annotated_mentions
 
     def __repr__(self):
-        return self.folder + self.id + ", part " + self.part
+        return self.identifier
 
     def __hash__(self):
-        return hash((self.folder, self.id, self.part))
+        return hash(self.identifier)
 
     def __lt__(self, other):
         """ Check whether this document is less than another document.
@@ -130,8 +135,7 @@ class CoNLLDocument:
         Returns:
             True if this document is less than other, False otherwise.
         """
-        return (self.folder, self.id, self.part) < (other.folder, other.id,
-                                                    other.part)
+        return self.identifier < other.identifier
 
     def __eq__(self, other):
         """ Check for document equality.
@@ -146,32 +150,268 @@ class CoNLLDocument:
             True if id and part of the documents are equal.
         """
         if isinstance(other, self.__class__):
-            return self.folder == other.folder \
-                and self.id == other.id \
-                and self.part == other.part
+            return self.identifier == other.identifier
         else:
             return False
 
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    def __get_genre(self):
-        if re.match("^(a2e|eng)", self.id):
-            return "wb"
-        elif re.match("^(cctv|cnn_000|msnbc|phoenix)", self.id):
-            return "bc"
-        elif re.match("^(abc|c2e|cnn|mnb|nbc|pri|voa)", self.id):
-            return "bn"
-        elif re.match("^(chtb|wsj)", self.id):
-            return "nw"
-        elif re.match("^(ch)", self.id):
-            return "tc"
-        elif re.match("^(ectb)", self.id):
-            return "mz"
-        elif re.match("^(nt)", self.id):
-            return "pt"
-        else:
-            return "unknown"
+    def write_antecedent_decisions_to_file(self, file):
+        """ Write all antecedent decisions to a file.
+
+        One decision is represented as one line in the file in the following
+        format:
+
+        ``identifier    anaphor_span    antecedent_span``
+
+        For example ``(bc/cctv/00/cctv_0000); part 000   (10, 11) (1, 1)``
+
+        Args:
+            file (file): The file to write antecedent decisions to.
+        """
+
+        for mention in self.system_mentions:
+            ante = mention.attributes["antecedent"]
+
+            if ante:
+                file.write(self.identifier + "\t" +
+                           str(mention.span) + "\t" +
+                           str(ante.span) + "\n")
+
+    def get_annotated_mentions_from_antecedent_decisions(self, span_pairs):
+        """ Overwrite coreference attributes with information from span pairs.
+
+        In particular, interpret the spans in span pairs as anaphor/antededent
+        decisions and update attributes annotated_mentions,
+        spans_to_annotated_mentions, coref accordingly.
+
+        Args:
+            span_pairs (list((Span,Span))): A list of span pairs corresponding
+                to anaphor/antecedent decisions.
+        """
+
+        spans_to_annotated_mentions = {}
+
+        for mention in self.annotated_mentions:
+            spans_to_annotated_mentions[mention.span] = mention
+
+        set_id = 0
+        for span_anaphor, span_antecedent in span_pairs:
+            if span_antecedent not in spans_to_annotated_mentions:
+                spans_to_annotated_mentions[span_antecedent] = \
+                    mentions.Mention.from_document(span_antecedent, self)
+                spans_to_annotated_mentions[
+                    span_antecedent].attributes["annotated_set_id"] = set_id
+                set_id += 1
+            if span_anaphor not in spans_to_annotated_mentions:
+                spans_to_annotated_mentions[span_anaphor] = \
+                    mentions.Mention.from_document(span_anaphor, self)
+                spans_to_annotated_mentions[span_anaphor].attributes[
+                    "annotated_set_id"] = spans_to_annotated_mentions[
+                        span_antecedent].attributes["annotated_set_id"]
+
+            spans_to_annotated_mentions[span_anaphor].attributes[
+                "antecedent"] = spans_to_annotated_mentions[
+                    span_antecedent]
+
+            self.annotated_mentions = sorted(
+                list(spans_to_annotated_mentions.values()))
+
+            self.coref.clear()
+
+            for span in spans_to_annotated_mentions:
+                self.coref[span] = spans_to_annotated_mentions[
+                    span].attributes["annotated_set_id"]
+
+    def get_antecedent_decisions(self, which_mentions="annotated"):
+        """ Get all antecedent decisions in this document.
+
+        Args:
+            which_mentions (str): Either "annotated" or "system". Defaults to
+                "system". Signals whether to consider annotated mentions or
+                system mentions.
+
+        Returns:
+            dict(Mention, Mention): The mapping of antecedent decisions.
+        """
+        antecedent_decisions = {}
+
+        doc_mentions = None
+
+        if which_mentions == "annotated":
+            doc_mentions = self.annotated_mentions
+        elif which_mentions == "system":
+            doc_mentions = self.system_mentions
+
+        for mention in doc_mentions:
+            antecedent = mention.attributes["antecedent"]
+
+            if antecedent:
+                antecedent_decisions[mention] = antecedent
+
+        return antecedent_decisions
+
+    def get_sentence_id_and_span(self, span):
+        """ Get the sentence span from the sentence embedding the span.
+
+        Args:
+            span (Span): A span corresponding to a fragment of the document.
+
+        Returns:
+            Span: The span of the sentence which embeds the text corresponding
+            to the span.
+        """
+        for i, sentence_span in enumerate(self.sentence_spans):
+            if sentence_span.embeds(span):
+                return i, sentence_span
+
+    def to_simple_output(self):
+        """ Convert the document into a simple textual representation,
+        containing tokens and coreference information.
+
+        In particular, the representation has one sentence per line, one space
+        between each token. Each system mention is enclosed by
+        ``<mention> ... </mention>`` tags, with the following attributes:
+
+        * id (int): integer identifier of the mention. Equals position in the
+            list of system mentions (excluding the dummy mention)
+        * span_start (int): start of the mention span
+        * span_end (int): end of the mention span
+        * entity (int): set id of the mention. Only when the mention is in some
+            coreference cluster
+        * antecedent (int): id of the antecedent. Only if the mention has some
+            antecedent.
+
+        Returns:
+            (str): A textual representation of document as described above.
+        """
+        content = []
+
+        for sentence_span in self.sentence_spans:
+            content += self.tokens[sentence_span.begin:
+                                   sentence_span.end+1]
+
+        mention_to_id = {}
+
+        for i, mention in enumerate(self.system_mentions[1:]):
+            mention_to_id[mention] = i
+
+            tag_begin = "<mention id=\"" + str(i) + "\" " \
+                        "span_start=\"" + str(mention.span.begin) + "\" " \
+                        "span_end=\"" + str(mention.span.end) + "\""
+
+            if mention.attributes["set_id"]:
+                tag_begin += " entity=\"" + \
+                             str(mention.attributes["set_id"]) + "\""
+
+            if mention.attributes["antecedent"]:
+                antecedent_id = mention_to_id[
+                    mention.attributes["antecedent"]]
+
+                tag_begin += " antecedent=\"" + str(antecedent_id) + "\""
+
+            tag_begin += ">"
+
+            old_begin = content[mention.span.begin]
+            content[mention.span.begin] = tag_begin + old_begin
+
+            content[mention.span.end] += "</mention>"
+
+        output_string = ""
+
+        for sentence_span in self.sentence_spans:
+            output_string += " ".join(
+                content[sentence_span.begin:sentence_span.end+1]) + "\n"
+
+        return output_string
+
+    def get_html_friendly_identifier(self):
+        """ Transform the identifier to a HTML/CSS/JS-friendly representation
+        for visualization.
+
+        Returns:
+            str: The HTML/CSS-JS-friendly representation.
+        """
+        return self.identifier.replace(".", "_")
+
+
+class CoNLLDocument(Document):
+    """Represents a document in CoNLL format.
+
+    For a specification of the format, see
+    http://conll.cemantix.org/2012/data.html.
+
+    Attributes:
+        identifier (str): A unique identifier for the document.
+        in_sentence_ids (list(int)): In-sentence indicies of all tokens in the
+            document, for example [0, 1, 2, 0, 1, 2, 3, 4, ...]
+        tokens (list(str)): All tokens.
+        pos (list(str)): All part-of-speech tags.
+        ner (list(str)): All named entity tags (if a token does not have a
+            tag, the tag is set to NONE).
+        parse (list(nltk:ParentedTree)): All parse trees.
+        dep (list(list(StanfordDependencies.CoNLL.Token)): All dependencies
+            represented as lists of tokens with label information and pointers
+            to heads. One list for each sentence.
+        speakers (list(str)): All speaker ids,
+        coref (dict(span, int)): A mapping of mention spans to their
+            coreference set id.
+        annotated_mentions list(Mention): All annotated mentions.
+        system_mentions list(Mention): The system mentions (initially empty).
+        document_table (list(list(str))): A tabular representation of the
+            document (as in the CoNLL data).
+    """
+
+    def __init__(self, document_as_string):
+        """ Construct a document from a string representation.
+
+            The Format must follow the CoNLL format, see
+                http://conll.cemantix.org/2012/data.html.
+
+            Args:
+                document_as_string (str): A representation of a document in
+                    the CoNLL format.
+            """
+        identifier = " ".join(document_as_string.split("\n")[0].split(" ")[2:])
+
+        self.document_table = CoNLLDocument.__string_to_table(
+            document_as_string)
+        in_sentence_ids = [int(i) for i in self.__extract_from_column(2)]
+        indexing_start = in_sentence_ids[0]
+        if indexing_start != 0:
+            logger.warning("Detected " +
+                           str(indexing_start) +
+                           "-based indexing for tokens in sentences in input,"
+                           "transformed to 0-based indexing.")
+            in_sentence_ids = [i - indexing_start for i in in_sentence_ids]
+        sentence_spans = CoNLLDocument.__extract_sentence_spans(in_sentence_ids)
+        temp_tokens = self.__extract_from_column(3)
+        temp_pos = self.__extract_from_column(4)
+        temp_ner = self.__extract_ner()
+        temp_speakers = self.__extract_from_column(9)
+        coref = CoNLLDocument.__get_span_to_id(self.__extract_from_column(-1))
+        parses = [CoNLLDocument.get_parse(span,
+                                          self.__extract_from_column(5),
+                                          temp_pos,
+                                          temp_tokens)
+                  for span in sentence_spans]
+        sd = StanfordDependencies.get_instance()
+        dep_trees = sd.convert_trees(
+            [parse.replace("NOPARSE", "S") for parse in parses]
+        )
+        sentences = []
+        for i, span in enumerate(sentence_spans):
+            sentences.append(
+                (temp_tokens[span.begin:span.end + 1],
+                 temp_pos[span.begin:span.end + 1],
+                 temp_ner[span.begin:span.end + 1],
+                 temp_speakers[span.begin:span.end + 1],
+                 parses[i],
+                 dep_trees[i])
+            )
+
+        super(CoNLLDocument, self).__init__(identifier, sentences, coref)
 
     def __extract_from_column(self, column):
         entries = []
@@ -210,22 +450,21 @@ class CoNLLDocument:
 
         return table
 
-    def __extract_sentence_spans(self):
-        sentence_spans_to_id = {}
-        sentence_id = 0
+    @staticmethod
+    def __extract_sentence_spans(in_sentence_ids):
+        sentence_spans = []
 
         span_start = 0
 
-        for i in range(1, len(self.in_sentence_ids)):
-            if self.in_sentence_ids[i] <= self.in_sentence_ids[i-1]:
-                sentence_spans_to_id[spans.Span(span_start, i-1)] = sentence_id
-                sentence_id += 1
+        for i in range(1, len(in_sentence_ids)):
+            if in_sentence_ids[i] <= in_sentence_ids[i-1]:
+                sentence_spans.append(spans.Span(span_start, i-1))
                 span_start = i
 
-        sentence_spans_to_id[
-            spans.Span(span_start, len(self.in_sentence_ids)-1)] = sentence_id
+        sentence_spans.append(spans.Span(span_start,
+                                         len(in_sentence_ids)-1))
 
-        return sentence_spans_to_id
+        return sentence_spans
 
     @staticmethod
     def __get_span_to_id(column):
@@ -254,23 +493,8 @@ class CoNLLDocument:
 
         return span_to_id
 
-    def __get_span_to_annotated_mentions(self):
-        mention_spans = self.coref.keys()
-
-        mention_spans = sorted(mention_spans)
-        span_to_mentions = {}
-
-        seen = set()
-
-        for span in mention_spans:
-            set_id = self.coref[span]
-            span_to_mentions[span] = mentions.Mention.from_document(
-                span, self, first_in_gold_entity=set_id not in seen)
-            seen.add(set_id)
-
-        return span_to_mentions
-
-    def get_parse(self, span):
+    @staticmethod
+    def get_parse(span, parses_as_string, pos, tokens):
         """ Get a the parse tree (as a string) of to the span.
 
         Args:
@@ -281,26 +505,12 @@ class CoNLLDocument:
         """
         parse_tree = ""
         for i in range(span.begin, span.end+1):
-            parse_bit = self.parse[i]
+            parse_bit = parses_as_string[i]
             parse_tree += \
                 parse_bit.replace("(", " (").replace(
-                    "*", " (" + self.pos[i] + " " + self.tokens[i] + ")")
+                    "*", " (" + pos[i] + " " + tokens[i] + ")")
 
         return parse_tree.strip()
-
-    def get_embedding_sentence(self, span):
-        """ Get the sentence span from the sentence embedding the span.
-
-        Args:
-            span (Span): A span corresponding to a fragment of the document.
-
-        Returns:
-            Span: The span of the sentence which embeds the text corresponding
-            to the span.
-        """
-        for sentence_span in self.sentence_spans_to_id.keys():
-            if sentence_span.embeds(span):
-                return sentence_span
 
     def get_string_representation(self):
         """ Get a string representation of the document.
@@ -333,12 +543,7 @@ class CoNLLDocument:
 
             padded_table.append(current_row)
 
-        begin = ("#begin document (" +
-                 self.folder +
-                 self.id +
-                 "); part " +
-                 self.part +
-                 "\n")
+        begin = ("#begin document " + self.identifier + "\n")
 
         content = "\n".join(["\t".join(row) for row in padded_table])
 
@@ -375,90 +580,13 @@ class CoNLLDocument:
 
         return output_with_parallel_annotations
 
-    def write_antecedent_decisions_to_file(self, file):
-        """ Write all antecedent decisions to a file.
-
-        One decision is represented as one line in the file in the following
-        format:
-
-        ``folderid    part    anaphor_span    antecedent_span``
-
-        For example ``bn/voa/02/voa_0220  000   (10, 11) (1, 1)``
-
-        Args:
-            file (file): The file to write antecedent decisions to.
-        """
-        for mention_span in sorted(self.antecedent_decisions.keys()):
-            file.write(self.folder + self.id + "\t" +
-                       self.part + "\t" +
-                       str(mention_span) + "\t" +
-                       str(self.antecedent_decisions[mention_span]) + "\n")
-
-    def get_annotated_mentions_from_antecedent_decisions(self, span_pairs):
-        """ Overwrite coreference attributes with information from span pairs.
-
-        In particular, interpret the spans in span pairs as anaphor/antededent
-        decisions and update attributes annotated_mentions,
-        spans_to_annotated_mentions, coref accordingly.
-
-        Args:
-            span_pairs (list((Span,Span))): A list of span pairs corresponding
-                to anaphor/antecedent decisions.
-        """
-        self.spans_to_annotated_mentions.clear()
-
-        set_id = 0
-        for span_anaphor, span_antecedent in span_pairs:
-            if span_antecedent not in self.spans_to_annotated_mentions:
-                self.spans_to_annotated_mentions[span_antecedent] = \
-                    mentions.Mention.from_document(span_antecedent, self)
-                self.spans_to_annotated_mentions[
-                    span_antecedent].attributes["annotated_set_id"] = set_id
-                set_id += 1
-            if span_anaphor not in self.spans_to_annotated_mentions:
-                self.spans_to_annotated_mentions[span_anaphor] = \
-                    mentions.Mention.from_document(span_anaphor, self)
-                self.spans_to_annotated_mentions[span_anaphor].attributes[
-                    "annotated_set_id"] = self.spans_to_annotated_mentions[
-                        span_antecedent].attributes["annotated_set_id"]
-
-            self.spans_to_annotated_mentions[span_anaphor].attributes[
-                "antecedent"] = self.spans_to_annotated_mentions[
-                    span_antecedent]
-
-            self.annotated_mentions = sorted(
-                list(self.spans_to_annotated_mentions.values()))
-
-            self.coref.clear()
-
-            for span in self.spans_to_annotated_mentions:
-                self.coref[span] = self.spans_to_annotated_mentions[
-                    span].attributes["annotated_set_id"]
-
-    def get_antecedent_decisions(self, which_mentions="annotated"):
-        """ Get all antecedent decisions in this document.
-
-        Args:
-            which_mentions (str): Either "annotated" or "system". Defaults to
-                "system". Signals whether to consider annotated mentions or
-                system mentions.
+    def get_html_friendly_identifier(self):
+        """ Transform the identifier to a HTML/CSS/JS-friendly representation
+        for visualization.
 
         Returns:
-            dict(Mention, Mention): The mapping of antecedent decisions.
+            str: The HTML/CSS-JS-friendly representation.
         """
-        antecedent_decisions = {}
-
-        doc_mentions = None
-
-        if which_mentions == "annotated":
-            doc_mentions = self.annotated_mentions
-        elif which_mentions == "system":
-            doc_mentions = self.system_mentions
-
-        for mention in doc_mentions:
-            antecedent = mention.attributes["antecedent"]
-
-            if antecedent:
-                antecedent_decisions[mention] = antecedent
-
-        return antecedent_decisions
+        splitted_by_whitespace = self.identifier.split()
+        return splitted_by_whitespace[0].split("/")[-1][:-2] + \
+               "_part_" + splitted_by_whitespace[-1]
