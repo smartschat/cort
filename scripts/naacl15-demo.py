@@ -1,6 +1,3 @@
-__author__ = 'sebastian'
-
-
 import codecs
 
 
@@ -8,6 +5,10 @@ from cort.analysis import error_extractors
 from cort.analysis import plotting
 from cort.analysis import spanning_tree_algorithms
 from cort.core import corpora
+
+
+__author__ = 'smartschat'
+
 
 # read in corpora
 reference = corpora.Corpus.from_file("reference", codecs.open("dev.gold", "r",

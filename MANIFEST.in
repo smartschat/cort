@@ -1,6 +1,7 @@
 include cort/resources/*
 include cort/analysis/visualization/*
 include cort/analysis/visualization/lib/*
+include cort/coreference/perceptrons.pyx
 include stanford_corenlp_pywrapper/rcorenlp.r
 include stanford_corenlp_pywrapper/lib/*
 include stanford_corenlp_pywrapper/javasrc/corenlp/*

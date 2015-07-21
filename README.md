@@ -23,13 +23,11 @@ __cort__ is available on PyPi. You can install it via
 ```
 pip install cort
 ```
-
-**cort** needs [cython](http://cython.org/), please install it it advance.
-
 Dependencies (automatically installed by pip) are 
 [nltk](http://www.nltk.org/), [numpy](http://www.numpy.org/), 
 [matplotlib](http://matplotlib.org), 
 [mmh3](https://pypi.python.org/pypi/mmh3),
+[cython](http://cython.org/),
 [future](https://pypi.python.org/pypi/future),
 [jpype](https://pypi.python.org/pypi/jpype1) and
 [beautifulsoup](https://pypi.python.org/pypi/beautifulsoup4). It ships with 

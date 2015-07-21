@@ -1,10 +1,9 @@
 from distutils.core import setup
-from Cython.Build import cythonize
 
 
 setup(
     name='cort',
-    version='0.2',
+    version='0.2.0.1',
     packages=['cort',
               'cort.analysis',
               'cort.core',
@@ -42,6 +41,7 @@ setup(
         'cort': ['analysis/visualization/style.css',
                  'analysis/visualization/lib/*',
                  'resources/*',
+                 'coreference/perceptrons.pyx',
                  "reference-coreference-scorers/v8.01/*.*",
                  "reference-coreference-scorers/v8.01/lib/*.pm",
                  "reference-coreference-scorers/v8.01/lib/Algorithm/*",
@@ -53,6 +53,5 @@ setup(
                                        'javasrc/util/misc/*',
                                        'javasrc/util/*.java'],
     },
-    scripts=['bin/cort-train', 'bin/cort-predict', 'bin/run-multigraph'],
-    ext_modules = cythonize("cort/coreference/perceptrons.pyx")
+    scripts=['bin/cort-train', 'bin/cort-predict', 'bin/run-multigraph']
 )
