@@ -7,16 +7,14 @@ devise approaches to coreference resolution, while the *error analysis* componen
 provides extensive functionality for analyzing and visualizing errors made by 
 coreference resolution systems.
 
-For more information and tutorials, have a look at the readme pages for the 
-<a href="COREFERENCE.md">coreference resolution component</a> or the
-<a href="ANALYSIS.md">error analysis component</a>.
-
-Furthermore, **cort** also contains a simple deterministic coreference resolution
-system based on a multigraph representation. For more information, consult the
-corresponding <a href="MULTIGRAPH.md">readme page</a>.
-
 If you have any questions or comments, drop me an e-mail at 
 [sebastian.martschat@gmail.com](mailto:sebastian.martschat@gmail.com).
+
+## Documentation
+
+* <a href="COREFERENCE.md">coreference resolution with cort</a>
+* <a href="ANALYSIS.md">error analysis with cort</a>
+* <a href="MULTIGRAPH.md">running the multigraph system</a>
 
 ## Installation
 
