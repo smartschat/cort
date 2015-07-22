@@ -54,7 +54,7 @@ for system in systems:
     subprocess.call([
         "cort-train",
         "-in", "/data/nlp/martscsn/thesis/data/input/train.auto",
-        "-out", "model-" + system + "train.obj",
+        "-out", "model-" + system + "-train.obj",
         "-extractor", get_extractor("train", system),
         "-perceptron", get_perceptron(system),
         "-cost_function", get_cost_function(system),
@@ -64,7 +64,7 @@ for system in systems:
     subprocess.call([
         "cort-train",
         "-in", "/data/nlp/martscsn/thesis/data/input/train+dev.auto",
-        "-out", "model-" + system + "train+dev.obj",
+        "-out", "model-" + system + "-train+dev.obj",
         "-extractor", get_extractor("train", system),
         "-perceptron", get_perceptron(system),
         "-cost_function", get_cost_function(system),
@@ -73,9 +73,9 @@ for system in systems:
     for data_set in data_sets:
         print("Predicting", system, "on", data_set)
         if data_set == "dev":
-            model = system + "-model-train.obj"
+            model = "model-" + system + "-train.obj"
         else:
-            model = system + "-model-train+dev.obj"
+            model = "model-" + system + "-train+dev.obj"
 
         subprocess.call([
             "cort-predict",
