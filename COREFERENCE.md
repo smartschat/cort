@@ -19,7 +19,14 @@ To define an approach to coreference resolution, the user has to provide
   latent structure, and
 * an algorithm for extracting entity assignments from the auxiliary structure.
 
-## Framework
+## Contents
+
+* [Framework](#framework)
+* [Case Study: the Mention Ranking Model](#ranking)
+* [Running cort](#running)
+* [Model Downloads and Results](#models)
+
+## <a name="framework"></a> Framework
 
 We first give an overview of the framework which we will use to represent the
 model (taken form our ACL'15 Demo paper). The framework is described in more 
@@ -85,7 +92,7 @@ we employ a latent structured perceptron (Sun et al., 2009) with
 cost-augmented inference (Crammer et al., 2006) and averaging (Collins, 2002). 
 
 
-## Case Study: the Mention Ranking Model
+## <a name="ranking"></a> Case Study: the Mention Ranking Model
 
 When devising a model, we first need to define a graph-based representation of
 the structures underlying the model. Here we consider the mention ranking 
@@ -454,7 +461,7 @@ cort.coreference.features.head_contained
 cort.coreference.features.token_distance
 ```
 
-## Running cort
+## <a name="running"></a> Running cort
 
 We provide two command line tools for training models and predicting 
 coreference chains with **cort**. 
@@ -525,7 +532,7 @@ feature set. The remaining parameters were as follows:
     * perceptron: `cort.coreference.approaches.mention_ranking.RankingPerceptron`
     * cost function: `cort.coreference.cost_functions.cost_based_on_consistency`
     * clusterer: `cort.coreference.clusterer.all_ante`    
-* AntecedentTrees
+* Antecedent Tree
     * extractor: `cort.coreference.approaches.antecedent_trees.extract_substructures`
     * perceptron: `cort.coreference.approaches.antecedent_trees.AntecedentTreePerceptron`
     * cost function: `cort.coreference.cost_functions.cost_based_on_consistency`
@@ -534,3 +541,47 @@ feature set. The remaining parameters were as follows:
 When running the script or these models the results are a bit higher than in the TACL paper,
 since I have extended the feature set. If you are interested in exactly replicating the results
 from the paper, please [contact me](mailto:sebastian.martschat@gmail.com).
+
+## <a name="models"></a> Model Downloads and Results
+
+We provide models trained on CoNLL-2012 shared task data, and evaluate these models.
+
+### Model Downloads
+
+* Mention Pair
+    * <a href="http://smartschat.de/downloads/pair-model-train.obj">trained on train</a>
+    * <a href="http://smartschat.de/downloads/pair-model-train+dev.obj">trained on train+dev</a>
+* Ranking: Closest
+    * <a href="http://smartschat.de/downloads/closest-model-train.obj">trained on train</a>
+    * <a href="http://smartschat.de/downloads/closest-model-train+dev.obj">trained on train+dev</a>
+* Ranking: Latent
+    * <a href="http://smartschat.de/downloads/latent-model-train.obj">trained on train</a>
+    * <a href="http://smartschat.de/downloads/latent-model-train+dev.obj">trained on train+dev</a>
+* Antecedent Tree
+    * <a href="http://smartschat.de/downloads/tree-model-train.obj">trained on train</a>
+    * <a href="http://smartschat.de/downloads/tree-model-train+dev.obj">trained on train+dev</a>
+    
+### Results
+
+We evaluated the models you can download above on CoNLL-2012 data (the models trained on train on development data,
+the other models on testing data). For scoring we employed the current version v8.01 of [the reference implementation
+of the CoNLL scorer](https://github.com/conll/reference-coreference-scorers). The numbers are a bit higher than in the
+TACL paper since we extended the feature set.
+
+#### Development Data
+
+Model             | MUC   | BCUB  | CEAFE | AVG
+----------------- | ----- | ----- | ----- | -----
+Pair              | 69.53 | 58.09 | 53.84 | 60.49
+Ranking: Closest  | 72.83 | 61.17 | 58.04 | 64.01
+Ranking: Latent   | 72.66 | 61.19 | 58.43 | 64.09
+Tree              | 72.16 | 60.36 | 57.27 | 63.26
+
+#### Testing Data
+
+Model             | MUC   | BCUB  | CEAFE | AVG
+----------------- | ----- | ----- | ----- | -----
+Pair              | 69.45 | 56.44 | 51.87 | 59.25
+Ranking: Closest  | 72.55 | 59.39 | 55.25 | 62.40
+Ranking: Latent   | 72.71 | 60.13 | 56.40 | 63.08
+Tree              | 71.78 | 58.44 | 54.53 | 61.58

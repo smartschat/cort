@@ -1,10 +1,21 @@
 # Error Analysis with cort
 
 With __cort__, you can analyze recall and precision errors of your coreference 
-resolution systems just with a few lines in python. Let us go through an 
-example.
+resolution systems just with a few lines in python. In this readme, we show
+the capabilities of __cort__ by going through an example.
 
-## Reading in Data
+## Contents
+
+* [Reading in Data](#reading)
+* [Extracting Errors](#extracting)
+* [Filtering and Categorizing](#filtering)
+* [Visualization](#visualization)
+* [Plotting](#plotting)
+* [Mention Attributes](#attributes)
+* [Format for Antecedent Data](#antecedents)
+* [Advanced Examples](#advanced)
+
+## <a name="reading"></a> Reading in Data
 
 So far, __cort__ only supports data in [the format from the CoNLL shared tasks 
 on coreference resolution](http://conll.cemantix.org/2012/data.html). Let us 
@@ -29,7 +40,7 @@ tree = corpora.Corpus.from_file("tree", open("tree-output.conll"))
 pair.read_antecedents(open('pair.antecedents'))
 ```
 
-## Extracting Errors
+## <a name="extracting"></a> Extracting Errors
 
 We now want to extract the errors. For this, we use an `ErrorExtractor`. 
 In addition to the corpora, we need to provide the `ErrorExtractor` with the 
@@ -59,7 +70,7 @@ second system, while `errors["pair"]["precision_errors"]["all"]`contains
 all precision errors of the first system. `errors` is an instance of the
 class `StructuredCoreferenceAnalysis`.
 
-## Filtering and Categorizing
+## <a name="filtering"></a> Filtering and Categorizing
 
 For further analysis, you will want to filter and categorize the errors you've 
 extracted. That's why `StructuredCoreferenceAnalysis` provides the member 
@@ -105,7 +116,7 @@ have a look at the documentation of `Mention`, or consult [the list included
 in this readme](#attributes).
 
 
-## Visualization
+## <a name="visualization"></a> Visualization
 
 Errors of one system can be visualized by providing the name of the system:
 
@@ -124,11 +135,16 @@ contains the navigation panel, which includes
 * a summary of all errors for the document in focus, and
 * lists of reference and system entities for the document in focus.
 
-To the right of the navigation panel, the document in focus is shown. When 
-the user picks a reference or system entity from the corresponding list, 
+To the right of the navigation panel, the document in focus is shown. Mentions in
+reference entities have a gold border, mention in system entities have a blue
+border.
+
+When the user picks a reference or system entity from the corresponding list, 
 __cort__ displays all recall and precision errors for all mentions which are 
-contained in the entity (as labeled red arrows between mentions). 
-Alternatively, the user can choose an error category from the error summary. 
+contained in the entity (as labeled red arrows between mentions). Furthermore,
+it shows all antecedent antecedent decisions for the entity (as blue arrows).
+The user can also click on mentions. Then all related errors and antecedent decisions
+are displayed. Alternatively, the user can choose an error category from the error summary. 
 In that case, all errors of that category are displayed.
 
 We use color to distinguish between entities: mentions in different entities 
@@ -138,7 +154,7 @@ have a yellow border, while mentions in system entities have a blue border.
 The visualization relies on [jQuery](https://jquery.org/) and 
 [jsPlumb](http://www.jsplumb.org/). The libraries are contained in our toolkit.
 
-## Plotting
+## <a name="plotting"></a> Plotting
 
 To assess differences in error distributions, __cort__ provides plotting
 functionality.
@@ -203,7 +219,7 @@ seperated by tabs. The format is
 
 where
 
-* doc_id is the identifier in the first line of an CoNLL document
+* doc_identifier is the identifier in the first line of an CoNLL document
   after #begin document, such as (bc/cctv/00/cctv_0000); part 000
 * `anaphor_start` is the position in the document where the anaphor begins 
   (counting from 0),
@@ -214,7 +230,7 @@ An example is
 
 ``(bc/cctv/00/cctv_0000); part 000   (10, 11) (1, 1)``
 
-## Advanced Examples
+## <a name="advanced"></a> Advanced Examples
 
 Here we show some advanced functionality.
 
