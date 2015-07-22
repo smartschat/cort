@@ -44,14 +44,14 @@ more efficient.
 
 Sebastian Martschat and Michael Strube (2015). **Latent Structures for 
 Coreference Resolution**. To appear in *Transactions of the Association for 
-Computational Linguistics*.
+Computational Linguistics*.  
 [PDF](http://smartschat.de/papers/tacl15.pdf)
 
 Sebastian Martschat, Patrick Claus and Michael Strube (2015). **Plug Latent 
 Structures and Play Coreference Resolution**. To appear in *Proceedings of 
 the 53rd Annual Meeting of the Association for Computational Linguistics: 
-System Demonstrations*, Beijing, China, 26-31 July 2015.
-[PDF](https://smartschat.de/papers/acl15demo.pdf)
+System Demonstrations*, Beijing, China, 26-31 July 2015.  
+[PDF](http://smartschat.de/papers/acl15demo.pdf)
 
 Sebastian Martschat, Thierry Göckel and Michael Strube (2015). **Analyzing and 
 Visualizing Coreference Resolution Errors**. In *Proceedings of the 2015 
