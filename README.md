@@ -43,8 +43,8 @@ more efficient.
 ## References
 
 Sebastian Martschat and Michael Strube (2015). **Latent Structures for 
-Coreference Resolution**. To appear in *Transactions of the Association for 
-Computational Linguistics*.  
+Coreference Resolution**. *Transactions of the Association for 
+Computational Linguistics*, 3, pages 405-418.  
 [PDF](http://smartschat.de/papers/tacl15.pdf)
 
 Sebastian Martschat, Patrick Claus and Michael Strube (2015). **Plug Latent 
