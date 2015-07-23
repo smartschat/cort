@@ -495,7 +495,7 @@ shared task on coreference resolution (I'll soon update **cort** for coreference
 resolution on raw text). It can be evoked as follows:
 
 ```bash
-cort-train -in test.conll \
+cort-predict -in test.conll \
            -model model.obj \
            -out output.conll \
            -extractor cort.coreference.approaches.mention_ranking.extract_substructures \
