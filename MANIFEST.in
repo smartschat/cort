@@ -1,4 +1,5 @@
 include cort/resources/*
+include cort/config_files/*
 include cort/analysis/visualization/*
 include cort/analysis/visualization/lib/*
 include cort/coreference/perceptrons.pyx
