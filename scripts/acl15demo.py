@@ -134,10 +134,24 @@ class LiveDemo():
         logging.info("Visualize")
 
         for doc in testing_corpus:
-            doc.annotated_mentions = []
+            max_id = 0
+
             for mention in doc.system_mentions[1:]:
-                mention.attributes["annotated_set_id"] = mention.attributes[
-                    "set_id"]
+                set_id = mention.attributes["set_id"]
+
+                if set_id:
+                    max_id = max(set_id, max_id)
+
+            max_id += 1
+
+            doc.annotated_mentions = []
+
+            for i, mention in enumerate(doc.system_mentions[1:]):
+                if mention.attributes["set_id"]:
+                    mention.attributes["annotated_set_id"] = mention.attributes[
+                        "set_id"]
+                else:
+                    mention.attributes["annotated_set_id"] = max_id + i
                 doc.annotated_mentions.append(mention)
 
         ex = error_extractors.ErrorExtractor(testing_corpus,

@@ -331,9 +331,6 @@ class Visualizer:
 
         index = 0
 
-        for mention in mentions:
-            print(mention)
-
         sentence_id, sentence_span = document.get_sentence_id_and_span(
             spans.Span(0, 0))
 
