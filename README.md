@@ -79,6 +79,9 @@ ACL'13-SRW paper.
 
 ## Changelog
 
+__Monday, 27 July 2015__   
+Now can perform coreference resolution on raw text. 
+
 __Tuesday, 21 July 2015__   
 Updated to status of TACL paper.
 

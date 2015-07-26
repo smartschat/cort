@@ -66,9 +66,10 @@ errors = extractor.get_errors()
 That's it! `errors` now contains all errors of the two systems under 
 consideration. The errors can be accessed like in a nested dict:
 `errors["tree"]["recall_errors"]["all"]` contains all recall errors of the
-second system, while `errors["pair"]["precision_errors"]["all"]`contains
-all precision errors of the first system. `errors` is an instance of the
-class `StructuredCoreferenceAnalysis`.
+second system, while `errors["pair"]["precision_errors"]["all"]` contains
+all precision errors of the first system. If you supplied antecedent data,
+`errors["pair"]["decisions"]["all"]` contains all antecedent decisions. 
+`errors` is an instance of the class `StructuredCoreferenceAnalysis`.
 
 ## <a name="filtering"></a> Filtering and Categorizing
 

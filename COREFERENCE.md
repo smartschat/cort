@@ -488,14 +488,14 @@ and classes (perceptron) as parameters. In the example, we give the functions/cl
 above as parameters. You can define your own extractors, perceptrons and cost functions, and give
 them as parameters to `cort-train`.
 
-### Predicting Coreference Chains
+### Predicting Coreference Chains on CoNLL data
 
-`cort-predict` predicts coreference chains on corpora following the annotation of the CoNLL-2012
-shared task on coreference resolution (I'll soon update **cort** for coreference
-resolution on raw text). It can be evoked as follows:
+`cort-predict-conll` predicts coreference chains on corpora following the 
+annotation of the CoNLL-2012 shared task on coreference resolution. It can be 
+evoked as follows:
 
 ```bash
-cort-predict -in test.conll \
+cort-predict-conll -in test.conll # only one file \
            -model model.obj \
            -out output.conll \
            -extractor cort.coreference.approaches.mention_ranking.extract_substructures \
@@ -508,6 +508,53 @@ cort-predict -in test.conll \
 
 Analogously to `cort-train`, you can define your own extractors, perceptrons and clusterer, and
 give them as parameters to `cort-predict`.
+
+### Predicting Coreference Chains on Raw Text
+
+`cort-predict-raw` predicts coreference chains on raw text. For preprocessing
+the text, it makes use of [Stanford CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml).
+It can be evoked as follows:
+
+```bash
+cort-predict-raw -in *.txt # in contrast to conll data: multiple files as 
+input \ 
+           -model model.obj \
+           -suffix out # suffix for output files, defaults to 'out' \
+           -extractor cort.coreference.approaches.mention_ranking.extract_substructures \
+           -perceptron cort.coreference.approaches.mention_ranking.RankingPerceptron \
+           -clusterer cort.coreference.clusterer.all_ante
+           -corenlp /home/sebastian/Downloads/corenlp # location of CoreNLP
+           -features my_features.txt # optional, defaults to standard feature set
+```
+
+The output consists of the sentence-splitted and tokenized text, with mentions
+in `<mention> ... </mention>` tags and attributes
+
+* mention id
+* span start
+* span end
+* entity id (if any)
+* id of antecedent (if any)
+
+For example:
+
+`<mention id="13" span_start="43" span_end="43" entity="12" 
+antecedent="11">its</mention> `
+
+The output is in the directory where the inputs files are.
+
+### Visualizing Raw Text Output
+
+`cort-visualize` visualizes coreference output on raw text. To visualize the 
+output of one document, run,
+
+```bash
+cort-visualize *.out -corenlp /home/sebastian/Downloads/corenlp 
+```
+
+It's still a bit slow since it first needs to load CoreNLP and then 
+preprocess the text again. I'm working on a version which does not need to 
+preprocess the text again.
 
 ### Running Models from the Paper
 
@@ -547,6 +594,9 @@ from the paper, please [contact me](mailto:sebastian.martschat@gmail.com).
 We provide models trained on CoNLL-2012 shared task data, and evaluate these models.
 
 ### Model Downloads
+
+Right now these models can only be loaded unter Python 3, I'll update the models
+for Python 2 compatibility as soon as possible.
 
 * Mention Pair
     * <a href="http://smartschat.de/downloads/pair-model-train.obj">trained on train</a>
