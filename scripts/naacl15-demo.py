@@ -33,9 +33,6 @@ extractor.add_system(tree)
 
 errors = extractor.get_errors()
 
-errors.update(pair.get_antecedent_decisions())
-errors.update(tree.get_antecedent_decisions())
-
 # categorize by mention type of anaphor
 by_type = errors.categorize(
     lambda err: err[0].attributes["type"]

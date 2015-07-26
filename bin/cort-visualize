@@ -9,6 +9,7 @@ import logging
 
 from cort.preprocessing import pipeline
 from cort.analysis import visualization, error_extractors, spanning_tree_algorithms
+from cort.core import corpora
 
 
 __author__ = 'smartschat'
@@ -17,7 +18,8 @@ __author__ = 'smartschat'
 def parse_args():
     parser = argparse.ArgumentParser(description='Visualize output.')
     parser.add_argument('input_filename',
-                        help='The file to visualize')
+                        help='The files to visualize',
+                        nargs='*')
     parser.add_argument('-corenlp',
                         required=True,
                         dest='corenlp',
@@ -33,11 +35,7 @@ args = parse_args()
 
 p = pipeline.Pipeline(args.corenlp, with_coref=True)
 
-corpus_to_visualize = p.run_on_doc(
-    codecs.open(args.input_filename, "r", "utf-8"))
-
-decisions = corpus_to_visualize.get_antecedent_decisions()
-decisions.reference = corpus_to_visualize
+corpus_to_visualize = p.run_on_docs("corpus", args.input_filename)
 
 ex = error_extractors.ErrorExtractor(corpus_to_visualize,
                                      spanning_tree_algorithms.recall_accessibility,
@@ -45,9 +43,9 @@ ex = error_extractors.ErrorExtractor(corpus_to_visualize,
 
 ex.add_system(corpus_to_visualize)
 
-decisions.update(ex.get_errors())
+decisions = ex.get_errors()
 
-visualizer = visualization.Visualizer(decisions, args.input_filename,
-                                      only_decisions=True)
+visualizer = visualization.Visualizer(decisions, "corpus",
+                                      for_raw_input=True)
 
 visualizer.run()

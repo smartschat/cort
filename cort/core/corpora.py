@@ -75,14 +75,8 @@ class Corpus:
 
         document_as_strings.append(current_document)
 
-        pool = multiprocessing.Pool(maxtasksperchild=1)
-        results = pool.map(from_string,
-                           document_as_strings)
-
-        pool.close()
-        pool.join()
-
-        return Corpus(description, sorted(doc for doc in results))
+        return Corpus(description, sorted([from_string(doc) for doc in
+                                           document_as_strings]))
 
 
 

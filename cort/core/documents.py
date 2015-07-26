@@ -333,7 +333,7 @@ class Document(object):
         Returns:
             str: The HTML/CSS-JS-friendly representation.
         """
-        return self.identifier.replace(".", "_")
+        return self.identifier.replace(".", "_").replace("/", "_")
 
 
 class CoNLLDocument(Document):

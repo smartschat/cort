@@ -71,6 +71,8 @@ class ErrorExtractor:
         For computing precision errors, switch the roles of reference and system
         entities.
 
+        Also extracts all pairwise decisions (if available).
+
         Args:
             system_corpus (Corpus): A corpus obtained from system output.
             which_mentions (str): Either "annotated" or "extracted",
@@ -87,7 +89,8 @@ class ErrorExtractor:
 
         self.errors[system_corpus.description] = {
             "recall_errors": {},
-            "precision_errors": {}
+            "precision_errors": {},
+            "decisions": {}
         }
 
         self.errors[system_corpus.description]["recall_errors"]["all"] = \
@@ -95,6 +98,9 @@ class ErrorExtractor:
         self.errors[
             system_corpus.description]["precision_errors"]["all"] = \
             precision_errors
+        self.errors[
+            system_corpus.description]["decisions"]["all"] = \
+            system_corpus.get_antecedent_decisions()
 
         self.corpora[system_corpus.description] = system_corpus
 
@@ -108,7 +114,7 @@ class ErrorExtractor:
         ``ranking``was added via ``self.add_system``,
         ``self.errors["ranking"]["recall_errors"]["all"]``is an ``EnhancedSet``
         containing all recall errors of the system. Errors of other systems
-        ańd precision errors can be accessed analogously.
+        and precision errors can be accessed analogously.
 
         Returns:
             StructuredCoreferenceAnalysis: A StructuredCoreferenceAnalysis
