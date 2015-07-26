@@ -78,7 +78,7 @@ for system in systems:
             model = "model-" + system + "-train+dev.obj"
 
         subprocess.call([
-            "cort-predict",
+            "cort-predict-conll",
             "-in", "/data/nlp/martscsn/thesis/data/input/" + data_set +
             ".auto",
             "-model", model,
