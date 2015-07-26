@@ -3,7 +3,8 @@ Client and process monitor for the java socket server.
 """
 
 from __future__ import division
-import subprocess, tempfile, time, os, logging, re, struct, socket, atexit, glob, itertools
+import subprocess, tempfile, time, os, logging, re, struct, socket, atexit, \
+    glob, itertools, codecs
 from copy import copy,deepcopy
 from pprint import pprint
 try:
@@ -178,7 +179,7 @@ class CoreNLP:
             sock = self.get_socket(num_retries=100, retry_interval=STARTUP_BUSY_WAIT_INTERVAL_SEC)
             sock.close()
         elif self.comm_mode=='PIPE':
-            self.outpipe_fp = open(self.outpipe, 'r', encoding="ISO-8859-1")
+            self.outpipe_fp = codecs.open(self.outpipe, 'r', "ISO-8859-1")
 
         while True:
             # This loop is for if you have timeouts for the socket connection

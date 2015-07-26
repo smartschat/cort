@@ -1,5 +1,8 @@
 __author__ = 'martscsn'
 
+import cort
+
+import codecs
 
 import stanford_corenlp_pywrapper
 
@@ -12,20 +15,32 @@ import bs4
 
 class Pipeline():
     def __init__(self, corenlp_location, with_coref=False):
+        package_dir = cort.__path__[0]
+
         if with_coref:
             self.proc = stanford_corenlp_pywrapper.CoreNLP(
-                configfile="corenlp_with_coref.ini",
+                configfile=package_dir + "/config_files/corenlp_with_coref.ini",
                 corenlp_jars=[corenlp_location + "/*"]
             )
         else:
             self.proc = stanford_corenlp_pywrapper.CoreNLP(
-                configfile="corenlp.ini",
+                configfile=package_dir + "/config_files/corenlp.ini",
                 corenlp_jars=[corenlp_location + "/*"]
             )
 
         self.with_coref = with_coref
 
-    def run_on_doc(self, doc_file):
+    def run_on_docs(self, identifier, docs):
+        processed_documents = []
+
+        for doc in docs:
+            processed_documents.append(self.run_on_doc(
+                codecs.open(doc, "r", "utf-8")
+            ))
+
+        return corpora.Corpus(identifier, processed_documents)
+
+    def run_on_doc(self, doc_file, name=None):
         if self.with_coref:
             soup = bs4.BeautifulSoup(doc_file.read())
             preprocessed = self.proc.parse_doc(soup.text)
@@ -93,6 +108,9 @@ class Pipeline():
                 )
             )
 
+        if not name:
+            name = doc_file.name
+
         if self.with_coref:
             antecedent_decisions = {}
             coref = {}
@@ -126,7 +144,7 @@ class Pipeline():
                     ]
 
             doc = documents.Document(
-                doc_file.name,
+                name,
                 sentences,
                 coref)
 
@@ -142,8 +160,8 @@ class Pipeline():
                 ana.attributes["antecedent"] = ante
         else:
             doc = documents.Document(
-                doc_file.name,
+                name,
                 sentences,
                 {})
 
-        return corpora.Corpus(doc.identifier, [doc])
+        return doc

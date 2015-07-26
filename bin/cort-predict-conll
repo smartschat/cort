@@ -11,7 +11,6 @@ import subprocess
 
 
 import cort
-from cort.preprocessing import pipeline
 from cort.core import corpora
 from cort.core import mention_extractor
 from cort.coreference import cost_functions
@@ -36,10 +35,6 @@ def parse_args():
                         help='The input file. Must follow the format of the '
                              'CoNLL shared tasks on coreference resolution '
                              '(see http://conll.cemantix.org/2012/data.html).)')
-    #parser.add_argument("-mode",
-    #                    required=True,
-    #                    dest="mode",
-    #                    help="The mode. Either conll or raw.")
     parser.add_argument('-model',
                         required=True,
                         dest='model',
@@ -73,15 +68,11 @@ def parse_args():
                         help='The file containing the list of features. If not'
                              'provided, defaults to a standard set of'
                              'features.')
-    parser.add_argument('-corenlp',
-                        dest='corenlp',
-                        help='Where is CoreNLP?')
 
     return parser.parse_args()
 
 
 def get_scores(output_data, gold_data):
-    cort.__path__[0]
     scorer_output = subprocess.check_output([
         "perl",
         cort.__path__[0] + "/reference-coreference-scorers/v8.01/scorer.pl",
@@ -182,19 +173,10 @@ perceptron = import_helper.import_from_path(args.perceptron)(
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)s %(''message)s')
 
-args.mode = "conll"
-
-if args.mode == "conll":
-    logging.info("Reading in data.")
-    testing_corpus = corpora.Corpus.from_file(
-        "testing",
-        codecs.open(args.input_filename, "r", "utf-8"))
-else:
-    logging.info("Reading in and preprocessing data.")
-    p = pipeline.Pipeline(args.corenlp)
-
-    testing_corpus = p.run_on_doc(
-        codecs.open(args.input_filename, "r", "utf-8"))
+logging.info("Reading in data.")
+testing_corpus = corpora.Corpus.from_file(
+    "testing",
+    codecs.open(args.input_filename, "r", "utf-8"))
 
 logging.info("Extracting system mentions.")
 for doc in testing_corpus:
@@ -209,24 +191,16 @@ mention_entity_mapping, antecedent_mapping = experiments.predict(
 
 testing_corpus.read_coref_decisions(mention_entity_mapping, antecedent_mapping)
 
-if args.mode == "conll":
-    logging.info("Write corpus to file.")
-    testing_corpus.write_to_file(codecs.open(args.output_filename, "w", "utf-8"))
 
-    if args.ante:
-        logging.info("Write antecedent decisions to file")
-        testing_corpus.write_antecedent_decisions_to_file(open(args.ante, "w"))
+logging.info("Write corpus to file.")
+testing_corpus.write_to_file(codecs.open(args.output_filename, "w", "utf-8"))
 
-    if args.gold:
-        logging.info("Evaluate.")
-        print(get_scores(args.output_filename, args.gold))
-else:
-    logging.info("Write output to file.")
+if args.ante:
+    logging.info("Write antecedent decisions to file")
+    testing_corpus.write_antecedent_decisions_to_file(open(args.ante, "w"))
 
-    output = testing_corpus.documents[0].to_simple_output()
-    my_file = codecs.open(args.input_filename + ".out", "w", "utf-8")
-    my_file.write(output)
-    my_file.close()
-
+if args.gold:
+    logging.info("Evaluate.")
+    print(get_scores(args.output_filename, args.gold))
 
 logging.info("Done.")
