@@ -29,8 +29,11 @@ To define an approach to coreference resolution, the user has to provide
 ## <a name="framework"></a> Framework
 
 We first give an overview of the framework which we will use to represent the
-model (taken form our ACL'15 Demo paper). The framework is described in more 
-detail in our TACL paper.
+model (taken form our 
+[ACL'15 Demo paper](http://www.aclweb.org/anthology/P/P15/P15-4011.pdf)). The 
+framework is described in more detail in our 
+[TACL paper](http://www.aclweb.org/anthology/Q/Q15/Q15-1029.pdf). For the 
+references, please consult these papers.
 
 ### Motivation
 
@@ -98,7 +101,7 @@ When devising a model, we first need to define a graph-based representation of
 the structures underlying the model. Here we consider the mention ranking 
 model (Denis and Baldridge, 2008; Chang et al., 2012). It models coreference 
 resolution as a *ranking problem*: for each anaphor we consider all candidate
-antecdents. Among these antecedents, the best-scoring antecedent according to 
+antecedents. Among these antecedents, the best-scoring antecedent according to 
 the model is selected.
 
 We will now define the graph-based structures underlying the model, devise 

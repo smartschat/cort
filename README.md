@@ -45,37 +45,39 @@ more efficient.
 Sebastian Martschat and Michael Strube (2015). **Latent Structures for 
 Coreference Resolution**. *Transactions of the Association for 
 Computational Linguistics*, 3, pages 405-418.  
-[PDF](http://smartschat.de/papers/tacl15.pdf)
+[PDF](http://www.aclweb.org/anthology/Q/Q15/Q15-1029.pdf)
 
 Sebastian Martschat, Patrick Claus and Michael Strube (2015). **Plug Latent 
 Structures and Play Coreference Resolution**. In *Proceedings of 
 the Proceedings of ACL-IJCNLP 2015 System Demonstrations*, Beijing, China, 
 26-31 July 2015, pages 61-66.  
-[PDF](http://www.aclweb.org/anthology/P15-4011)
+[PDF](http://www.aclweb.org/anthology/P/P15/P15-4011.pdf)
 
 Sebastian Martschat, Thierry Göckel and Michael Strube (2015). **Analyzing and 
 Visualizing Coreference Resolution Errors**. In *Proceedings of the 2015 
 Conference of the North American Chapter of the Association for Computational 
 Linguistics: Demonstrations*, Denver, Colorado, USA, 31 May-5 June 2015,
 pages 6-10.  
-[PDF](https://aclweb.org/anthology/N15-3002)
+[PDF](https://aclweb.org/anthology/N/N15/N15-3002.pdf)
 
 Sebastian Martschat and Michael Strube (2014). **Recall Error Analysis for 
 Coreference Resolution**. In *Proceedings of the 2014 Conference on Empirical 
 Methods in Natural Language Processing (EMNLP)*, Doha, Qatar, 25-29 October 
 2014, pages 2070-2081.  
-[PDF](http://aclweb.org/anthology/D14-1221)
+[PDF](http://aclweb.org/anthology/D/D14/D14-1221.pdf)
 
 Sebastian Martschat (2013). **Multigraph Clustering for Unsupervised 
 Coreference Resolution**. In *Proceedings of the Student Research Workshop 
 at the 51st Annual Meeting of the Association for Computational Linguistics*, 
 Sofia, Bulgaria, 5-7 August 2013, pages 81-88.  
-[PDF](http://aclweb.org/anthology/P13-3012)
+[PDF](http://aclweb.org/anthology/P/P13/P13-3012.pdf)
 
 If you use the error analysis component in your research, please cite the
-EMNLP'14 paper. If you use the coreference component in your research, please
-cite the TACL paper. If you use the multigraph system, please cite the 
-ACL'13-SRW paper.
+[EMNLP'14 paper](http://aclweb.org/anthology/D/D14/D14-1221.pdf). If you use 
+the coreference component in your research, please cite the 
+[TACL paper](http://www.aclweb.org/anthology/Q/Q15/Q15-1029.pdf). If you use 
+the multigraph system, please cite the 
+[ACL'13-SRW paper](http://aclweb.org/anthology/P/P13/P13-3012.pdf).
 
 ## Changelog
 
