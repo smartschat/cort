@@ -3,7 +3,7 @@ from distutils.core import setup
 
 setup(
     name='cort',
-    version='0.2.1',
+    version='0.2.1.1',
     packages=['cort',
               'cort.analysis',
               'cort.core',
@@ -55,5 +55,6 @@ setup(
                                        'javasrc/util/*.java'],
     },
     scripts=['bin/cort-train', 'bin/cort-predict-conll',
-             'bin/cort-predict-raw', 'bin/cort-visualize' 'bin/run-multigraph']
+             'bin/cort-predict-raw', 'bin/cort-visualize', 
+             'bin/run-multigraph']
 )
