@@ -27,11 +27,11 @@ Dependencies (automatically installed by pip) are
 [nltk](http://www.nltk.org/), [numpy](http://www.numpy.org/), 
 [matplotlib](http://matplotlib.org), 
 [mmh3](https://pypi.python.org/pypi/mmh3),
+[PyStanfordDependencies](https://github.com/dmcc/PyStanfordDependencies),
 [cython](http://cython.org/),
 [future](https://pypi.python.org/pypi/future),
 [jpype](https://pypi.python.org/pypi/jpype1) and
 [beautifulsoup](https://pypi.python.org/pypi/beautifulsoup4). It ships with 
-[PyStanfordDependencies](https://github.com/dmcc/PyStanfordDependencies),
 [stanford_corenlp_pywrapper](https://github.com/brendano/stanford_corenlp_pywrapper)
 and [the reference implementation of the CoNLL scorer]
 (https://github.com/conll/reference-coreference-scorers).
