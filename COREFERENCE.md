@@ -480,9 +480,9 @@ cort-train -in train.conll \
            -extractor cort.coreference.approaches.mention_ranking.extract_substructures \
            -perceptron cort.coreference.approaches.mention_ranking.RankingPerceptron \
            -cost_function cort.coreference.cost_functions.cost_based_on_consistency \
-           -n_iter 5 # optional, default is 5
-           -cost_scaling 100 # optional, default is 1
-           -random_seed 23 # optional, default is 1
+           -n_iter 5 \ 
+           -cost_scaling 100 \
+           -random_seed 23 \
            -features my_features.txt # optional, defaults to standard feature set
 ```
 
@@ -491,6 +491,9 @@ and classes (perceptron) as parameters. In the example, we give the functions/cl
 above as parameters. You can define your own extractors, perceptrons and cost functions, and give
 them as parameters to `cort-train`.
 
+The parameters `n_iter`, `cost_scaling`, `-random_seed` and `-features` are optional and default to 
+5, 1, 23 and a standard set of features respectively.
+
 ### Predicting Coreference Chains on CoNLL data
 
 `cort-predict-conll` predicts coreference chains on corpora following the 
@@ -498,19 +501,26 @@ annotation of the CoNLL-2012 shared task on coreference resolution. It can be
 evoked as follows:
 
 ```bash
-cort-predict-conll -in test.conll # only one file \
+cort-predict-conll -in test.conll \
            -model model.obj \
            -out output.conll \
            -extractor cort.coreference.approaches.mention_ranking.extract_substructures \
            -perceptron cort.coreference.approaches.mention_ranking.RankingPerceptron \
-           -clusterer cort.coreference.clusterer.all_ante
-           -features my_features.txt # optional, defaults to standard feature set
-           -ante output.antecedents # optional (output antecedent decisions)\
-           -gold test.gold # optional, used for scoring
+           -clusterer cort.coreference.clusterer.all_ante \
+           -features my_features.txt \
+           -ante output.antecedents \ 
+           -gold test.gold
 ```
+
+`cort-predict-conll` expects as input one file containing all documents in CoNLL format to 
+be processed.
 
 Analogously to `cort-train`, you can define your own extractors, perceptrons and clusterer, and
 give them as parameters to `cort-predict`.
+
+The parameters `-ante` and `-gold` are optional. `-ante` specifies the file antecedent decisions
+should be written to (for error analysis), while `-gold` specifies the location of
+gold data for scoring.
 
 ### Predicting Coreference Chains on Raw Text
 
@@ -519,16 +529,18 @@ the text, it makes use of [Stanford CoreNLP](http://nlp.stanford.edu/software/co
 It can be evoked as follows:
 
 ```bash
-cort-predict-raw -in *.txt # in contrast to conll data: multiple files as 
-input \ 
+cort-predict-raw -in *.txt \ 
            -model model.obj \
-           -suffix out # suffix for output files, defaults to 'out' \
            -extractor cort.coreference.approaches.mention_ranking.extract_substructures \
            -perceptron cort.coreference.approaches.mention_ranking.RankingPerceptron \
-           -clusterer cort.coreference.clusterer.all_ante
-           -corenlp /home/sebastian/Downloads/corenlp # location of CoreNLP
-           -features my_features.txt # optional, defaults to standard feature set
+           -clusterer cort.coreference.clusterer.all_ante \
+           -corenlp /home/sebastian/Downloads/corenlp \
+           -features my_features.txt \
+           -suffix out
 ```
+
+The parameter `-corenlp` specifies the location of Stanford CoreNLP. The parameter `-suffix`, which
+specifies the file ending for the output, is optional and defaults to `out`.
 
 The output consists of the sentence-splitted and tokenized text, with mentions
 in `<mention> ... </mention>` tags and attributes
