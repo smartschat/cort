@@ -3,7 +3,7 @@ from distutils.core import setup
 
 setup(
     name='cort',
-    version='0.2.1.1',
+    version='0.2.2',
     packages=['cort',
               'cort.analysis',
               'cort.core',
@@ -16,7 +16,6 @@ setup(
               'cort.coreference.approaches',
               'cort.util',
               'cort.preprocessing',
-              'StanfordDependencies',
               'stanford_corenlp_pywrapper'],
 
     url='http://github.com/smartschat/cort',
@@ -35,8 +34,9 @@ setup(
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Text Processing',
         ],
-    install_requires=['nltk', 'numpy', 'matplotlib', 'mmh3', 'cython',
-                      'future', 'jpype1', 'beautifulsoup4'],
+    install_requires=['nltk >= 3.0.1', 'numpy', 'matplotlib', 'mmh3', 'cython',
+                      'future', 'jpype1', 'beautifulsoup4',
+                      'pystanforddependencies >= 0.2.0'],
     package_data={
         'cort': ['analysis/visualization/style.css',
                  'analysis/visualization/lib/*',
@@ -55,6 +55,6 @@ setup(
                                        'javasrc/util/*.java'],
     },
     scripts=['bin/cort-train', 'bin/cort-predict-conll',
-             'bin/cort-predict-raw', 'bin/cort-visualize', 
+             'bin/cort-predict-raw', 'bin/cort-visualize',
              'bin/run-multigraph']
 )
