@@ -464,6 +464,12 @@ cort.coreference.features.head_contained
 cort.coreference.features.token_distance
 ```
 
+All features for a pair are combined with all `fine_type`-feature for the pair. This is currently hard-coded in 
+`cort/coreference/instance_extractors.py` (by combining all features with the first feature in the list of 
+features that operate on one mention, which in the standard list is `fine_type`. If you want other feature 
+combinations, or change the position of `fine_type` in the list of features, you have to modify 
+`cort/coreference/instance_extractors.py` accordingly.
+
 ## <a name="running"></a> Running cort
 
 We provide two command line tools for training models and predicting 
@@ -609,9 +615,6 @@ from the paper, please [contact me](mailto:sebastian.martschat@gmail.com).
 We provide models trained on CoNLL-2012 shared task data, and evaluate these models.
 
 ### Model Downloads
-
-Right now these models can only be loaded unter Python 3, I'll update the models
-for Python 2 compatibility as soon as possible.
 
 * Mention Pair
     * <a href="http://smartschat.de/downloads/pair-model-train.obj">trained on train</a>

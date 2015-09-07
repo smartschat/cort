@@ -36,9 +36,9 @@ Dependencies (automatically installed by pip) are
 and [the reference implementation of the CoNLL scorer]
 (https://github.com/conll/reference-coreference-scorers).
 
-__cort__ is written for use on Linux with either Python 2.7+ or Python 3.3+.
-However, I recommend running __cort__ with Python 3, since the Python 3 version is 
-more efficient.
+__cort__ is written for use on Linux with Python 3.3+. While __cort__ also runs under 
+Python 2.7, I strongly recommend running __cort__ with Python 3, since the Python 3 
+version is much more efficient.
 
 ## References
 
