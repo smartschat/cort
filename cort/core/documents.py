@@ -398,7 +398,8 @@ class CoNLLDocument(Document):
                   for span in sentence_spans]
         sd = StanfordDependencies.get_instance()
         dep_trees = sd.convert_trees(
-            [parse.replace("NOPARSE", "S") for parse in parses]
+            [parse.replace("NOPARSE", "S") for parse in parses],
+            universal=False
         )
         sentences = []
         for i, span in enumerate(sentence_spans):
@@ -585,7 +586,7 @@ class CoNLLDocument(Document):
         for visualization.
 
         Returns:
-            str: The HTML/CSS-JS-friendly representation.
+            str: The HTML/CSS/JS-friendly representation.
         """
         splitted_by_whitespace = self.identifier.split()
         return splitted_by_whitespace[0].split("/")[-1][:-2] + \
