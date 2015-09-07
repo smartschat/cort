@@ -34,7 +34,7 @@ def learn(training_corpus, instance_extractor, perceptron):
     """
     logging.info("Learning.")
 
-    logging.info("\tExtracting instances.")
+    logging.info("\tExtracting instances and features.")
     substructures, arc_information = instance_extractor.extract(
         training_corpus)
 
@@ -80,7 +80,7 @@ def predict(testing_corpus,
             mention.attributes["antecedent"] = None
             mention.attributes["set_id"] = None
 
-    logging.info("\tExtracting instances.")
+    logging.info("\tExtracting instances and features.")
     substructures, arc_information = instance_extractor.extract(testing_corpus)
 
     logging.info("\tDoing predictions.")

@@ -4,6 +4,8 @@ import argparse
 import codecs
 import logging
 import pickle
+import sys
+
 
 from cort.core import corpora
 from cort.core import mention_extractor
@@ -68,6 +70,10 @@ def parse_args():
 
     return parser.parse_args()
 
+
+if sys.version_info[0] == 2:
+    logging.warning("You are running cort under Python 2. cort is much more "
+                    "efficient under Python 3.3+.")
 
 args = parse_args()
 

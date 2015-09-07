@@ -8,6 +8,7 @@ import logging
 import os
 import pickle
 import subprocess
+import sys
 
 
 import cort
@@ -118,6 +119,13 @@ def get_scores(output_data, gold_data):
 
     return results_formatted
 
+
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s %(levelname)s %(''message)s')
+
+if sys.version_info[0] == 2:
+    logging.warning("You are running cort under Python 2. cort is much more "
+                    "efficient under Python 3.3+.")
 args = parse_args()
 
 if args.features:
@@ -169,9 +177,6 @@ perceptron = import_helper.import_from_path(args.perceptron)(
     weights=weights,
     cost_scaling=0
 )
-
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s %(levelname)s %(''message)s')
 
 logging.info("Reading in data.")
 testing_corpus = corpora.Corpus.from_file(
