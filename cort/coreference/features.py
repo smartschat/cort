@@ -87,14 +87,14 @@ def gr_func(mention):
 
 
 def governor(mention):
-    """ Compute grammatical function of a mention.
+    """ Compute governor of a mention.
 
     Args:
         mention (Mention): A mention.
 
     Returns:
-        str: The string 'gr_func=GR_FUNC', where GR_FUNC is one of 'SUBJECT',
-        'OBJECT' and 'OTHER'.
+        str: The string 'governor=GOVERNOR', where GOVERNOR is the governor
+        of the mention.
     """
     return "governor=" + mention.attributes["governor"].lower()
 
