@@ -7,7 +7,6 @@ import sys
 
 
 import mmh3
-from pickle import PicklingError
 import numpy
 
 
@@ -101,49 +100,44 @@ class InstanceExtractor:
         for doc in corpus:
             id_to_doc_mapping[doc.identifier] = doc
 
-        slice_size = len(corpus.documents)
+        pool = multiprocessing.Pool(maxtasksperchild=1)
 
-        for num in range(0, len(corpus.documents), slice_size):
-            docs = corpus.documents[num:num+slice_size]
+        if sys.version_info[0] == 2:
+            results = pool.map(unwrap_extract_doc,
+                               zip([self]*len(corpus.documents),
+                                   corpus.documents))
+        else:
+            results = pool.map(self._extract_doc, corpus.documents)
 
-            pool = multiprocessing.Pool(maxtasksperchild=1)
+        pool.close()
+        pool.join()
 
-            if sys.version_info[0] == 2:
-                results = pool.map(unwrap_extract_doc,
-                                   zip([self]*len(corpus.documents),
-                                       corpus.documents))
-            else:
-                results = pool.map(self._extract_doc, docs)
+        for result in results:
+            doc_identifier, anaphors, antecedents, features, costs, \
+                consistency, feature_mapping, substructures_mapping = result
 
-            pool.close()
-            pool.join()
+            doc = id_to_doc_mapping[doc_identifier]
 
-            for result in results:
-                doc_identifier, anaphors, antecedents, features, costs, \
-                    consistency, feature_mapping, substructures_mapping = result
+            for i in range(0, len(substructures_mapping)-1):
+                struct = []
+                begin = substructures_mapping[i]
+                end = substructures_mapping[i+1]
 
-                doc = id_to_doc_mapping[doc_identifier]
+                for pair_index in range(begin, end):
+                    arc = (doc.system_mentions[anaphors[pair_index]],
+                           doc.system_mentions[antecedents[pair_index]])
 
-                for i in range(0, len(substructures_mapping)-1):
-                    struct = []
-                    begin = substructures_mapping[i]
-                    end = substructures_mapping[i+1]
+                    struct.append(arc)
 
-                    for pair_index in range(begin, end):
-                        arc = (doc.system_mentions[anaphors[pair_index]],
-                               doc.system_mentions[antecedents[pair_index]])
+                    features_start = feature_mapping[pair_index]
+                    features_end = feature_mapping[pair_index+1]
 
-                        struct.append(arc)
+                    arc_information[arc] = \
+                        (features[features_start:features_end],
+                         costs[pair_index],
+                         consistency[pair_index])
 
-                        features_start = feature_mapping[pair_index]
-                        features_end = feature_mapping[pair_index+1]
-
-                        arc_information[arc] = \
-                            (features[features_start:features_end],
-                             costs[pair_index],
-                             consistency[pair_index])
-
-                    all_substructures.append(struct)
+                all_substructures.append(struct)
 
         # in python 2, array.array does not support the buffer interface
         if sys.version_info[0] == 2:
