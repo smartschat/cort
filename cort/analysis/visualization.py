@@ -530,8 +530,9 @@ class Visualizer:
                 if len(precision_errors[cat]) > 0:
                     precision_categories.add(cat)
 
-        recall_categories = sorted(list(recall_categories))
-        precision_categories = sorted(list(precision_categories))
+        recall_categories = sorted([str(cat) for cat in recall_categories])
+        precision_categories = sorted([str(cat) for cat
+                                       in precision_categories])
 
         for cat in recall_categories:
             recall_errors_navi += "\n\t\t\t\t\t\t\t<li>"
