@@ -100,7 +100,8 @@ class ErrorExtractor:
             precision_errors
         self.errors[
             system_corpus.description]["decisions"]["all"] = \
-            system_corpus.get_antecedent_decisions()
+            system_corpus.get_antecedent_decisions()[
+            system_corpus.description]["decisions"]["all"]
 
         self.corpora[system_corpus.description] = system_corpus
 
