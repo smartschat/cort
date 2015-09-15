@@ -81,6 +81,9 @@ the multigraph system, please cite the
 
 ## Changelog
 
+__Tuesday, 15 September 2015__   
+Minor bugfixes.
+
 __Monday, 27 July 2015__   
 Now can perform coreference resolution on raw text. 
 
