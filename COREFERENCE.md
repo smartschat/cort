@@ -640,16 +640,16 @@ TACL paper since we extended the feature set.
 
 Model             | MUC   | BCUB  | CEAFE | AVG
 ----------------- | ----- | ----- | ----- | -----
-Pair              | 69.53 | 58.09 | 53.84 | 60.49
-Ranking: Closest  | 72.83 | 61.17 | 58.04 | 64.01
-Ranking: Latent   | 72.66 | 61.19 | 58.43 | 64.09
-Tree              | 72.16 | 60.36 | 57.27 | 63.26
+Pair              | 69.34 | 58.02 | 53.63 | 60.33
+Ranking: Closest  | 72.63 | 60.83 | 57.83 | 63.76
+Ranking: Latent   | 72.77 | 61.47 | 58.71 | 64.32
+Tree              | 72.01 | 60.22 | 57.37 | 63.20
 
 #### Testing Data
 
 Model             | MUC   | BCUB  | CEAFE | AVG
 ----------------- | ----- | ----- | ----- | -----
-Pair              | 69.45 | 56.44 | 51.87 | 59.25
-Ranking: Closest  | 72.55 | 59.39 | 55.25 | 62.40
-Ranking: Latent   | 72.71 | 60.13 | 56.40 | 63.08
-Tree              | 71.78 | 58.44 | 54.53 | 61.58
+Pair              | 69.71 | 56.61 | 52.02 | 59.45
+Ranking: Closest  | 72.72 | 59.58 | 55.54 | 62.61
+Ranking: Latent   | 72.76 | 60.19 | 56.29 | 63.08
+Tree              | 71.89 | 58.47 | 54.99 | 61.78
