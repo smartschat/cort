@@ -617,17 +617,17 @@ We provide models trained on CoNLL-2012 shared task data, and evaluate these mod
 ### Model Downloads
 
 * Mention Pair
-    * <a href="http://smartschat.de/downloads/pair-model-train.obj">trained on train</a>
-    * <a href="http://smartschat.de/downloads/pair-model-train+dev.obj">trained on train+dev</a>
+    * <a href="http://smartschat.de/downloads/model-pair-train.obj">trained on train</a>
+    * <a href="http://smartschat.de/downloads/model-pair-train+dev.obj">trained on train+dev</a>
 * Ranking: Closest
-    * <a href="http://smartschat.de/downloads/closest-model-train.obj">trained on train</a>
-    * <a href="http://smartschat.de/downloads/closest-model-train+dev.obj">trained on train+dev</a>
+    * <a href="http://smartschat.de/downloads/model-closest-train.obj">trained on train</a>
+    * <a href="http://smartschat.de/downloads/model-closest-train+dev.obj">trained on train+dev</a>
 * Ranking: Latent
-    * <a href="http://smartschat.de/downloads/latent-model-train.obj">trained on train</a>
-    * <a href="http://smartschat.de/downloads/latent-model-train+dev.obj">trained on train+dev</a>
+    * <a href="http://smartschat.de/downloads/model-latent-train.obj">trained on train</a>
+    * <a href="http://smartschat.de/downloads/model-latent-train+dev.obj">trained on train+dev</a>
 * Antecedent Tree
-    * <a href="http://smartschat.de/downloads/tree-model-train.obj">trained on train</a>
-    * <a href="http://smartschat.de/downloads/tree-model-train+dev.obj">trained on train+dev</a>
+    * <a href="http://smartschat.de/downloads/model-tree-train.obj">trained on train</a>
+    * <a href="http://smartschat.de/downloads/model-tree-train+dev.obj">trained on train+dev</a>
     
 ### Results
 
