@@ -81,6 +81,9 @@ the multigraph system, please cite the
 
 ## Changelog
 
+__Friday, 9 October 2015__   
+Now supports label-dependent cost functions.
+
 __Tuesday, 15 September 2015__   
 Minor bugfixes.
 
