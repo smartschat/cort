@@ -120,12 +120,13 @@ cdef class Perceptron:
             substructures (list(list((Mention, Mention)))): The search space
                 for the substructures, defined by a nested list. The ith list
                 contains the search space for the ith substructure.
-            arc_information (dict((Mention, Mention), (array, int, bool)): A
+            arc_information (dict((Mention, Mention), (array, array, bool)): A
                 mapping of arcs (= mention pairs) to information about these
                 arcs. The information consists of the features (represented as
                 an int array via feature hashing), the costs for the arc (for
-                each label), and whether predicting the arc to be coreferent is
-                consistent with the gold annotation).
+                each label, order as in self.get_labels()), and whether
+                predicting the arc to be coreferent is consistent with the gold
+                annotation).
         Returns:
             A tuple describing the learned model, consisting of
 
@@ -208,12 +209,13 @@ cdef class Perceptron:
             substructures (list(list((Mention, Mention)))): The search space
                 for the substructures, defined by a nested list. The ith list
                 contains the search space for the ith substructure.
-            arc_information (dict((Mention, Mention), array): A
+            arc_information (dict((Mention, Mention), (array, array, bool)): A
                 mapping of arcs (= mention pairs) to information about these
                 arcs. The information consists of the features (represented as
                 an int array via feature hashing), the costs for the arc (for
-                each label), and whether predicting the arc to be coreferent is
-                consistent with the gold annotation).
+                each label, order as in self.get_labels()), and whether
+                predicting the arc to be coreferent is consistent with the gold
+                annotation).
         Returns:
             Three nested lists describing the output. In particular, these
             lists are:
@@ -250,12 +252,13 @@ cdef class Perceptron:
         Args:
             substructure (list((Mention, Mention))): The list of mention pairs
                 which define the search space for one substructure.
-            arc_information (dict((Mention, Mention), (array, int, bool)): A
+            arc_information (dict((Mention, Mention), (array, array, bool)): A
                 mapping of arcs (= mention pairs) to information about these
                 arcs. The information consists of the features (represented as
                 an int array via feature hashing), the costs for the arc (for
-                each label), and whether predicting the arc to be coreferent is
-                consistent with the gold annotation).
+                each label, order as in self.get_labels()), and whether
+                predicting the arc to be coreferent is consistent with the gold
+                annotation).
 
         Returns:
             A 6-tuple describing the highest-scoring substructure and the
@@ -356,13 +359,17 @@ cdef class Perceptron:
         return best, max_val, best_cons, max_cons, best_is_consistent
 
     def score_arc(self, arc, arc_information, label="+"):
-        """ Score an arc (described by features) according to priors, weights
-        and costs.
+        """ Score an arc according to priors, weights and costs.
 
         Args:
-            features (numpy.array): An array containing integer features.
-            costs (int): The costs of predicting the arc described by
-                ``features``.
+            arc ((Mention, Mention)): The pair of mentions constituting the arc.
+            arc_information (dict((Mention, Mention), (array, array, bool)): A
+                mapping of arcs (= mention pairs) to information about these
+                arcs. The information consists of the features (represented as
+                an int array via feature hashing), the costs for the arc (for
+                each label, order as in self.get_labels()), and whether
+                predicting the arc to be coreferent is consistent with the gold
+                annotation).
             label (str): The label of the arc. Defaults to "+".
 
         Returns:

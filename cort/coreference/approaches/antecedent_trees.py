@@ -85,12 +85,13 @@ class AntecedentTreePerceptron(perceptrons.Perceptron):
                 ranking, this list contains all potential anaphor-antecedent
                 pairs in the following order:
                 (m_1, m_0), (m_2, m_1), (m_2, m_0), (m_3, m_2), ...
-            arc_information (dict((Mention, Mention), (array, int, bool)): A
+            arc_information (dict((Mention, Mention), (array, array, bool)): A
                 mapping of arcs (= mention pairs) to information about these
                 arcs. The information consists of the features (represented as
-                an int array via feature hashing), the costs for the arc, and
-                whether predicting the arc to be coreferent is consistent with
-                the gold annotation).
+                an int array via feature hashing), the costs for the arc (for
+                each label, order as in self.get_labels()), and whether
+                predicting the arc to be coreferent is consistent with the gold
+                annotation).
 
         Returns:
             A 6-tuple describing the highest-scoring antecedent tree, and the

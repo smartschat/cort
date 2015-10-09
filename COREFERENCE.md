@@ -192,12 +192,13 @@ class RankingPerceptron(perceptrons.Perceptron):
                 ranking, this list consists of all potential anaphor-antecedent
                 pairs for one fixed anaphor in descending order, such as
                     (m_3, m_2), (m_2, m_1), (m_2, m_0)
-            arc_information (dict((Mention, Mention), (array, int, bool)): A
+            arc_information (dict((Mention, Mention), (array, array, bool)): A
                 mapping of arcs (= mention pairs) to information about these
                 arcs. The information consists of the features (represented as
-                an int array via feature hashing), the costs for the arc, and
-                whether predicting the arc to be coreferent is consistent with
-                the gold annotation).
+                an int array via feature hashing), the costs for the arc (for
+                each label, order as in self.get_labels()), and whether
+                predicting the arc to be coreferent is consistent with the gold
+                annotation).
 
         Returns:
             A 6-tuple describing the highest-scoring anaphor-antecedent
@@ -260,12 +261,13 @@ class RankingPerceptronClosest(perceptrons.Perceptron):
                 ranking, this list consists of all potential anaphor-antecedent
                 pairs for one fixed anaphor in descending order, such as
                     (m_3, m_2), (m_3, m_1), (m_3, m_0)
-            arc_information (dict((Mention, Mention), (array, int, bool)): A
+            arc_information (dict((Mention, Mention), (array, array, bool)): A
                 mapping of arcs (= mention pairs) to information about these
                 arcs. The information consists of the features (represented as
-                an int array via feature hashing), the costs for the arc, and
-                whether predicting the arc to be coreferent is consistent with
-                the gold annotation).
+                an int array via feature hashing), the costs for the arc (for
+                each label, order as in self.get_labels()), and whether
+                predicting the arc to be coreferent is consistent with the gold
+                annotation).
 
         Returns:
             A 6-tuple describing the highest-scoring anaphor-antecedent
@@ -298,8 +300,8 @@ class RankingPerceptronClosest(perceptrons.Perceptron):
         best_is_consistent = False
 
         for arc in substructure:
-            features, costs, consistent = arc_information[arc]
-            score = self.score_arc(features, costs)
+            consistent = arc_information[arc][2]
+            score = self.score_arc(arc, arc_information)
 
             if score > max_val:
                 best = arc
@@ -332,7 +334,7 @@ For the mention ranking model, we make use of a variant of a cost function
 employed in Fernandes et al. (2014), shown below.
 
 ```python
-def cost_based_on_consistency(arc):
+def cost_based_on_consistency(arc, label="+"):
     """ Assign cost to arcs based on consistency of decision and anaphoricity.
 
     An anaphor-antecedent decision is consistent if either
@@ -350,6 +352,7 @@ def cost_based_on_consistency(arc):
 
     Args:
         arc ((Mention, Mention)): A pair of mentions.
+        label (str): The label to predict for the arc. Defaults to '+'.
 
     Return:
         (int): The cost of predicting the arc.

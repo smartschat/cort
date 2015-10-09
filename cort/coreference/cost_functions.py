@@ -21,7 +21,7 @@ def cost_based_on_consistency(arc, label="+"):
 
     Args:
         arc ((Mention, Mention)): A pair of mentions.
-        label (str): The label to predict for the arc. Defaults to '+'
+        label (str): The label to predict for the arc. Defaults to '+'.
 
     Return:
         (int): The cost of predicting the arc.

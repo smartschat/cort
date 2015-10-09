@@ -121,12 +121,13 @@ class MentionPairsPerceptron(perceptrons.Perceptron):
             substructure (list((Mention, Mention))): The list of mention pairs
                 which define the search space for one substructure. For the
                 mention pair model, the list contains only one mention pair.
-            arc_information (dict((Mention, Mention), (array, int, bool)): A
+            arc_information (dict((Mention, Mention), (array, array, bool)): A
                 mapping of arcs (= mention pairs) to information about these
                 arcs. The information consists of the features (represented as
                 an int array via feature hashing), the costs for the arc (for
-                each label), and whether predicting the arc to be coreferent is
-                consistent with the gold annotation).
+                each label, order as in self.get_labels()), and whether
+                predicting the arc to be coreferent is consistent with the gold
+                annotation).
 
         Returns:
             A 6-tuple describing the highest-scoring label for the pair, and
