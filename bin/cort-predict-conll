@@ -162,13 +162,6 @@ else:
         features.token_distance
     ]
 
-extractor = instance_extractors.InstanceExtractor(
-    import_helper.import_from_path(args.extractor),
-    mention_features,
-    pairwise_features,
-    cost_functions.null_cost
-)
-
 logging.info("Loading model.")
 priors, weights = pickle.load(open(args.model, "rb"))
 
@@ -176,6 +169,14 @@ perceptron = import_helper.import_from_path(args.perceptron)(
     priors=priors,
     weights=weights,
     cost_scaling=0
+)
+
+extractor = instance_extractors.InstanceExtractor(
+    import_helper.import_from_path(args.extractor),
+    mention_features,
+    pairwise_features,
+    cost_functions.null_cost,
+    perceptron.get_labels()
 )
 
 logging.info("Reading in data.")

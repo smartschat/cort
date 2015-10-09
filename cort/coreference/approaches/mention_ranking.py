@@ -197,8 +197,8 @@ class RankingPerceptronClosest(perceptrons.Perceptron):
         best_is_consistent = False
 
         for arc in substructure:
-            features, costs, consistent = arc_information[arc]
-            score = self.score_arc(features, costs)
+            score = self.score_arc(arc, arc_information)
+            consistent = arc_information[arc][2]
 
             if score > max_val:
                 best = arc

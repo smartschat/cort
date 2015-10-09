@@ -111,17 +111,19 @@ else:
         features.token_distance
     ]
 
-extractor = instance_extractors.InstanceExtractor(
-    import_helper.import_from_path(args.extractor),
-    mention_features,
-    pairwise_features,
-    import_helper.import_from_path(args.cost_function)
-)
 
 perceptron = import_helper.import_from_path(args.perceptron)(
     cost_scaling=int(args.cost_scaling),
     n_iter=int(args.n_iter),
     seed=int(args.seed)
+)
+
+extractor = instance_extractors.InstanceExtractor(
+    import_helper.import_from_path(args.extractor),
+    mention_features,
+    pairwise_features,
+    import_helper.import_from_path(args.cost_function),
+    perceptron.get_labels()
 )
 
 logging.info("Reading in data.")

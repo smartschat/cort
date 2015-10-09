@@ -18,7 +18,7 @@ __author__ = 'smartschat'
 cdef class Perceptron:
     cdef int n_iter, random_seed
     cdef double cost_scaling
-    cdef dict priors, weights
+    cdef dict priors, weights, label_to_index
     """ Provide a latent structured perceptron.
 
     This implementation provides a latent structured perceptron with
@@ -37,6 +37,9 @@ cdef class Perceptron:
               for each feature seen during training (for representing the
               features we employ *feature hashing*). If the graphs employed are
               not labeled, ``l`` is set to "+".
+        label_to_index (dict(str, int)): A mapping of labels to the index of the
+              label in the list of labels.
+
     """
 
     def __init__(self,
@@ -73,6 +76,10 @@ cdef class Perceptron:
 
         labels = self.get_labels()
 
+        self.label_to_index = {}
+        for i, label in enumerate(labels):
+            self.label_to_index[label] = i
+
         if not priors:
             self.priors = {}
             for label in labels:
@@ -86,7 +93,7 @@ cdef class Perceptron:
             if weights is None:
                 for label in labels:
                     weights_for_label = array.array("d",
-                                                        (0.0 for k in range(2**24)))
+                                                    (0.0 for k in range(2**24)))
                     self.weights[label] = weights_for_label
             else:
                 for label in weights:
@@ -116,10 +123,9 @@ cdef class Perceptron:
             arc_information (dict((Mention, Mention), (array, int, bool)): A
                 mapping of arcs (= mention pairs) to information about these
                 arcs. The information consists of the features (represented as
-                an int array via feature hashing), the costs for the arc, and
-                whether predicting the arc to be coreferent is consistent with
-                the gold annotation).
-
+                an int array via feature hashing), the costs for the arc (for
+                each label), and whether predicting the arc to be coreferent is
+                consistent with the gold annotation).
         Returns:
             A tuple describing the learned model, consisting of
 
@@ -202,12 +208,12 @@ cdef class Perceptron:
             substructures (list(list((Mention, Mention)))): The search space
                 for the substructures, defined by a nested list. The ith list
                 contains the search space for the ith substructure.
-            arc_information (dict((Mention, Mention), (array, int, bool)): A
+            arc_information (dict((Mention, Mention), array): A
                 mapping of arcs (= mention pairs) to information about these
                 arcs. The information consists of the features (represented as
-                an int array via feature hashing), the costs for the arc, and
-                whether predicting the arc to be coreferent is consistent with
-                the gold annotation).
+                an int array via feature hashing), the costs for the arc (for
+                each label), and whether predicting the arc to be coreferent is
+                consistent with the gold annotation).
         Returns:
             Three nested lists describing the output. In particular, these
             lists are:
@@ -247,9 +253,9 @@ cdef class Perceptron:
             arc_information (dict((Mention, Mention), (array, int, bool)): A
                 mapping of arcs (= mention pairs) to information about these
                 arcs. The information consists of the features (represented as
-                an int array via feature hashing), the costs for the arc, and
-                whether predicting the arc to be coreferent is consistent with
-                the gold annotation).
+                an int array via feature hashing), the costs for the arc (for
+                each label), and whether predicting the arc to be coreferent is
+                consistent with the gold annotation).
 
         Returns:
             A 6-tuple describing the highest-scoring substructure and the
@@ -335,7 +341,7 @@ cdef class Perceptron:
             score = self._cython_score_arc(self.priors[label],
                                       self.weights[label],
                                       self.cost_scaling,
-                                      costs,
+                                      costs[self.label_to_index[label]],
                                       features)
 
             if score > max_val:
@@ -349,7 +355,7 @@ cdef class Perceptron:
 
         return best, max_val, best_cons, max_cons, best_is_consistent
 
-    def score_arc(self, features, costs, label="+"):
+    def score_arc(self, arc, arc_information, label="+"):
         """ Score an arc (described by features) according to priors, weights
         and costs.
 
@@ -364,11 +370,13 @@ cdef class Perceptron:
                 costs for predicting the arc, plus the prior for the label.
         """
 
+        features, costs, consistent = arc_information[arc]
+
         return self._cython_score_arc(
             self.priors[label],
             self.weights[label],
             self.cost_scaling,
-            costs,
+            costs[self.label_to_index[label]],
             features
         )
 

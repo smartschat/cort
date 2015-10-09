@@ -3,7 +3,7 @@
 __author__ = 'martscsn'
 
 
-def cost_based_on_consistency(arc):
+def cost_based_on_consistency(arc, label="+"):
     """ Assign cost to arcs based on consistency of decision and anaphoricity.
 
     An anaphor-antecedent decision is consistent if either
@@ -21,6 +21,7 @@ def cost_based_on_consistency(arc):
 
     Args:
         arc ((Mention, Mention)): A pair of mentions.
+        label (str): The label to predict for the arc. Defaults to '+'
 
     Return:
         (int): The cost of predicting the arc.
@@ -39,12 +40,13 @@ def cost_based_on_consistency(arc):
         return 0
 
 
-def null_cost(arc):
+def null_cost(arc, label="+"):
     """ Dummy cost function which always returns 0 (corresponding to not using
     a cost function at all).
 
     Args:
         arc ((Mention, Mention)): A pair of mentions.
+        label (str): The label to predict for the arc. Defaults to '+'
 
     Return:
         0

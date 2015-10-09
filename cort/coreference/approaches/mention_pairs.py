@@ -124,9 +124,9 @@ class MentionPairsPerceptron(perceptrons.Perceptron):
             arc_information (dict((Mention, Mention), (array, int, bool)): A
                 mapping of arcs (= mention pairs) to information about these
                 arcs. The information consists of the features (represented as
-                an int array via feature hashing), the costs for the arc, and
-                whether predicting the arc to be coreferent is consistent with
-                the gold annotation).
+                an int array via feature hashing), the costs for the arc (for
+                each label), and whether predicting the arc to be coreferent is
+                consistent with the gold annotation).
 
         Returns:
             A 6-tuple describing the highest-scoring label for the pair, and
@@ -148,10 +148,10 @@ class MentionPairsPerceptron(perceptrons.Perceptron):
                   same as the correct label.
         """
         arc = substructure[0]
-        features, costs, consistent = arc_information[arc]
+        consistent = arc_information[arc][2]
 
-        score_coref = self.score_arc(features, costs, "+")
-        score_non_coref = self.score_arc(features, costs, "-")
+        score_coref = self.score_arc(arc, arc_information, "+")
+        score_non_coref = self.score_arc(arc, arc_information, "-")
 
         if score_coref >= score_non_coref:
             label = "+"

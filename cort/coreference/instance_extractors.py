@@ -34,12 +34,15 @@ class InstanceExtractor:
             of features for mention pairs.
         cost_function (function: (Mention, Mention) -> int): A function
             assigning costs to mention pairs.
+        labels (list(str)): A list of arc labels emplyoed by the approach.
+            Defaults to the list containing only "+".
     """
     def __init__(self,
                  extract_substructures,
                  mention_features,
                  pairwise_features,
-                 cost_function):
+                 cost_function,
+                 labels=("+",)):
         """ Initialize instance and feature extraction.
 
         Args:
@@ -56,11 +59,14 @@ class InstanceExtractor:
                 list of features for mention pairs.
             cost_function (function: (Mention, Mention) -> int): A function
                 assigning costs to mention pairs.
+            labels (list(str)): A list of arc labels emplyoed by the
+                approach.
         """
         self.extract_substructures = extract_substructures
         self.mention_features = mention_features
         self.pairwise_features = pairwise_features
         self.cost_function = cost_function
+        self.labels = labels
 
     def extract(self, corpus):
         """ Extract instances and features from a corpus.
@@ -69,28 +75,18 @@ class InstanceExtractor:
             corpus (Corpus): The corpus to extract instances and features from.
 
         Returns:
-            A 6-tuple which describes the extracted instances and their
+            A tuple which describes the extracted instances and their
             features. The individual components are:
 
-                - **arcs** (*list((Mention, Mention))*): A list of coreference
-                  arcs.
-                - **features** (*numpy.array*): An array of features. The features
-                  are represented as integers via feature hashing.
-                - **substructures_mapping** (*numpy.array*): A list of indices
-                  that encodes which arcs in the list of arcs correspond to the
-                  same substructure. For example, if
-                  ``substructres_mapping[3] = 20`` and
-                  ``substructures_mapping[4] = 100``, then ``arcs[20:100]``
-                  correspond to the same substructure.
-                - **arcs_mapping** (*numpy.array*): A list of indices that encodes
-                  which features in the list of features correspond to the
-                  same arc (following the same principle as
-                  ``substructures_mapping``).
-                - **coreferent** (*numpy.array*): A boolean array of size
-                  len(arcs) containing the information whether the two mentions
-                  in the arc are coreferent.
-                - **costs** (*numpy.array*): An array of size len(arcs)
-                  containing the costs of wrongly predicting an arc.
+            * substructures (list(list((Mention, Mention)))): The search space
+                for the substructures, defined by a nested list. The ith list
+                contains the search space for the ith substructure.
+            * arc_information (dict((Mention, Mention), (array, int, bool)): A
+                mapping of arcs (= mention pairs) to information about these
+                arcs. The information consists of the features (represented as
+                an int array via feature hashing), the costs for the arc (for
+                each label), and whether predicting the arc to be coreferent is
+                consistent with the gold annotation).
         """
 
         all_substructures = []
@@ -111,6 +107,8 @@ class InstanceExtractor:
 
         pool.close()
         pool.join()
+
+        num_labels = len(self.labels)
 
         for result in results:
             doc_identifier, anaphors, antecedents, features, costs, \
@@ -134,7 +132,7 @@ class InstanceExtractor:
 
                     arc_information[arc] = \
                         (features[features_start:features_end],
-                         costs[pair_index],
+                         costs[num_labels*pair_index:num_labels*pair_index + num_labels],
                          consistency[pair_index])
 
                 all_substructures.append(struct)
@@ -143,9 +141,8 @@ class InstanceExtractor:
         if sys.version_info[0] == 2:
             for arc in arc_information:
                 feats, cost, cons = arc_information[arc]
-                arc_information[arc] = (numpy.array(feats,
-                                                    dtype=numpy.uint32),
-                                        cost,
+                arc_information[arc] = (numpy.array(feats, dtype=numpy.uint32),
+                                        numpy.array(cost, dtype=float),
                                         cons)
 
         return all_substructures, arc_information
@@ -178,7 +175,8 @@ class InstanceExtractor:
             for arc in struct:
                 anaphors.append(mentions_to_ids[arc[0]])
                 antecedents.append(mentions_to_ids[arc[1]])
-                costs.append(self.cost_function(arc))
+                for label in self.labels:
+                    costs.append(self.cost_function(arc, label))
                 consistency.append(arc[0].decision_is_consistent(arc[1]))
 
                 arc_features = self._extract_features(arc, cache)
