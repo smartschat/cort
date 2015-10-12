@@ -3,7 +3,7 @@ from distutils.core import setup
 
 setup(
     name='cort',
-    version='0.2.2',
+    version='0.2.3',
     packages=['cort',
               'cort.analysis',
               'cort.core',
