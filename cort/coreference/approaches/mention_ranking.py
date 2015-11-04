@@ -100,16 +100,19 @@ class RankingPerceptron(perceptrons.Perceptron):
                 ranking, this list consists of all potential anaphor-antecedent
                 pairs for one fixed anaphor in descending order, such as
                     (m_3, m_2), (m_2, m_1), (m_2, m_0)
-            arc_information (dict((Mention, Mention), (array, array, bool)): A
-                mapping of arcs (= mention pairs) to information about these
-                arcs. The information consists of the features (represented as
-                an int array via feature hashing), the costs for the arc (for
-                each label, order as in self.get_labels()), and whether
-                predicting the arc to be coreferent is consistent with the gold
-                annotation).
+            arc_information (dict((Mention, Mention),
+                                  ((array, array, array), list(int), bool)):
+                A mapping of arcs (= mention pairs) to information about these
+                arcs. The information consists of the features, the costs for
+                the arc (for each label), and whether predicting the arc to be
+                coreferent is consistent with the gold annotation). The features
+                are divided in three arrays: the first array contains the non-
+                numeric features, the second array the numeric features, and the
+                third array the values for the numeric features. The features
+                are represented as integers via feature hashing.
 
         Returns:
-            A 6-tuple describing the highest-scoring anaphor-antecedent
+            A 7-tuple describing the highest-scoring anaphor-antecedent
             decision, and the highest-scoring anaphor-antecedent decision
             consistent with the gold annotation. The tuple consists of:
 
@@ -160,16 +163,19 @@ class RankingPerceptronClosest(perceptrons.Perceptron):
                 ranking, this list consists of all potential anaphor-antecedent
                 pairs for one fixed anaphor in descending order, such as
                     (m_3, m_2), (m_3, m_1), (m_3, m_0)
-            arc_information (dict((Mention, Mention), (array, array, bool)): A
-                mapping of arcs (= mention pairs) to information about these
-                arcs. The information consists of the features (represented as
-                an int array via feature hashing), the costs for the arc (for
-                each label, order as in self.get_labels()), and whether
-                predicting the arc to be coreferent is consistent with the gold
-                annotation).
+            arc_information (dict((Mention, Mention),
+                                  ((array, array, array), list(int), bool)):
+                A mapping of arcs (= mention pairs) to information about these
+                arcs. The information consists of the features, the costs for
+                the arc (for each label), and whether predicting the arc to be
+                coreferent is consistent with the gold annotation). The features
+                are divided in three arrays: the first array contains the non-
+                numeric features, the second array the numeric features, and the
+                third array the values for the numeric features. The features
+                are represented as integers via feature hashing.
 
         Returns:
-            A 6-tuple describing the highest-scoring anaphor-antecedent
+            A 7-tuple describing the highest-scoring anaphor-antecedent
             decision, and the anaphor-antecedent pair with the closest gold
             antecedent. The tuple consists of:
 

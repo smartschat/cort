@@ -29,6 +29,9 @@ Reference:
 from __future__ import division
 
 
+import array
+
+
 from cort.coreference import perceptrons
 
 
@@ -85,16 +88,19 @@ class AntecedentTreePerceptron(perceptrons.Perceptron):
                 ranking, this list contains all potential anaphor-antecedent
                 pairs in the following order:
                 (m_1, m_0), (m_2, m_1), (m_2, m_0), (m_3, m_2), ...
-            arc_information (dict((Mention, Mention), (array, array, bool)): A
-                mapping of arcs (= mention pairs) to information about these
-                arcs. The information consists of the features (represented as
-                an int array via feature hashing), the costs for the arc (for
-                each label, order as in self.get_labels()), and whether
-                predicting the arc to be coreferent is consistent with the gold
-                annotation).
+            arc_information (dict((Mention, Mention),
+                                  ((array, array, array), list(int), bool)):
+                A mapping of arcs (= mention pairs) to information about these
+                arcs. The information consists of the features, the costs for
+                the arc (for each label), and whether predicting the arc to be
+                coreferent is consistent with the gold annotation). The features
+                are divided in three arrays: the first array contains the non-
+                numeric features, the second array the numeric features, and the
+                third array the values for the numeric features. The features
+                are represented as integers via feature hashing.
 
         Returns:
-            A 6-tuple describing the highest-scoring antecedent tree, and the
+            A 7-tuple describing the highest-scoring antecedent tree, and the
             highest-scoring antecedent tree consistent with the gold
             annotation. The tuple consists of:
 

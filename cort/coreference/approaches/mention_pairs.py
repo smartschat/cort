@@ -121,16 +121,19 @@ class MentionPairsPerceptron(perceptrons.Perceptron):
             substructure (list((Mention, Mention))): The list of mention pairs
                 which define the search space for one substructure. For the
                 mention pair model, the list contains only one mention pair.
-            arc_information (dict((Mention, Mention), (array, array, bool)): A
-                mapping of arcs (= mention pairs) to information about these
-                arcs. The information consists of the features (represented as
-                an int array via feature hashing), the costs for the arc (for
-                each label, order as in self.get_labels()), and whether
-                predicting the arc to be coreferent is consistent with the gold
-                annotation).
+            arc_information (dict((Mention, Mention),
+                                  ((array, array, array), list(int), bool)):
+                A mapping of arcs (= mention pairs) to information about these
+                arcs. The information consists of the features, the costs for
+                the arc (for each label), and whether predicting the arc to be
+                coreferent is consistent with the gold annotation). The features
+                are divided in three arrays: the first array contains the non-
+                numeric features, the second array the numeric features, and the
+                third array the values for the numeric features. The features
+                are represented as integers via feature hashing.
 
         Returns:
-            A 6-tuple describing the highest-scoring label for the pair, and
+            A 7-tuple describing the highest-scoring label for the pair, and
             the correct label for the pair. The tuple consists of:
 
                 - **best_arcs** (*list((Mention, Mention))*): the pair under
@@ -172,4 +175,12 @@ class MentionPairsPerceptron(perceptrons.Perceptron):
                 label == coref_label)
 
     def get_labels(self):
+        """ Get the graph labels employed by the mention pair approach..
+
+        The mention pair approach uses labels '+' (coreferent) and '-' (not
+        coreferent).
+
+        Returns:
+            list(str): The list ['+', '-'] of graph labels.
+        """
         return ["+", "-"]
