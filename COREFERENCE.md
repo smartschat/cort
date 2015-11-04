@@ -631,7 +631,7 @@ We provide models trained on CoNLL-2012 shared task data, and evaluate these mod
 * Ranking: Latent
     * <a href="http://smartschat.de/downloads/model-latent-train.obj">trained on train</a>
     * <a href="http://smartschat.de/downloads/model-latent-train+dev.obj">trained on train+dev</a>
-* Ranking: Latent
+* Tree
     * <a href="http://smartschat.de/downloads/model-tree-train.obj">trained on train</a>
     * <a href="http://smartschat.de/downloads/model-tree-train+dev.obj">trained on train+dev</a>
     
