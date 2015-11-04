@@ -435,10 +435,13 @@ def all_ante(substructures, labels, scores, coref_labels):
 
 ### Features
 
-By default, **cort** runs with a standard feature set. You can define your own set of
-features and give it as a parameter to the toolkit. To do so, write the function names
-(using the full paths) of the features in a text file. As an example, here is the standard
-feature set:
+By default, **cort** runs with a standard feature set. Each feature takes as input a 
+mention or a pair of mention, and outputs a tuple: the name of the feature and the
+value of the feature. The value can be a string, a boolean, or a numeric value.
+
+You can define your own set of features and give it as a parameter to the toolkit. 
+To do so, write the function names (using the full paths) of the features in a text 
+file. As an example, here is the standard feature set:
 
 ```
 cort.coreference.features.fine_type
@@ -628,9 +631,7 @@ We provide models trained on CoNLL-2012 shared task data, and evaluate these mod
 * Ranking: Latent
     * <a href="http://smartschat.de/downloads/model-latent-train.obj">trained on train</a>
     * <a href="http://smartschat.de/downloads/model-latent-train+dev.obj">trained on train+dev</a>
-* Antecedent Tree
-    * <a href="http://smartschat.de/downloads/model-tree-train.obj">trained on train</a>
-    * <a href="http://smartschat.de/downloads/model-tree-train+dev.obj">trained on train+dev</a>
+* Antecedent Tree: coming soon
     
 ### Results
 
@@ -643,16 +644,16 @@ TACL paper since we extended the feature set.
 
 Model             | MUC   | BCUB  | CEAFE | AVG
 ----------------- | ----- | ----- | ----- | -----
-Pair              | 69.34 | 58.02 | 53.63 | 60.33
-Ranking: Closest  | 72.63 | 60.83 | 57.83 | 63.76
-Ranking: Latent   | 72.77 | 61.47 | 58.71 | 64.32
+Pair              | 69.39 | 58.10 | 53.90 | 60.46
+Ranking: Closest  | 72.63 | 60.83 | 57.83 | 63.79
+Ranking: Latent   | 72.77 | 61.47 | 58.71 | 64.29
 Tree              | 72.01 | 60.22 | 57.37 | 63.20
 
 #### Testing Data
 
 Model             | MUC   | BCUB  | CEAFE | AVG
 ----------------- | ----- | ----- | ----- | -----
-Pair              | 69.71 | 56.61 | 52.02 | 59.45
-Ranking: Closest  | 72.72 | 59.58 | 55.54 | 62.61
-Ranking: Latent   | 72.76 | 60.19 | 56.29 | 63.08
+Pair              | 69.78 | 56.72 | 52.17 | 59.56
+Ranking: Closest  | 72.62 | 59.65 | 55.55 | 62.61
+Ranking: Latent   | 72.56 | 60.05 | 56.14 | 62.92
 Tree              | 71.89 | 58.47 | 54.99 | 61.78
