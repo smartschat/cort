@@ -618,7 +618,8 @@ from the paper, please [contact me](mailto:sebastian.martschat@gmail.com).
 
 ## <a name="models"></a> Model Downloads and Results
 
-We provide models trained on CoNLL-2012 shared task data, and evaluate these models.
+We provide models trained on CoNLL-2012 shared task data, and evaluate these models. Right now, these
+models only work in Python 3, I will update them as soon as possible.
 
 ### Model Downloads
 
