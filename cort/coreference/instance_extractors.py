@@ -1,10 +1,8 @@
 """ Extract instances and features from a corpus. """
 
-
 import array
 import multiprocessing
 import sys
-
 
 import mmh3
 import numpy
@@ -81,12 +79,16 @@ class InstanceExtractor:
             * substructures (list(list((Mention, Mention)))): The search space
                 for the substructures, defined by a nested list. The ith list
                 contains the search space for the ith substructure.
-            * arc_information (dict((Mention, Mention), (array, int, bool)): A
-                mapping of arcs (= mention pairs) to information about these
-                arcs. The information consists of the features (represented as
-                an int array via feature hashing), the costs for the arc (for
-                each label), and whether predicting the arc to be coreferent is
-                consistent with the gold annotation).
+            * arc_information (dict((Mention, Mention),
+                                    ((array, array, array), list(int), bool)):
+                A mapping of arcs (= mention pairs) to information about these
+                arcs. The information consists of the features, the costs for
+                the arc (for each label), and whether predicting the arc to be
+                coreferent is consistent with the gold annotation). The features
+                are divided in three arrays: the first array contains the non-
+                numeric features, the second array the numeric features, and the
+                third array the values for the numeric features. The features
+                are represented as integers via feature hashing.
         """
 
         all_substructures = []
@@ -100,7 +102,7 @@ class InstanceExtractor:
 
         if sys.version_info[0] == 2:
             results = pool.map(unwrap_extract_doc,
-                               zip([self]*len(corpus.documents),
+                               zip([self] * len(corpus.documents),
                                    corpus.documents))
         else:
             results = pool.map(self._extract_doc, corpus.documents)
@@ -111,15 +113,24 @@ class InstanceExtractor:
         num_labels = len(self.labels)
 
         for result in results:
-            doc_identifier, anaphors, antecedents, features, costs, \
-                consistency, feature_mapping, substructures_mapping = result
+            (doc_identifier,
+             anaphors,
+             antecedents,
+             nonnumeric_features,
+             numeric_features,
+             numeric_vals,
+             costs,
+             consistency,
+             nonnumeric_feature_mapping,
+             numeric_feature_mapping,
+             substructures_mapping) = result
 
             doc = id_to_doc_mapping[doc_identifier]
 
-            for i in range(0, len(substructures_mapping)-1):
+            for i in range(0, len(substructures_mapping) - 1):
                 struct = []
                 begin = substructures_mapping[i]
-                end = substructures_mapping[i+1]
+                end = substructures_mapping[i + 1]
 
                 for pair_index in range(begin, end):
                     arc = (doc.system_mentions[anaphors[pair_index]],
@@ -127,12 +138,29 @@ class InstanceExtractor:
 
                     struct.append(arc)
 
-                    features_start = feature_mapping[pair_index]
-                    features_end = feature_mapping[pair_index+1]
+                    # find position of arc's features in document array
+                    nonnumeric_features_start = nonnumeric_feature_mapping[
+                        pair_index]
+                    nonnumeric_features_end = nonnumeric_feature_mapping[
+                        pair_index + 1]
+
+                    numeric_features_start = numeric_feature_mapping[pair_index]
+                    numeric_features_end = numeric_feature_mapping[
+                        pair_index + 1]
 
                     arc_information[arc] = \
-                        (features[features_start:features_end],
-                         costs[num_labels*pair_index:num_labels*pair_index + num_labels],
+                        ((nonnumeric_features[
+                          nonnumeric_features_start:nonnumeric_features_end
+                          ],
+                          numeric_features[
+                          numeric_features_start:numeric_features_end
+                          ],
+                          numeric_vals[
+                          numeric_features_start:numeric_features_end
+                          ]),
+                         costs[
+                         num_labels * pair_index:num_labels * pair_index
+                         + num_labels],
                          consistency[pair_index])
 
                 all_substructures.append(struct)
@@ -141,9 +169,12 @@ class InstanceExtractor:
         if sys.version_info[0] == 2:
             for arc in arc_information:
                 feats, cost, cons = arc_information[arc]
-                arc_information[arc] = (numpy.array(feats, dtype=numpy.uint32),
-                                        numpy.array(cost, dtype=float),
-                                        cons)
+                arc_information[arc] = (
+                    (numpy.array(feats[0], dtype=numpy.uint32),
+                     numpy.array(feats[1], dtype=numpy.uint32),
+                     numpy.array(feats[2], dtype=float)),
+                    numpy.array(cost, dtype=float),
+                    cons)
 
         return all_substructures, arc_information
 
@@ -160,11 +191,15 @@ class InstanceExtractor:
         antecedents = array.array('H')
         costs = array.array('H')
         consistency = array.array('B')
-        feature_mapping = array.array('I')
+        nonnumeric_feature_mapping = array.array('I')
+        numeric_feature_mapping = array.array('I')
         substructures_mapping = array.array('I')
-        features = array.array('I')
+        nonnumeric_features = array.array('I')
+        numeric_features = array.array('I')
+        numeric_vals = array.array("f")
 
-        feature_mapping.append(0)
+        nonnumeric_feature_mapping.append(0)
+        numeric_feature_mapping.append(0)
         substructures_mapping.append(0)
 
         for struct in substructures:
@@ -173,31 +208,56 @@ class InstanceExtractor:
                 continue
 
             for arc in struct:
+                # ids for anaphor and antecedent
                 anaphors.append(mentions_to_ids[arc[0]])
                 antecedents.append(mentions_to_ids[arc[1]])
+
+                # cost for each label
                 for label in self.labels:
                     costs.append(self.cost_function(arc, label))
+
+                # is decision to make them coreferent consistent with gold?
                 consistency.append(arc[0].decision_is_consistent(arc[1]))
 
-                arc_features = self._extract_features(arc, cache)
-                features.extend(arc_features)
-                feature_mapping.append(feature_mapping[-1] + len(arc_features))
+                # features for the arc: stored in array which applies to whole
+                # document
+                (arc_nonnumeric_features, arc_numeric_features,
+                 arc_numeric_vals) = self._extract_features(arc, cache)
 
+                nonnumeric_features.extend(arc_nonnumeric_features)
+                numeric_features.extend(arc_numeric_features)
+                numeric_vals.extend(arc_numeric_vals)
+
+                # auxiliary arrays that store the position of features for arcs
+                # in the document array
+                nonnumeric_feature_mapping.append(
+                    nonnumeric_feature_mapping[-1] + len(
+                        arc_nonnumeric_features))
+                numeric_feature_mapping.append(
+                    numeric_feature_mapping[-1] + len(arc_numeric_features))
+
+            # store position of substructures in document array
             substructures_mapping.append(substructures_mapping[-1] +
                                          len(struct))
 
         return (doc.identifier,
                 anaphors,
                 antecedents,
-                features,
+                nonnumeric_features,
+                numeric_features,
+                numeric_vals,
                 costs,
                 consistency,
-                feature_mapping,
+                nonnumeric_feature_mapping,
+                numeric_feature_mapping,
                 substructures_mapping)
 
     def _extract_features(self, arc, cache):
         anaphor, antecedent = arc
         inst_feats = []
+        numeric_features = []
+
+        numeric_types = {"float", "int"}
 
         if not antecedent.is_dummy():
             # mention features
@@ -209,21 +269,32 @@ class InstanceExtractor:
             ana_features = cache[anaphor]
             ante_features = cache[antecedent]
 
-            inst_feats += ["ana_" + feat for feat in ana_features]
-            inst_feats += ["ante_" + feat for feat in ante_features]
+            # first: non-numeric features (categorial, boolean)
+            inst_feats += ["ana_" + feat + "=" + str(val) for feat, val in
+                           ana_features if type(val).__name__ not in
+                           numeric_types]
+
+            len_ana_features = len(inst_feats)
+
+            inst_feats += ["ante_" + feat + "=" + str(val) for feat, val in
+                           ante_features if type(val).__name__ not in
+                           numeric_types]
 
             # concatenated features
-            inst_feats += ["ana_" + feat_ana + "^ante_" + feat_ante
-                           for feat_ana, feat_ante in
+            inst_feats += ["ana_" + ana_info[0] + "=" + str(ana_info[1]) +
+                           "^ante_" + ante_info[0] + "=" + str(ante_info[1])
+                           for ana_info, ante_info in
                            zip(ana_features, ante_features)]
 
             # pairwise features
-            inst_feats += [feature(anaphor, antecedent) for feature
-                           in self.pairwise_features
-                           if feature(anaphor, antecedent)]
+            pairwise_features = [feature(anaphor, antecedent) for feature
+                                 in self.pairwise_features]
+            inst_feats += [feature + "=" + str(val) for feature, val
+                           in pairwise_features
+                           if val and type(val).__name__ not in numeric_types]
 
             # feature combinations
-            fine_type_indices = {len(self.mention_features)*i for i
+            fine_type_indices = {len_ana_features * i for i
                                  in [0, 1, 2]}
 
             inst_feats += [
@@ -232,8 +303,33 @@ class InstanceExtractor:
                 if j not in fine_type_indices
             ]
 
-        # to hash
-        all_feats = array.array('I', [mmh3.hash(word.encode("utf-8")) & 2**24-1
-                                      for word in inst_feats])
+            # now numeric features
+            ana_numeric = [("ana_" + feat, val) for feat, val
+                           in ana_features
+                           if type(val).__name__ in numeric_types]
+            ante_numeric = [("ante_" + feat, val) for feat, val
+                            in ante_features
+                            if type(val).__name__ in numeric_types]
+            pair_numeric = [(feat, val) for feat, val in pairwise_features
+                            if type(val).__name__ in numeric_types]
 
-        return all_feats
+            # feature combinations for numeric features
+            for numeric_features in [ana_numeric, ante_numeric, pair_numeric]:
+                numeric_features += [
+                    (inst_feats[i] + "^" + numeric_features[j][0],
+                     numeric_features[j][1]) for i in fine_type_indices
+                    for j, numeric_feature in enumerate(numeric_features)
+                ]
+
+            numeric_features = ana_numeric + ante_numeric + pair_numeric
+
+        # to hash
+        all_nonnumeric_feats = array.array(
+            'I', [mmh3.hash(word.encode("utf-8")) & 2 ** 24 - 1 for word
+                  in inst_feats])
+        all_numeric_feats = array.array(
+            'I', [mmh3.hash(word.encode("utf-8")) & 2 ** 24 - 1 for word, _
+                  in numeric_features])
+        numeric_vals = array.array("f", [val for _, val in numeric_features])
+
+        return all_nonnumeric_feats, all_numeric_feats, numeric_vals
