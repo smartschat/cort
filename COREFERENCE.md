@@ -631,7 +631,9 @@ We provide models trained on CoNLL-2012 shared task data, and evaluate these mod
 * Ranking: Latent
     * <a href="http://smartschat.de/downloads/model-latent-train.obj">trained on train</a>
     * <a href="http://smartschat.de/downloads/model-latent-train+dev.obj">trained on train+dev</a>
-* Antecedent Tree: coming soon
+* Ranking: Latent
+    * <a href="http://smartschat.de/downloads/model-tree-train.obj">trained on train</a>
+    * <a href="http://smartschat.de/downloads/model-tree-train+dev.obj">trained on train+dev</a>
     
 ### Results
 
@@ -647,7 +649,7 @@ Model             | MUC   | BCUB  | CEAFE | AVG
 Pair              | 69.39 | 58.10 | 53.90 | 60.46
 Ranking: Closest  | 72.63 | 60.83 | 57.83 | 63.79
 Ranking: Latent   | 72.77 | 61.47 | 58.71 | 64.29
-Tree              | 72.01 | 60.22 | 57.37 | 63.20
+Tree              | 71.86 | 60.19 | 57.28 | 63.11
 
 #### Testing Data
 
@@ -656,4 +658,4 @@ Model             | MUC   | BCUB  | CEAFE | AVG
 Pair              | 69.78 | 56.72 | 52.17 | 59.56
 Ranking: Closest  | 72.62 | 59.65 | 55.55 | 62.61
 Ranking: Latent   | 72.56 | 60.05 | 56.14 | 62.92
-Tree              | 71.89 | 58.47 | 54.99 | 61.78
+Tree              | 71.93 | 58.61 | 54.78 | 61.77
