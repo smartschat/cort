@@ -501,7 +501,7 @@ cdef class Perceptron:
                                   double costs,
                                   numpy.uint32_t[:] nonnumeric_features,
                                   numpy.uint32_t[:] numeric_features,
-                                  float[:] numeric_vals):
+                                  double[:] numeric_vals):
 
         cdef double score = 0.0
         cdef int index = 0
@@ -524,7 +524,7 @@ cdef class Perceptron:
                              double[:] cached_weights,
                              numpy.uint32_t[:] nonnumeric_features,
                              numpy.uint32_t[:] numeric_features,
-                             float[:] numeric_vals,
+                             double[:] numeric_vals,
                              double update_val_for_weights,
                              double update_val_for_cached_weights):
         cdef int index
