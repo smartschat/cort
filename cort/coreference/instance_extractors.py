@@ -172,7 +172,7 @@ class InstanceExtractor:
                 arc_information[arc] = (
                     (numpy.array(feats[0], dtype=numpy.uint32),
                      numpy.array(feats[1], dtype=numpy.uint32),
-                     numpy.array(feats[2], dtype=float)),
+                     numpy.array(feats[2], dtype="float32")),
                     numpy.array(cost, dtype=float),
                     cons)
 
