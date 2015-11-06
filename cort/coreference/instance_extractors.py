@@ -34,6 +34,9 @@ class InstanceExtractor:
             assigning costs to mention pairs.
         labels (list(str)): A list of arc labels emplyoed by the approach.
             Defaults to the list containing only "+".
+        convert_to_string_function (function): The function used to convert
+            feature values to (unicode) strings. For Python 2 it is
+            ``unicode``, for Python 3 it is ``string``.
     """
     def __init__(self,
                  extract_substructures,
@@ -65,6 +68,11 @@ class InstanceExtractor:
         self.pairwise_features = pairwise_features
         self.cost_function = cost_function
         self.labels = labels
+
+        if sys.version_info[0] == 2:
+            self.convert_to_string_function = unicode
+        else:
+            self.convert_to_string_function = str
 
     def extract(self, corpus):
         """ Extract instances and features from a corpus.
@@ -270,26 +278,31 @@ class InstanceExtractor:
             ante_features = cache[antecedent]
 
             # first: non-numeric features (categorial, boolean)
-            inst_feats += ["ana_" + feat + "=" + str(val) for feat, val in
+            inst_feats += ["ana_" + feat + "=" +
+                           self.convert_to_string_function(val) for feat, val in
                            ana_features if type(val).__name__ not in
                            numeric_types]
 
             len_ana_features = len(inst_feats)
 
-            inst_feats += ["ante_" + feat + "=" + str(val) for feat, val in
+            inst_feats += ["ante_" + feat + "=" +
+                           self.convert_to_string_function(val) for feat, val in
                            ante_features if type(val).__name__ not in
                            numeric_types]
 
             # concatenated features
-            inst_feats += ["ana_" + ana_info[0] + "=" + str(ana_info[1]) +
-                           "^ante_" + ante_info[0] + "=" + str(ante_info[1])
+            inst_feats += ["ana_" + ana_info[0] + "=" +
+                           self.convert_to_string_function(ana_info[1]) +
+                           "^ante_" + ante_info[0] + "=" +
+                           self.convert_to_string_function(ante_info[1])
                            for ana_info, ante_info in
                            zip(ana_features, ante_features)]
 
             # pairwise features
             pairwise_features = [feature(anaphor, antecedent) for feature
                                  in self.pairwise_features]
-            inst_feats += [feature + "=" + str(val) for feature, val
+            inst_feats += [feature + "=" +
+                           self.convert_to_string_function(val) for feature, val
                            in pairwise_features
                            if val and type(val).__name__ not in numeric_types]
 
