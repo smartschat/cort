@@ -2,11 +2,15 @@ from __future__ import print_function
 
 import codecs
 import shutil
-import html
 import os
 import webbrowser
 from random import randint
 import collections
+
+try:
+    from html import escape as html_escape
+except ImportError:
+    from cgi import escape as html_escape
 
 import cort
 from cort.core import spans
@@ -210,7 +214,7 @@ class Visualizer:
         annotated_mentions = set(document.annotated_mentions)
 
         for token in document.tokens:
-            token = html.escape(token)
+            token = html_escape(token, True)
 
             mention_id = 0
 
@@ -226,13 +230,13 @@ class Visualizer:
                     mention_id += 1
                     continue
 
-                mention_tokens = html.escape(" ".join(mention.attributes[
+                mention_tokens = html_escape(" ".join(mention.attributes[
                     'tokens']), True)
 
-                mention_head = html.escape(" ".join(mention.attributes[
+                mention_head = html_escape(" ".join(mention.attributes[
                     'head']), True)
 
-                mention_type = html.escape("".join(mention.attributes[
+                mention_type = html_escape("".join(mention.attributes[
                     'type']), True)
 
                 mention_span = str(mention.span)
@@ -352,7 +356,7 @@ class Visualizer:
                     "annotated_set_id"])])
 
         for token in document.tokens:
-            token = html.escape(token)
+            token = html_escape(token, True)
 
             mention_id = 0
 
@@ -368,13 +372,13 @@ class Visualizer:
                     mention_id += 1
                     continue
 
-                mention_tokens = html.escape(" ".join(mention.attributes[
+                mention_tokens = html_escape(" ".join(mention.attributes[
                     'tokens']), True)
 
-                mention_head = html.escape(" ".join(mention.attributes[
+                mention_head = html_escape(" ".join(mention.attributes[
                     'head']), True)
 
-                mention_type = html.escape("".join(mention.attributes[
+                mention_type = html_escape("".join(mention.attributes[
                     'type']), True)
 
                 mention_span = str(mention.span)
