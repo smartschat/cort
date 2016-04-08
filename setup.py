@@ -3,7 +3,7 @@ from distutils.core import setup
 
 setup(
     name='cort',
-    version='0.2.4.3',
+    version='0.2.4.4',
     packages=['cort',
               'cort.analysis',
               'cort.core',
@@ -36,7 +36,7 @@ setup(
         ],
     install_requires=['nltk >= 3.0.1', 'numpy', 'matplotlib', 'mmh3', 'cython',
                       'future', 'jpype1', 'beautifulsoup4',
-                      'pystanforddependencies >= 0.2.0'],
+                      'pystanforddependencies >= 0.3.1'],
     package_data={
         'cort': ['analysis/visualization/style.css',
                  'analysis/visualization/lib/*',
