@@ -131,50 +131,75 @@ class TestHeadFinder(unittest.TestCase):
         self.assertEqual((spans.Span(0, 1), ["Khan", "Younes"]), head_finders.HeadFinder.adjust_head_for_nam(
             ["Khan", "Younes", "in", "the", "southern", "Ghaza", "Strip"],
             ["NNP", "NNS", "IN", "DT", "JJ", "NNP", "NNP"],
-            "GPE"
+            "GPE",
+            spans.Span(6, 6),
+            ["Strip"]
         ))
 
         self.assertEqual((spans.Span(0, 1), ["Walter", "Sisulu"]), head_finders.HeadFinder.adjust_head_for_nam(
             ["Walter", "Sisulu"],
             ["NNP", "NNP"],
-            "PERSON"
+            "PERSON",
+            spans.Span(1, 1),
+            ["Sisulu"]
         ))
 
         self.assertEqual((spans.Span(1, 5), ['vice', 'president', 'Robert', 'W.', 'Reedy']), head_finders.HeadFinder.adjust_head_for_nam(
             ['former', 'vice', 'president', 'Robert', 'W.', 'Reedy'],
             ["JJ", "NN", "NN", "NNP", "NNP", "NNP"],
-            "PERSON"
+            "PERSON",
+            spans.Span(5, 5),
+            ["Reedy"]
         ))
 
         self.assertEqual((spans.Span(0, 1), ['Michael', 'Wolf']), head_finders.HeadFinder.adjust_head_for_nam(
             ['Michael', 'Wolf', ',', 'a', 'contributing', 'editor'],
             ["NNP", "NNP", ",", "DT", "VBG", "NN"],
-            "PERSON"
+            "PERSON",
+            spans.Span(1, 1),
+            ["Wolf"]
         ))
 
         self.assertEqual((spans.Span(0, 1), ['Mr.', 'Clinton']), head_finders.HeadFinder.adjust_head_for_nam(
             ['Mr.', 'Clinton'],
             ["NNP", "NNP"],
-            "NONE"
+            "NONE",
+            spans.Span(1, 1),
+            ["Clinton"]
         ))
 
         self.assertEqual((spans.Span(0, 0), ['Taiwan']), head_finders.HeadFinder.adjust_head_for_nam(
             ['Taiwan', "'s"],
             ["NNP", "POS"],
-            "GPE"
+            "GPE",
+            spans.Span(0, 0),
+            ["Taiwan"]
         ))
 
         self.assertEqual((spans.Span(0, 2), ["Jim", "'s", "Tools"]), head_finders.HeadFinder.adjust_head_for_nam(
             ['Jim', "'s", "Tools"],
             ["NNP", "POS", "NNP"],
-            "ORG"
+            "ORG",
+            spans.Span(1, 1),
+            ["Tools"]
         ))
 
         self.assertEqual((spans.Span(0, 3), ["Taiwan", "'s", "False", "Cypresses"]), head_finders.HeadFinder.adjust_head_for_nam(
             ["Taiwan", "'s", "False", "Cypresses"],
             ["NNP", "POS", "JJ", "NNP"],
-            "NONE"
+            "NONE",
+            spans.Span(0, 0),
+            ["Taiwan"]
         ))
+
+        self.assertEqual((spans.Span(1, 1), ["Vader"]),
+                 head_finders.HeadFinder.adjust_head_for_nam(
+                     ["Darth", "Vader"],
+                     ["NNP", "NNP"],
+                     "VILLAIN",
+                     spans.Span(1, 1),
+                     ["Vader"]
+                 ))
 
     def test_head_rule_cc(self):
         parse = """(NP

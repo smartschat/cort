@@ -245,7 +245,9 @@ def compute_head_information(attributes):
             head_finders.HeadFinder.adjust_head_for_nam(
                 attributes["tokens"],
                 attributes["pos"],
-                attributes["ner"][head_index])
+                attributes["ner"][head_index],
+                in_mention_span,
+                head)
 
     # proper name mention: head index last word of head
     # (e.g. "Obama" in "Barack Obama")
@@ -274,7 +276,9 @@ def compute_head_information(attributes):
                         head_finders.HeadFinder.adjust_head_for_nam(
                             attributes["tokens"][start:end],
                             attributes["pos"][start:end],
-                            attributes["ner"][head_index])
+                            attributes["ner"][head_index],
+                            in_mention_span,
+                            head)
                     break
                 start += len(child.leaves())
 
