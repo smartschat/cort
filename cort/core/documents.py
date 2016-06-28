@@ -9,6 +9,7 @@ import logging
 
 from cort.core import mentions
 from cort.core import spans
+from cort.core.util import get_java_path
 
 import StanfordDependencies
 
@@ -396,7 +397,7 @@ class CoNLLDocument(Document):
                                           temp_pos,
                                           temp_tokens)
                   for span in sentence_spans]
-        sd = StanfordDependencies.get_instance()
+        sd = StanfordDependencies.get_instance(java_command=get_java_path())
         dep_trees = sd.convert_trees(
             [parse.replace("NOPARSE", "S") for parse in parses],
         )
