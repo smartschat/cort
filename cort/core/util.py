@@ -19,9 +19,3 @@ def clean_via_pos(tokens, pos):
     """
     return [token for token, pos in zip(tokens, pos)
             if pos not in ["DT", "POS"]]
-
-
-def get_java_path():
-    if "JAVA_HOME" in os.environ:
-        return os.path.join(os.environ["JAVA_HOME"], "bin", "java")
-    return "java"
