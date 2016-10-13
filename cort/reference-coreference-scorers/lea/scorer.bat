@@ -31,6 +31,7 @@ if (@ARGV < 3) {
      bcub: B-Cubed (Bagga and Baldwin, 1998)
      ceafm: CEAF (Luo et al, 2005) using mention-based similarity
      ceafe: CEAF (Luo et al, 2005) using entity-based similarity
+     lea: LEA (Moosavi and Strube, 2016)
      all: uses all the metrics to score
   
   keys_file: file with expected coreference chains in SemEval format
@@ -47,14 +48,14 @@ if (@ARGV < 3) {
 }
 
 my $metric = shift (@ARGV);
-if ($metric !~ /^(muc|bcub|ceafm|ceafe|all)/i) {
+if ($metric !~ /^(muc|bcub|ceafm|ceafe|lea|all)/i) {
   print "Invalid metric\n";
   exit;
 }
 
 
 if ($metric eq 'all') {
-  foreach my $m ('muc', 'bcub', 'ceafm', 'ceafe') {
+  foreach my $m ('muc', 'bcub', 'ceafm', 'ceafe', 'lea') {
     print "\nMETRIC $m:\n";
     &CorScorer::Score( $m, @ARGV );
   }

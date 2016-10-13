@@ -7,7 +7,6 @@ import pickle
 import sys
 import os.path
 
-
 from cort.core import corpora
 from cort.core import mention_extractor
 from cort.coreference import experiments
@@ -18,8 +17,6 @@ from cort.singleton import singleton_perceptron
 from cort.singleton import singleton_instance_extractor
 import train_singleton_models
 
-
-__author__ = 'smartschat'
 
 
 logging.basicConfig(level=logging.INFO,
@@ -55,7 +52,7 @@ def parse_args():
     parser.add_argument('-n_iter',
                         dest='n_iter',
                         default=5,
-                        help='Number of perceptron iterations. Defaults to 5.')
+                        help='Number of perceptron iterations. Defaults to 6.')
     parser.add_argument('-cost_scaling',
                         dest='cost_scaling',
                         default=100,
@@ -74,10 +71,6 @@ def parse_args():
 
     return parser.parse_args()
 
-
-if sys.version_info[0] == 2:
-    logging.warning("You are running cort under Python 2. cort is much more "
-                    "efficient under Python 3.3+.")
 
 args = parse_args()
 
@@ -100,7 +93,7 @@ else:
         features.next_token,
         features.governor,
         features.ancestry,
-        features.singleton_score
+        features.singleton_score,
     ]
 
     pairwise_features = [
@@ -113,9 +106,9 @@ else:
         features.modifier,
         features.tokens_contained,
         features.head_contained,
-        features.token_distance
+        features.token_distance,
+        features.genre,
     ]
-
 
 perceptron = import_helper.import_from_path(args.perceptron)(
     cost_scaling=int(args.cost_scaling),
@@ -135,10 +128,9 @@ logging.info("Reading in data.")
 training_corpus = corpora.Corpus.from_file("training",
                                            codecs.open(args.input_filename,
                                                        "r", "utf-8"))
-logging.info("Extracting system mentions.")
 for doc in training_corpus:
     doc.system_mentions = mention_extractor.extract_system_mentions(doc)
-    
+
 if features.singleton_score in mention_features:
     
     singleton_mention_features = [
@@ -161,60 +153,58 @@ if features.singleton_score in mention_features:
         features.next_token_pos,
         features.next_next_token_pos,
         features.governor,
-        features.ancestry
+        features.ancestry,
     ]
     
     general_features = [
-            features.mention_string_appeared_again,
-            features.head_string_appeared_again,
+        features.has_exact_match,
+        features.has_head_match,
     ]
-    
+ 
     if not os.path.isfile('singleton_train_even.model') or \
        not os.path.isfile('singleton_train_odd.model') or \
        not os.path.isfile('singleton_train_all.model'):
            
         logging.info("Training singletpon models.")
-        train_singleton_models.train_models(training_corpus)
+        train_singleton_models.train_models(training_corpus, "even")
+        train_singleton_models.train_models(training_corpus, "odd")
+        train_singleton_models.train_models(training_corpus, "all")
 
     logging.info("Loading singleton models.")
-    priors, weights = pickle.load(open("singleton_train_even.model", "rb"))
+    e_priors, e_weights = pickle.load(open("singleton_train_even.model", "rb"))
     
     singleton_perceptron_even = singleton_perceptron.SingletonPerceptron(
-        priors=priors,
-        weights=weights,
+        priors=e_priors,
+        weights=e_weights,
         cost_scaling=0
     )
     
-    priors, weights = pickle.load(open("singleton_train_odd.model", "rb"))
+    o_priors, o_weights = pickle.load(open("singleton_train_odd.model", "rb"))
     
     singleton_perceptron_odd = singleton_perceptron.SingletonPerceptron(
-        priors=priors,
-        weights=weights,
+        priors=o_priors,
+        weights=o_weights,
         cost_scaling=0
     )   
     
     logging.info("\tExtracting singleton instances and features.")
     singleton_extractor = singleton_instance_extractor.InstanceExtractor(
         singleton_mention_features,
-        general_features
+        general_features,
+        singleton_perceptron_odd.get_labels()
     )
+
     substructures, arc_information = singleton_extractor.extract(training_corpus)
 
-    i=0
     for doc in training_corpus:
         if (i%2 == 0):
             singleton_perceptron_odd.set_singleton_scores(doc, arc_information)
         else:
             singleton_perceptron_even.set_singleton_scores(doc, arc_information)
         i+=1
-    
-model = experiments.learn(
-    training_corpus,
-    extractor,
-    perceptron
-)
 
-logging.info("Writing model to file.")
+model = experiments.learn(training_corpus, extractor, perceptron)
+
 pickle.dump(model, open(args.output_filename, "wb"), protocol=2)
 
 logging.info("Done.")

@@ -6,7 +6,7 @@ import sys
 
 import mmh3
 import numpy
-
+from cort.coreference import features
 
 __author__ = 'martscsn'
 
@@ -335,6 +335,9 @@ class InstanceExtractor:
                 ]
 
             numeric_features = ana_numeric + ante_numeric + pair_numeric
+            #inst_feats.append("ana_singleton_score="+str(features.singleton_score(anaphor)))
+            #inst_feats.append("ant_singleton_score="+str(features.singleton_score(antecedent)))
+            #inst_feats.append("ana_singleton_score="+str(features.singleton_score(anaphor))+"^ant_singleton_score="+str(features.singleton_score(antecedent)))
 
         # to hash
         all_nonnumeric_feats = array.array(

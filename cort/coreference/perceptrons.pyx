@@ -20,11 +20,9 @@ cdef class Perceptron:
     cdef double cost_scaling
     cdef dict priors, weights, label_to_index
     """ Provide a latent structured perceptron.
-
     This implementation provides a latent structured perceptron with
     cost-augmented inference and parameter averaging for graphs encoding
     coreference decisions.
-
     Attributes:
         n_iter (int): The number of epochs for training. Defaults to 5.
         seed (int): The random seed for shuffling the data. Defaults to 23.
@@ -37,7 +35,6 @@ cdef class Perceptron:
             for each feature seen during training (for representing the
             features we employ *feature hashing*). If the graphs employed are
             not labeled, ``l`` is set to "+".
-
     """
 
     def __init__(self,
@@ -49,7 +46,6 @@ cdef class Perceptron:
                  cluster_features=None):
         """
         Initialize the perceptron.
-
         Args:
             n_iter (int): The number of epochs for training. Defaults to 5.
             seed (int): The random seed for shuffling the data. Defaults to 23.
@@ -111,10 +107,8 @@ cdef class Perceptron:
 
     def fit(self, substructures, arc_information):
         """Learn weights from data.
-
         The learned label priors and weights are stored in ``self.priors`` and
         ``self.weights``.
-
         Args:
             substructures (list(list((Mention, Mention)))): The search space
                 for the substructures, defined by a nested list. The ith list
@@ -197,7 +191,6 @@ cdef class Perceptron:
     def predict(self, substructures, arc_information):
         """
         Predict coreference information according to a learned model.
-
         Args:
             substructures (list(list((Mention, Mention)))): The search space
                 for the substructures, defined by a nested list. The ith list
@@ -215,7 +208,6 @@ cdef class Perceptron:
         Returns:
             Three nested lists describing the output. In particular, these
             lists are:
-
                 - arcs (list(list(Mention, Mention))): The nested list of
                   predicted arcs. The ith list contains predictions for the
                   ith substructure.
@@ -239,12 +231,10 @@ cdef class Perceptron:
 
     def argmax(self, substructure, arc_information):
         """ Decoder for coreference resolution.
-
         Compute highest-scoring substructure and highest-scoring constrained
         substructure consistent with the gold annotation. To implement
         coreference resolution approaches, inherit this class and implement
         this function.
-
         Args:
             substructure (list((Mention, Mention))): The list of mention pairs
                 which define the search space for one substructure.
@@ -258,12 +248,10 @@ cdef class Perceptron:
                 numeric features, the second array the numeric features, and the
                 third array the values for the numeric features. The features
                 are represented as integers via feature hashing.
-
         Returns:
             A 7-tuple describing the highest-scoring substructure and the
             highest-scoring substructure consistent with the gold information.
             The tuple consists of:
-
                 - **best_arcs** (*list((Mention, Mention))*): the list of arcs
                    in the highest-scoring substructure,
                 - **best_labels** (*list(str)*): the list of labels of the
@@ -344,9 +332,7 @@ cdef class Perceptron:
 
     def get_labels(self):
         """ Get the graph labels employed by the current approach.
-
         In this case, the only graph label employed is '+'.
-
         Returns:
             list(str): A list of graph labels (contains only one graph label
                 '+').
@@ -356,9 +342,7 @@ cdef class Perceptron:
     def get_coref_labels(self):
         """ Get the graph labels signalling coreference employed by the
         current approach.
-
         In this case, the only graph label signalling coreference is '+'.
-
         Returns:
             list(str): A list of graph labels signalling coreference (contains
                 only one graph label '+').
@@ -368,7 +352,6 @@ cdef class Perceptron:
     def find_best_arcs(self, arcs, arc_information, label="+"):
         """ Find the highest-scoring arc and arc consistent with the gold
         information among a set of arcs.
-
         Args:
             arcs (list((Mention, Mention)): A list of mention pairs constituting
                 arcs.
@@ -383,12 +366,10 @@ cdef class Perceptron:
                 third array the values for the numeric features. The features
                 are represented as integers via feature hashing.
             label (str): The label of the arcs. Defaults to "+".
-
         Returns:
             A 5-tuple describing the highest-scoring anaphor-antecedent
             decision, and the highest-scoring anaphor-antecedent decision
             consistent with the gold annotation. The tuple consists of:
-
                 - **best** (*(Mention, Mention)*): the highest-scoring
                   anaphor-antecedent decision.
                 - **max_val** (*float*): the score of the highest-scoring
@@ -437,7 +418,6 @@ cdef class Perceptron:
 
     def score_arc(self, arc, arc_information, label="+"):
         """ Score an arc according to priors, weights and costs.
-
         Args:
             arc ((Mention, Mention)): The pair of mentions constituting the arc.
             arc_information (dict((Mention, Mention),
@@ -451,7 +431,6 @@ cdef class Perceptron:
                 third array the values for the numeric features. The features
                 are represented as integers via feature hashing.
             label (str): The label of the arc. Defaults to "+".
-
         Returns:
             float: The sum of all weights for the features, plus the scaled
                 costs for predicting the arc, plus the prior for the label.
@@ -473,10 +452,8 @@ cdef class Perceptron:
 
     def get_model(self):
         """ Get the priors and weights of the current model.
-
         Returns:
             A tuple containing priors and weights. The tuple consists of:
-
             - **priors** (**dict(str, float)**): A mapping of graph labels to
                 priors for these labels.
             - **weights** (**dict(str, array)**): A mapping of graph labels to

@@ -25,6 +25,7 @@ use: scorer.pl <metric> <keys_file> <response_file> [name]
     ceafm: CEAF (Luo et al, 2005) using mention-based similarity
     ceafe: CEAF (Luo et al, 2005) using entity-based similarity
     blanc: BLANC
+    lea: LEA (Moosavi and Strube, 2016)
     all: uses all the metrics to score
 
   keys_file: file with expected coreference chains in SemEval format
@@ -41,13 +42,13 @@ use: scorer.pl <metric> <keys_file> <response_file> [name]
 }
 
 my $metric = shift(@ARGV);
-if ($metric !~ /^(muc|bcub|ceafm|ceafe|blanc|all)/i) {
+if ($metric !~ /^(muc|bcub|ebcub|ceafm|ceafe|blanc|lea|all)/i) {
   print "Invalid metric\n";
   exit;
 }
 
 if ($metric eq 'all') {
-  foreach my $m ('muc', 'bcub', 'ceafm', 'ceafe', 'blanc') {
+  foreach my $m ('muc', 'bcub', 'ceafm', 'ceafe', 'blanc', 'lea') {
     print "\nMETRIC $m:\n";
     &CorScorer::Score($m, @ARGV);
   }

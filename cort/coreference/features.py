@@ -221,7 +221,6 @@ def next_token(mention):
     else:
         return "next", "NONE"
 
-
 def ancestry(mention):
     """ Compute the ancestry of a mention.
 
@@ -241,6 +240,8 @@ def ancestry(mention):
     """
     return "ancestry", mention.attributes["ancestry"]
 
+def genre(anaphor, antecedent):
+        return "genre", anaphor.document.identifier[1:anaphor.document.identifier.index("/")]
 
 def exact_match(anaphor, antecedent):
     """ Compute whether the tokens of two mentions match exactly.
@@ -574,3 +575,71 @@ def __get_acronyms(cleaned_tokens):
                     token[0].isupper()]), \
            ".".join([token[0] for token in tokens_without_designator if
                      token[0].isupper()]) + "."
+
+def has_exact_match(mention, all_mentions):
+    for m in all_mentions:
+        if (not m.is_dummy() and m != mention
+            and mention.attributes["tokens_as_lowercase_string"] == m.attributes["tokens_as_lowercase_string"]):
+            return "has_exact_match", True
+    return "has_exact_match", False
+
+def has_head_match(mention, all_mentions):
+    for m in all_mentions:
+        if (not m.is_dummy() and m != mention and
+        mention.attributes["head_as_lowercase_string"] ==
+            m.attributes["head_as_lowercase_string"]):
+            return "has_head_match", True
+    return "has_head_match", False
+
+def pre_pre_token(mention):
+    prec = mention.get_context(-2)
+
+    if prec:
+        return "prePreToken", prec[0].lower()
+    else:
+        return "PrePreToken", "NONE"
+        
+def preceding_token_pos(mention):
+    prec = mention.get_pos_context(-1)
+
+    if prec:
+        return "prePOS", prec[0]
+    else:
+        return "prePOS","NONE"
+
+
+def pre_pre_token_pos(mention):
+    prec = mention.get_pos_context(-2)
+
+    if prec:
+        return "prePrePOS", prec[0]
+    else:
+        return "prePrePOS","NONE"
+        
+def next_next_token(mention):
+    next_t = mention.get_context(2)
+
+    if next_t:
+        return "nextNextToken",next_t[1].lower()
+    else:
+        return "nextNextToken","NONE"
+        
+def next_token_pos(mention):
+    next_t = mention.get_pos_context(1)
+
+    if next_t:
+        return "nextPOS",next_t[0].lower()
+    else:
+        return "nextPOS","NONE"
+
+def next_next_token_pos(mention):
+    next_t = mention.get_pos_context(2)
+
+    if next_t:
+        return "nextNextPOS",next_t[1].lower()
+    else:
+        return "nextNextPOS","NONE"
+        
+def singleton_score (mention):
+    return "singletonScore",  int(mention.attributes["singletonScore"]/10)
+
