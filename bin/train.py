@@ -196,6 +196,7 @@ if features.singleton_score in mention_features:
 
     substructures, arc_information = singleton_extractor.extract(training_corpus)
 
+    i=0
     for doc in training_corpus:
         if (i%2 == 0):
             singleton_perceptron_odd.set_singleton_scores(doc, arc_information)
