@@ -7,6 +7,8 @@ devise approaches to coreference resolution, while the *error analysis* componen
 provides extensive functionality for analyzing and visualizing errors made by 
 coreference resolution systems.
 
+If you are interested in running __cort__ with the search space pruning described in Moosavi and Strube (2016), check out [Nafise Moosavi's fork of __cort__](https://github.com/ns-moosavi/cort/tree/singleton_feature).
+
 If you have any questions or comments, drop me an e-mail at 
 [sebastian.martschat@gmail.com](mailto:sebastian.martschat@gmail.com).
 
@@ -41,6 +43,13 @@ Python 2.7, I strongly recommend running __cort__ with Python 3, since the Pytho
 version is much more efficient.
 
 ## References
+
+Nafise Sadat Moosavi and Michael Strube (2016). **Search space pruning: A 
+simple solution for better coreference resolvers**. In *Proceedings of the 2016 
+Conference of the North American Chapter of the Association for Computational 
+Linguistics: Human Language Technologies*, San Diego, Cal., 12-17 June 2016, 
+pages 1005-1011.
+[PDF](http://www.aclweb.org/anthology/N16-1115.pdf)
 
 Sebastian Martschat and Michael Strube (2015). **Latent Structures for 
 Coreference Resolution**. *Transactions of the Association for 
