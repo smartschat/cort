@@ -208,44 +208,21 @@ class AntecedentTreePerceptron(perceptrons.Perceptron):
         number_mentions = len(substructure[0][0].document.system_mentions)
 
         # first compute mapping mention to (score, ante) pair
-        mention_mapping = defaultdict(list)
-
-        for ana_index in range(1, number_mentions):
-            first_arc = ana_index*(ana_index-1)//2
-            last_arc = first_arc + ana_index
-
-            mention = substructure[first_arc][0]
-
-            for arc in substructure[first_arc:last_arc]:
-                ante = arc[1]
-                score = self.score_arc(arc, arc_information)
-
-                mention_mapping[mention].append((score, ante))
-
-            mention_mapping[mention] = sorted(mention_mapping[mention])
+        mention_mapping = self._compute_mention_to_score_ante_mapping(
+            number_mentions, substructure, arc_information
+        )
 
         solutions = []
         coref_union_find = []
 
         # compute 1-best solution
-        mapping = {}
-        union_find = UnionFind()
 
-        for mention in sorted(mention_mapping.keys()):
-            score, antecedent = mention_mapping[mention][-1]
-            mapping[mention] = (score, antecedent)
-
-            if not antecedent.is_dummy():
-                union_find.union(mention, antecedent)
-
-        solutions.append(mapping)
-        coref_union_find.append(union_find)
+        best_mapping, best_uf = self._compute_1_best_solution(mention_mapping)
+        solutions.append(best_mapping)
+        coref_union_find.append(best_uf)
 
         # sort all choices in priority queue
-        my_queue = PriorityQueue()
-        for mention in sorted(mention_mapping.keys()):
-            for score, ante in mention_mapping[mention]:
-                my_queue.put((-score, (mention, ante)))
+        my_queue = self._generate_queue(mention_mapping)
 
         # generate approximate k-best solutions
         while not my_queue.empty():
@@ -261,36 +238,17 @@ class AntecedentTreePerceptron(perceptrons.Perceptron):
                     novel = False
 
             if novel:
-                my_uf = UnionFind()
-
-                new_mapping = {}
-                base_mapping = solutions[0]
-                for m in base_mapping:
-                    if m != mention:
-                        new_mapping[m] = base_mapping[m]
-                        old_ante = base_mapping[m][1]
-                        if not old_ante.is_dummy():
-                            my_uf.union(m, base_mapping[m][1])
-                    else:
-                        new_mapping[m] = (-score, ante)
-                        if not ante.is_dummy():
-                            my_uf.union(m, ante)
+                new_mapping, new_uf = self._compute_new_mapping_and_uf(
+                    solutions[0], mention, ante, score)
 
                 solutions.append(new_mapping)
-                coref_union_find.append(my_uf)
+                coref_union_find.append(new_uf)
 
         # transform into correct output format
         output = []
 
         for map in solutions:
-            arcs = []
-            arcs_scores = []
-
-            for mention in sorted(map.keys()):
-                score, ante = map[mention]
-                arcs.append((mention, ante))
-                arcs_scores.append(score)
-
+            arcs, arcs_scores = self._transform_from_mapping(map)
             output.append((arcs, [], arcs_scores))
 
         output_length = len(output)
@@ -303,3 +261,74 @@ class AntecedentTreePerceptron(perceptrons.Perceptron):
                             "Padded list with lowest-scoring.")
 
         return output
+
+    def _compute_mention_to_score_ante_mapping(
+            self, number_mentions, substructure, arc_information):
+        # first compute mapping mention to (score, ante) pair
+        mention_mapping = defaultdict(list)
+
+        for ana_index in range(1, number_mentions):
+            first_arc = ana_index * (ana_index - 1) // 2
+            last_arc = first_arc + ana_index
+
+            mention = substructure[first_arc][0]
+
+            for arc in substructure[first_arc:last_arc]:
+                ante = arc[1]
+                score = self.score_arc(arc, arc_information)
+
+                mention_mapping[mention].append((score, ante))
+
+            mention_mapping[mention] = sorted(mention_mapping[mention])
+
+        return mention_mapping
+
+    def _compute_1_best_solution(self, mention_mapping):
+        mapping = {}
+        union_find = UnionFind()
+
+        for mention in sorted(mention_mapping.keys()):
+            score, antecedent = mention_mapping[mention][-1]
+            mapping[mention] = (score, antecedent)
+
+            if not antecedent.is_dummy():
+                union_find.union(mention, antecedent)
+
+        return mapping, union_find
+
+    def _generate_queue(self, mention_mapping):
+        my_queue = PriorityQueue()
+
+        for mention in sorted(mention_mapping.keys()):
+            for score, ante in mention_mapping[mention]:
+                my_queue.put((-score, (mention, ante)))
+
+        return my_queue
+
+    def _compute_new_mapping_and_uf(self, base_mapping, mention, ante, score):
+        my_uf = UnionFind()
+
+        new_mapping = {}
+        for m in base_mapping:
+            if m != mention:
+                new_mapping[m] = base_mapping[m]
+                old_ante = base_mapping[m][1]
+                if not old_ante.is_dummy():
+                    my_uf.union(m, base_mapping[m][1])
+            else:
+                new_mapping[m] = (-score, ante)
+                if not ante.is_dummy():
+                    my_uf.union(m, ante)
+
+        return new_mapping, my_uf
+
+    def _transform_from_mapping(self, map):
+        arcs = []
+        arcs_scores = []
+
+        for mention in sorted(map.keys()):
+            score, ante = map[mention]
+            arcs.append((mention, ante))
+            arcs_scores.append(score)
+
+        return arcs, arcs_scores
