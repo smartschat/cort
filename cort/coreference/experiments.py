@@ -89,3 +89,58 @@ def predict(testing_corpus,
     logging.info("\tClustering results.")
 
     return coref_extractor(arcs, labels, scores, perceptron.get_coref_labels())
+
+
+def predict_kbest(testing_corpus,
+                  instance_extractor,
+                  perceptron,
+                  coref_extractor,
+                  k=10):
+    """ According to a learned model, predict k-best coreference information.
+
+    Args:
+        testing_corpus (Corpus): The corpus to predict coreference on.
+        instance_extractor (InstanceExtracor): The instance extracor that
+            defines the features and the structure of instances that are
+            extracted during testing.
+        perceptron (Perceptron): A perceptron learned from training data.
+        argmax_function (function): A decoder that computes the best-scoring
+            coreference structure over a set of structures.
+        coref_extractor (function): An extractor for consolidating pairwise
+            predictions into coreference clusters.
+        k (int): Number of solutions to include. Defaults to 10.
+
+    Returns:
+        A list of tuples containing two dicts. The components are
+
+            - **mention_entity_mapping** (*dict(Mention, int)*): A mapping of
+              mentions to entity identifiers.
+            - **antecedent_mapping** (*dict(Mention, Mention)*): A mapping of
+              mentions to their antecedent (as determined by the
+              ``coref_extractor``).
+    """
+    logging.info("Predicting.")
+
+    logging.info("\tRemoving coreference annotations from corpus.")
+    for doc in testing_corpus:
+        doc.antecedent_decisions = {}
+        for mention in doc.system_mentions:
+            mention.attributes["antecedent"] = None
+            mention.attributes["set_id"] = None
+
+    logging.info("\tExtracting instances and features.")
+    substructures, arc_information = instance_extractor.extract(testing_corpus)
+
+    if len(substructures) != len(testing_corpus.documents):
+        raise Exception("k-best prediction are only reasonable for "
+                        "document-wide models.")
+
+    logging.info("\tDoing predictions.")
+    prediction_lists = perceptron.predict_kbest(substructures, arc_information, k)
+
+    logging.info("\tClustering results.")
+
+    return [
+        coref_extractor(arcs, labels, scores, perceptron.get_coref_labels())
+        for (arcs, labels, scores) in prediction_lists
+    ]

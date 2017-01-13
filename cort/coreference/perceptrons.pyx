@@ -237,6 +237,57 @@ cdef class Perceptron:
 
         return arcs, labels, scores
 
+    def predict_kbest(self, substructures, arc_information, k):
+        """
+        Predict k-best coreference information according to a learned model.
+        Only reasonable for document-wide models.
+
+        Args:
+            substructures (list(list((Mention, Mention)))): The search space
+                for the substructures, defined by a nested list. The ith list
+                contains the search space for the ith substructure.
+            arc_information (dict((Mention, Mention),
+                                  ((array, array, array), list(int), bool)):
+                A mapping of arcs (= mention pairs) to information about these
+                arcs. The information consists of the features, the costs for
+                the arc (for each label), and whether predicting the arc to be
+                coreferent is consistent with the gold annotation). The features
+                are divided in three arrays: the first array contains the non-
+                numeric features, the second array the numeric features, and the
+                third array the values for the numeric features. The features
+                are represented as integers via feature hashing.
+            k (int): Number of solutions to include.
+
+        Returns:
+            A list of three nested lists describing the output. In particular,
+            these lists are:
+
+                - arcs (list(list(Mention, Mention))): The nested list of
+                  predicted arcs. The ith list contains predictions for the
+                  ith substructure.
+                - labels (list(list(str))): Labels of the predicted arcs.
+                - arcs (list(list(float))): Scores for the predicted arcs.
+        """
+
+        outer_list = []
+
+        for i in range(0, k):
+            outer_list.append(([],[],[]))
+
+        for substructure in substructures:
+            k_best_output = self.kbest(substructure,
+                                       arc_information,
+                                       k)
+
+            for i in range(0, k):
+                substructure_arcs, substructure_arcs_labels, \
+                substructure_arcs_scores = k_best_output[i]
+                outer_list[i][0].append(substructure_arcs)
+                outer_list[i][1].append(substructure_arcs_labels)
+                outer_list[i][2].append(substructure_arcs_scores)
+
+        return outer_list
+
     def argmax(self, substructure, arc_information):
         """ Decoder for coreference resolution.
 
@@ -281,6 +332,42 @@ cdef class Perceptron:
                   with the gold information,
                 - **is_consistent** (*bool*): whether the highest-scoring
                   substructure is consistent with the gold information.
+        """
+        raise NotImplementedError()
+
+    def kbest(self, substructure, arc_information, k):
+        """ k-best decoder for coreference resolution.
+
+        Compute k-best document-wide substructures. To implement k-best decoding
+        for coreference resolution approaches, inherit this class and implement
+        this function. So far, it cannot be used during training.
+
+        Args:
+            substructure (list((Mention, Mention))): The list of mention pairs
+                which define the search space for one substructure.
+            arc_information (dict((Mention, Mention),
+                                  ((array, array, array), list(int), bool)):
+                A mapping of arcs (= mention pairs) to information about these
+                arcs. The information consists of the features, the costs for
+                the arc (for each label), and whether predicting the arc to be
+                coreferent is consistent with the gold annotation). The features
+                are divided in three arrays: the first array contains the non-
+                numeric features, the second array the numeric features, and the
+                third array the values for the numeric features. The features
+                are represented as integers via feature hashing.
+            k (int): Number of substructures to include (i.e. length of the k-best
+                list).
+
+        Returns:
+            A list of 3-tuples describing the highest-scoring substructures.
+            Each tuple consists of:
+
+                - **best_arcs** (*list((Mention, Mention))*): the list of arcs
+                   in the highest-scoring substructure,
+                - **best_labels** (*list(str)*): the list of labels of the
+                  arcs in the highest-scoring substructure,
+                - **best_scores** (*list(float)*): the scores of the arcs in
+                  the highest-scoring substructure,
         """
         raise NotImplementedError()
 
