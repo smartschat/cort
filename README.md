@@ -90,6 +90,9 @@ the multigraph system, please cite the
 
 ## Changelog
 
+__Friday, 13 January 2016__
+Support (approximate) k-best decoding.
+
 __Wednesday, 4 November 2015__  
 Support numeric features. Due to a different feature representation the models changed,
 hence I have updated the downloadable models.

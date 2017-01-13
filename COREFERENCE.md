@@ -25,6 +25,7 @@ To define an approach to coreference resolution, the user has to provide
 * [Case Study: the Mention Ranking Model](#ranking)
 * [Running cort](#running)
 * [Model Downloads and Results](#models)
+* [k-best Decoding](#kbest)
 
 ## <a name="framework"></a> Framework
 
@@ -659,3 +660,10 @@ Pair              | 69.78 | 56.72 | 52.17 | 59.56
 Ranking: Closest  | 72.62 | 59.65 | 55.55 | 62.61
 Ranking: Latent   | 72.56 | 60.05 | 56.14 | 62.92
 Tree              | 71.93 | 58.61 | 54.78 | 61.77
+
+## <a name="kbest"></a> k-best Decoding
+
+This branch of __cort__ supports k-best decoding. An approximate k-best decoder for
+antecedent trees is implemented. It can be invoked from the command line when using
+the `cort-predict-conll` script by supplying the desired length of the k-best list
+ via the parameter `k`, for example `-k 10`.
