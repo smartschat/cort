@@ -28,10 +28,8 @@ Reference:
 
 from __future__ import division
 
-
-import array
-from collections import defaultdict
 from queue import PriorityQueue
+from collections import defaultdict
 
 import logging
 
@@ -222,7 +220,7 @@ class AntecedentTreePerceptron(perceptrons.Perceptron):
         coref_union_find.append(best_uf)
 
         # sort all choices in priority queue
-        my_queue = self._generate_queue(mention_mapping)
+        my_queue = self._generate_queue(mention_mapping, best_mapping)
 
         # generate approximate k-best solutions
         while not my_queue.empty():
@@ -237,9 +235,19 @@ class AntecedentTreePerceptron(perceptrons.Perceptron):
                 if uf[mention] == uf[ante]:
                     novel = False
 
+            if ante.is_dummy():
+                for sol in solutions:
+                    if sol[mention][1].is_dummy():
+                        novel = False
+
             if novel:
+                print(mention.document, score)
+                print(mention, ante, score)
                 new_mapping, new_uf = self._compute_new_mapping_and_uf(
                     solutions[0], mention, ante, score)
+
+                _, scores = self._transform_from_mapping(new_mapping)
+                print(sum(scores))
 
                 solutions.append(new_mapping)
                 coref_union_find.append(new_uf)
@@ -293,15 +301,18 @@ class AntecedentTreePerceptron(perceptrons.Perceptron):
 
             if not antecedent.is_dummy():
                 union_find.union(mention, antecedent)
+            else:
+                union_find.union(mention, mention)
 
         return mapping, union_find
 
-    def _generate_queue(self, mention_mapping):
+    def _generate_queue(self, mention_mapping, best_mapping):
         my_queue = PriorityQueue()
 
         for mention in sorted(mention_mapping.keys()):
+            best_score = best_mapping[mention][0]
             for score, ante in mention_mapping[mention]:
-                my_queue.put((-score, (mention, ante)))
+                my_queue.put((best_score - score, (mention, ante)))
 
         return my_queue
 
@@ -315,10 +326,15 @@ class AntecedentTreePerceptron(perceptrons.Perceptron):
                 old_ante = base_mapping[m][1]
                 if not old_ante.is_dummy():
                     my_uf.union(m, base_mapping[m][1])
+                else:
+                    my_uf.union(m, m)
             else:
-                new_mapping[m] = (-score, ante)
+                best_score = base_mapping[m][0]
+                new_mapping[m] = (best_score - score, ante)
                 if not ante.is_dummy():
                     my_uf.union(m, ante)
+                else:
+                    my_uf.union(m, m)
 
         return new_mapping, my_uf
 
