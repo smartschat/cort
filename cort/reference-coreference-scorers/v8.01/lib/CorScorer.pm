@@ -61,7 +61,7 @@ print "version: " . $VERSION . " " . Cwd::realpath(__FILE__) . "\n";
 # 1.02 Corrected BCUB bug. It fails when the key file does not have any mention
 
 # global variables
-my $VERBOSE         = 2;
+my $VERBOSE         = 1;
 my $HEAD_COLUMN     = 8;
 my $RESPONSE_COLUMN = -1;
 my $KEY_COLUMN      = -1;
