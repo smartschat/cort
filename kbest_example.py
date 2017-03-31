@@ -5,6 +5,8 @@ from __future__ import print_function
 
 import numpy
 import pyximport
+from collections import defaultdict
+
 pyximport.install(setup_args={"include_dirs": numpy.get_include()})
 
 import codecs
@@ -75,6 +77,81 @@ def get_scores(output_data, gold_data):
     results_formatted += "conll\t\t\t" + format(average, '.2f') + "\n"
 
     return results_formatted
+
+
+def get_upper_bound(output_data, gold_data, k):
+    metrics = ["muc", "bcub", "ceafe"]
+
+    doc_to_metric_to_f1 = {}
+    average_f1 = defaultdict(float)
+    doc_to_metric_to_rec_prec = {}
+
+    results_formatted = "\tR\tP\tF1\n"
+
+    # store results
+    for i in range(k):
+        for metric in metrics:
+            scorer_output = subprocess.check_output([
+                "perl",
+                cort.__path__[0] + "/reference-coreference-scorers/v8.01/scorer.pl",
+                metric,
+                gold_data,
+                os.getcwd() + "/" + output_data + "-" + str(i)]).decode()
+
+            doc_identifier = None
+
+            for line in scorer_output.split("\n"):
+                if not line:
+                    continue
+
+                if line.startswith("("):
+                    doc_identifier = line.strip()
+                elif line.startswith("------"):
+                    doc_identifier = None
+                elif line.startswith("Recall"):
+                    splitted = line.split()
+                    f1 = float(splitted[-1].replace("%", ""))
+                    doc_to_metric_to_f1[(doc_identifier, metric, i)] = f1
+                    average_f1[(doc_identifier, i)] += f1
+                    doc_to_metric_to_rec_prec[(doc_identifier, metric, i)] = (
+                            float(splitted[1].replace("(", "")),
+                            float(splitted[3].replace(")", "")),
+                            float(splitted[6].replace("(", "")),
+                            float(splitted[8].replace(")", "")),
+                        )
+    for key in average_f1:
+        average_f1[key] /= 3
+
+
+    # compute optimal position in list for each doc
+    docs = sorted(list(set([key[0] for key in doc_to_metric_to_f1.keys()])))
+    best_for_doc = []
+
+    for doc in docs:
+        arr = numpy.array([average_f1[(doc, i)] for i in range(k)])
+        best_for_doc.append(arr.argmax())
+
+    metric_to_f1 = {}
+
+    # compute upper bound
+    for metric in metrics:
+        rec = sum([doc_to_metric_to_rec_prec[doc, metric, best_for_doc[i]][0] for i, doc in enumerate(docs)]) / sum(
+            [doc_to_metric_to_rec_prec[doc, metric, best_for_doc[i]][1] for i, doc in enumerate(docs)])
+        prec = sum([doc_to_metric_to_rec_prec[doc, metric, best_for_doc[i]][2] for i, doc in enumerate(docs)]) / sum(
+            [doc_to_metric_to_rec_prec[doc, metric, best_for_doc[i]][3] for i, doc in enumerate(docs)])
+
+        f1 = 2*prec*rec/(prec+rec)
+
+        metric_to_f1[metric] = f1
+
+        results_formatted += metric + "\t" + format(rec*100, '.2f') + "\t" + format(prec*100, '.2f') + "\t" + format(f1*100, '.2f') + "\n"
+
+    average = sum(metric_to_f1.values())/3
+    results_formatted += "\n"
+    results_formatted += "conll\t\t\t" + format(average*100, '.2f') + "\n"
+
+    return results_formatted
+
 
 # input/output/k-best parameters
 
@@ -157,6 +234,8 @@ for i, (arcs, labels, scores) in enumerate(prediction_lists):
     mention_entity_mapping, antecedent_mapping = clusterer.all_ante(
         arcs, labels, scores, perceptron.get_coref_labels())
 
+    print(str(i+1) + "-best solution")
+
     # print sum of arc scores for each doc
     for doc_arcs, doc_scores in zip(arcs, scores):
         print(doc_arcs[0][0].document, sum(doc_scores))
@@ -183,3 +262,5 @@ for i, (arcs, labels, scores) in enumerate(prediction_lists):
     logging.info("\tEvaluate.")
     print(get_scores(OUTPUT_NAME + "-" + str(i), GOLD_FILE))
 
+logging.info("\tCompute upper bound.")
+print(get_upper_bound(OUTPUT_NAME, GOLD_FILE, K))
