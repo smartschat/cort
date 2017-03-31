@@ -241,13 +241,10 @@ class AntecedentTreePerceptron(perceptrons.Perceptron):
                         novel = False
 
             if novel:
-                print(mention.document, score)
-                print(mention, ante, score)
                 new_mapping, new_uf = self._compute_new_mapping_and_uf(
                     solutions[0], mention, ante, score)
 
                 _, scores = self._transform_from_mapping(new_mapping)
-                print(sum(scores))
 
                 solutions.append(new_mapping)
                 coref_union_find.append(new_uf)
