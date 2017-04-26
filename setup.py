@@ -1,9 +1,9 @@
-from distutils.core import setup
+from setuptools import setup
 
 
 setup(
     name='cort',
-    version='0.2.4.4',
+    version='0.2.4.5',
     packages=['cort',
               'cort.analysis',
               'cort.core',
