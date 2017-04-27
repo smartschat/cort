@@ -33,10 +33,18 @@ use Data::Dumper;
 use Math::Combinatorics;
 use Cwd;
 
-our $VERSION = '8.0';
+
+our $VERSION = '8.01';
 print "version: " . $VERSION . " " . Cwd::realpath(__FILE__) . "\n";
 
 ##
+# 8.01 fixed a bug that crashed the the BLANC scoring when duplicate
+#      (potentially singleton) mentions were present in the
+#      response. as part of the fix, wee will allow a maximum of 10
+#      duplicate mentions in response, but if there are more, than it
+#      is a sign of a systematic error/manipulation and we will refuse
+#      to score that run.
+
 #  8.0 added code to compute the BLANC metric (generalized for both gold
 #      and system mentions (Luo et al., 2014)
 #
@@ -226,6 +234,7 @@ sub GetCoreference {
     my @sentId;
     while (my $l = <F>) {
       chomp($l);
+			$l =~ s/^\s+$//;
       next if ($l eq '');
       if ($l =~ /\#\s*end document/) {
         foreach my $h (@half) {
@@ -575,11 +584,17 @@ sub Eval {
   elsif ($scorer eq 'bcub') {
     ($nr, $dr, $np, $dp) = BCUBED($keyChainsOrig, $responseChainsOrig);
   }
+  elsif ($scorer eq 'ebcub') {
+    ($nr, $dr, $np, $dp) = EBCUBED($keyChainsOrig, $responseChainsOrig);
+  }
   elsif ($scorer eq 'ceafm') {
     ($nr, $dr, $np, $dp) = CEAF($keyChainsOrig, $responseChainsOrig, 1);
   }
   elsif ($scorer eq 'ceafe') {
     ($nr, $dr, $np, $dp) = CEAF($keyChainsOrig, $responseChainsOrig, 0);
+  }
+  elsif ($scorer eq 'lea') {
+    ($nr, $dr, $np, $dp) = LEA($keyChainsOrig, $responseChainsOrig);
   }
   else {
     die "Metric $scorer not implemented yet\n";
@@ -695,6 +710,75 @@ sub BCUBED {
   return ($acumR, $keymentions, $acumP, $resmentions);
 }
 
+sub LEA{
+  my ($keys, $responses) = @_;
+  # Computing recall
+  my ($acumR, $keysImportance) = LEASUB($keys, $responses);
+  # Computing precision
+  my ($acumP, $responsesImportance) = LEASUB($responses, $keys);
+
+  ShowRPF($acumR, $keysImportance, $acumP, $responsesImportance) if ($VERBOSE);
+  return ($acumR, $keysImportance, $acumP, $responsesImportance);
+
+}
+
+sub LEASUB{
+  my ($keys, $responses) = @_;
+
+  my $rIndex = Indexa($responses);
+
+  my $leaScore  = 0;
+  my $importance = 0;
+
+  foreach my $kEntity (@$keys) {
+    next if (!defined($kEntity));
+    my $entitySize     = scalar(@$kEntity);
+    my $resolvedLinks = 0;
+    my @mappedEntities = ();
+
+    if ($entitySize == 1){ #singletons
+      my $cMention = $kEntity->[0];
+      my $rEntity = (defined($rIndex->{$cMention})) ? $responses->[$rIndex->{$cMention}] : [];
+      my $rEntitySize = scalar(@$rEntity);
+      
+      if ($rEntitySize == 1){ #the source singleton mention is also a singleton in the target entities
+        $resolvedLinks++;
+      }
+    }
+    else {
+      for (my $i = 0 ; $i < @$kEntity ; $i++) {
+        my $cMention = $kEntity->[$i];
+        for (my $j = $i + 1 ; $j < @$kEntity ; $j++) {
+          my $nMention = $kEntity->[$j];
+          if ( defined($rIndex->{$cMention})
+            && defined($rIndex->{$nMention})
+            && $rIndex->{$cMention} == $rIndex->{$nMention})
+          {
+            $resolvedLinks++;
+          }
+        }
+      }
+    }
+
+    my $entityLinks;
+    if ($entitySize == 1){
+      $entityLinks = 1;
+    }
+    else {
+      $entityLinks = ($entitySize * ($entitySize-1)/2) if ($entitySize);
+    }
+    
+    my $resolutionScore = 0;
+    $resolutionScore = $resolvedLinks / $entityLinks if ($entityLinks);
+    $leaScore += ($resolutionScore * $entitySize);
+    $importance += $entitySize;
+  }
+  
+  return ($leaScore, $importance);
+
+}
+
+
 # type = 0: Entity-based
 # type = 1: Mention-based
 sub CEAF {
@@ -779,7 +863,9 @@ sub SIMEntityBased {
       }
     }
   }
-
+#  if ($intersection == 1){
+#    $intersection = 0
+#  }
   my $r = 0;
   my $d = scalar(@$a) + scalar(@$b);
   if ($d != 0) {

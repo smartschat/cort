@@ -6,7 +6,7 @@ import sys
 
 import mmh3
 import numpy
-
+from cort.coreference import features
 
 __author__ = 'martscsn'
 

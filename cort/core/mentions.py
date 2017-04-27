@@ -364,3 +364,26 @@ class Mention:
                    or self.attributes["first_in_gold_entity"]
         else:
             return False
+
+
+    def get_pos_context(self, window):
+        """ Get the POS context in a window around the mention.
+
+        Args:
+            window (int): An integer specifying the size of the window.
+
+        Returns:
+            list(str): The tokens in a window of around the mention.
+
+            In particular, get ``window`` POS to the right or left of the
+            mention,, depending on the sign of ``window``: if the sign is +,
+            then to the right, if the sign is -, then to the left. Return
+            None if the window is not contained in the document.
+        """
+        if window < 0 <= window + self.span.begin:
+            return self.document.pos[
+                self.span.begin + window:self.span.begin]
+        elif (window > 0 and self.span.end + window + 1
+                <= len(self.document.pos)):
+            return self.document.pos[
+                self.span.end + 1:self.span.end + window + 1]
