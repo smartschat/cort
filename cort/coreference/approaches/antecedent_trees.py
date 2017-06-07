@@ -260,7 +260,7 @@ class AntecedentTreePerceptron(perceptrons.Perceptron):
 
         if output_length < k:
             for i in range(output_length, k):
-                output.append(output[output_length])
+                output.append(output[output_length - 1])
 
             logging.warning("Less than " + str(k) + " trees included in k-best list. "
                             "Padded list with lowest-scoring.")
