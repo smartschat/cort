@@ -244,8 +244,6 @@ class AntecedentTreePerceptron(perceptrons.Perceptron):
                 new_mapping, new_uf = self._compute_new_mapping_and_uf(
                     solutions[0], mention, ante, score)
 
-                _, scores = self._transform_from_mapping(new_mapping)
-
                 solutions.append(new_mapping)
                 coref_union_find.append(new_uf)
 
@@ -335,12 +333,12 @@ class AntecedentTreePerceptron(perceptrons.Perceptron):
 
         return new_mapping, my_uf
 
-    def _transform_from_mapping(self, map):
+    def _transform_from_mapping(self, mapping):
         arcs = []
         arcs_scores = []
 
-        for mention in sorted(map.keys()):
-            score, ante = map[mention]
+        for mention in sorted(mapping.keys()):
+            score, ante = mapping[mention]
             arcs.append((mention, ante))
             arcs_scores.append(score)
 
