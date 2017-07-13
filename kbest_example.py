@@ -160,7 +160,7 @@ CORPUS_FILE = "a2e_dev.conll"
 OUTPUT_NAME = "output"
 OUTPUT_ANTECEDENT_NAME = "antecedent"
 GOLD_FILE = "a2e_dev.conll"
-K = 10
+K = 1000
 
 # define  features
 mention_features = [
@@ -197,7 +197,7 @@ pairwise_features = [
 logging.info("Loading model.")
 priors, weights = pickle.load(open(MODEL_FILE, "rb"))
 
-perceptron = antecedent_trees.AntecedentTreePerceptron(
+perceptron = antecedent_trees.AntecedentTreePerceptronOvergeneratingKBest(
     priors=priors,
     weights=weights,
     cost_scaling=0

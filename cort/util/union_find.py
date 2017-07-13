@@ -41,6 +41,7 @@ Union-find data structure. Based on Josiah Carlson's code,
 http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/215912
 with significant additional changes by D. Eppstein.
 """
+from collections import defaultdict
 
 
 class UnionFind:
@@ -98,3 +99,15 @@ class UnionFind:
             if r != heaviest:
                 self.weights[heaviest] += self.weights[r]
                 self.parents[r] = heaviest
+
+    def get_representation_for_comparison(self):
+        repr_to_cluster = {}
+
+        for item in self:
+            if self[item] not in repr_to_cluster:
+                repr_to_cluster[self[item]] = set()
+            repr_to_cluster[self[item]].add(item)
+
+        return repr_to_cluster.values()
+
+

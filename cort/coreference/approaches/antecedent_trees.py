@@ -160,11 +160,17 @@ class AntecedentTreePerceptron(perceptrons.Perceptron):
             is_consistent
         )
 
+
+class AntecedentTreePerceptronAgendaBasedKBest(perceptrons.Perceptron):
     def kbest(self, substructure, arc_information, k):
         """ Approximate k-best decoder for antecedent trees.
 
         Computes an approximation of the k highest-scoring antecedent trees
-        by also considering suboptimal antecedent choices for mentions. Should
+        by also considering suboptimal antecedent choices for mentions. Filters
+        out trees that lead to the same coreference chains as trees that were
+        already constructed and does so while generating the list.
+
+        Should
         not be used during training.
 
         Args:
@@ -332,6 +338,217 @@ class AntecedentTreePerceptron(perceptrons.Perceptron):
                     my_uf.union(m, m)
 
         return new_mapping, my_uf
+
+    def _transform_from_mapping(self, mapping):
+        arcs = []
+        arcs_scores = []
+
+        for mention in sorted(mapping.keys()):
+            score, ante = mapping[mention]
+            arcs.append((mention, ante))
+            arcs_scores.append(score)
+
+        return arcs, arcs_scores
+
+
+class AntecedentTreePerceptronOvergeneratingKBest(perceptrons.Perceptron):
+    def kbest(self, substructure, arc_information, k):
+        """ Approximate k-best decoder for antecedent trees.
+
+        Computes an approximation of the k highest-scoring antecedent trees
+        by also considering suboptimal antecedent choices for mentions. First
+        generates a list of k-best trees of the requested size and then, for each
+        coreference chain equivalence class, only retains the highest-scoring tree
+        that leads to this equivalence class. Should not be used during training.
+
+        Args:
+            substructure (list((Mention, Mention))): The list of mention pairs
+                which define the search space for one substructure. For mention
+                ranking, this list contains all potential anaphor-antecedent
+                pairs in the following order:
+                (m_1, m_0), (m_2, m_1), (m_2, m_0), (m_3, m_2), ...
+            arc_information (dict((Mention, Mention),
+                                  ((array, array, array), list(int), bool)):
+                A mapping of arcs (= mention pairs) to information about these
+                arcs. The information consists of the features, the costs for
+                the arc (for each label), and whether predicting the arc to be
+                coreferent is consistent with the gold annotation). The features
+                are divided in three arrays: the first array contains the non-
+                numeric features, the second array the numeric features, and the
+                third array the values for the numeric features. The features
+                are represented as integers via feature hashing.
+            k (int): Number of antecedent trees created (actual k-best list may contain
+                fewer elements).
+
+        Returns:
+            A list of 3-tuples describing the highest-scoring trees leading to different
+            coreference chains, ordered by decreasing total score.
+
+            Each tuple consists of:
+
+                - **best_arcs** (*list((Mention, Mention))*): the arcs
+                  constituting the antecedent tree,
+                - **best_labels** (*list(str)*): empty, the antecedent tree
+                  approach does not employ any labels,
+                - **best_scores** (*list(float)*): the scores of the
+                  arcs in the antecedent tree.
+        """
+        if not substructure:
+            return [], []
+
+        number_mentions = len(substructure[0][0].document.system_mentions)
+
+        # first compute mapping mention to (score, ante) pair
+        mention_mapping = self._compute_mention_to_score_ante_mapping(
+            number_mentions, substructure, arc_information
+        )
+
+        solutions = []
+        coref_union_find = []
+
+        # compute 1-best solution
+        best_mapping, best_uf = self._compute_1_best_solution(mention_mapping)
+        solutions.append(best_mapping)
+        coref_union_find.append(best_uf)
+
+        # sort all choices in priority queue
+        my_queue = self._generate_queue(mention_mapping, best_mapping)
+
+        # generate approximate k-best solutions
+        while True:
+            if len(solutions) >= k:
+                break
+
+            score, pair = my_queue.get()
+
+            mention, ante = pair
+
+            new_solutions = []
+
+            for sol in solutions:
+                new_solutions.append(sol)
+
+            for sol in solutions:
+                if sol[mention][1] != ante:
+                    new_mapping, _ = self._compute_new_mapping_and_uf(sol, mention, ante, score)
+                    new_solutions.append(new_mapping)
+
+            solutions = new_solutions
+
+        solutions = solutions[:k]
+
+        # transform into correct output format
+        temp_output = []
+
+        for map in solutions:
+            arcs, arcs_scores = self._transform_from_mapping(map)
+            temp_output.append((sum(arcs_scores), (arcs, [], arcs_scores)))
+
+        sorted_descending_temp_output = sorted(temp_output, reverse=True)
+
+        final_output = []
+        coref_for_computing_whether_equivalence_class_already_seen = []
+
+        for sol in sorted_descending_temp_output:
+            _, tree_description = sol
+            arcs, _, _ = tree_description
+
+            coref_chain = self._compute_uf_from_arcs(arcs).get_representation_for_comparison()
+
+            already_added = False
+
+            for x in coref_for_computing_whether_equivalence_class_already_seen:
+                if coref_chain == x:
+                    already_added = True
+
+            if not already_added:
+                final_output.append(tree_description)
+                coref_for_computing_whether_equivalence_class_already_seen.append(coref_chain)
+
+        print(len(final_output))
+
+        return final_output
+
+    def _compute_mention_to_score_ante_mapping(
+            self, number_mentions, substructure, arc_information):
+        # first compute mapping mention to (score, ante) pair
+        mention_mapping = defaultdict(list)
+
+        for ana_index in range(1, number_mentions):
+            first_arc = ana_index * (ana_index - 1) // 2
+            last_arc = first_arc + ana_index
+
+            mention = substructure[first_arc][0]
+
+            for arc in substructure[first_arc:last_arc]:
+                ante = arc[1]
+                score = self.score_arc(arc, arc_information)
+
+                mention_mapping[mention].append((score, ante))
+
+            mention_mapping[mention] = sorted(mention_mapping[mention])
+
+        return mention_mapping
+
+    def _compute_1_best_solution(self, mention_mapping):
+        mapping = {}
+        union_find = UnionFind()
+
+        for mention in sorted(mention_mapping.keys()):
+            score, antecedent = mention_mapping[mention][-1]
+            mapping[mention] = (score, antecedent)
+
+            if not antecedent.is_dummy():
+                union_find.union(mention, antecedent)
+            else:
+                union_find.union(mention, mention)
+
+        return mapping, union_find
+
+    def _generate_queue(self, mention_mapping, best_mapping):
+        my_queue = PriorityQueue()
+
+        for mention in sorted(mention_mapping.keys()):
+            best_score = best_mapping[mention][0]
+            for score, ante in mention_mapping[mention]:
+                my_queue.put((best_score - score, (mention, ante)))
+
+        return my_queue
+
+    def _compute_new_mapping_and_uf(self, base_mapping, mention, ante, score):
+        my_uf = UnionFind()
+
+        new_mapping = {}
+        for m in base_mapping:
+            if m != mention:
+                new_mapping[m] = base_mapping[m]
+                old_ante = base_mapping[m][1]
+                if not old_ante.is_dummy():
+                    my_uf.union(m, base_mapping[m][1])
+                else:
+                    my_uf.union(m, m)
+            else:
+                best_score = base_mapping[m][0]
+                new_mapping[m] = (best_score - score, ante)
+                if not ante.is_dummy():
+                    my_uf.union(m, ante)
+                else:
+                    my_uf.union(m, m)
+
+        return new_mapping, my_uf
+
+    def _compute_uf_from_arcs(self, arcs):
+        my_uf = UnionFind()
+
+        for arc in arcs:
+            ana, ante = arc
+
+            if not ante.is_dummy():
+                my_uf.union(ana, ante)
+            else:
+                my_uf.union(ana, ana)
+
+        return my_uf
 
     def _transform_from_mapping(self, mapping):
         arcs = []
