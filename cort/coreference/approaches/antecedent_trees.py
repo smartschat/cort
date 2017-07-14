@@ -267,6 +267,7 @@ class AntecedentTreePerceptronAgendaBasedKBest(perceptrons.Perceptron):
                 output.append(output[output_length - 1])
 
             logging.warning("Less than " + str(k) + " trees included in k-best list. "
+                            "(Only " + str(output_length) + " trees.) "
                             "Padded list with lowest-scoring.")
 
         return output
@@ -476,6 +477,7 @@ class AntecedentTreePerceptronOvergeneratingKBest(perceptrons.Perceptron):
                 final_output.append(final_output[output_length - 1])
 
             logging.warning("Less than " + str(k) + " trees included in k-best list. "
+                            "(Only " + str(output_length) + " trees.) "
                             "Padded list with lowest-scoring.")
 
         return final_output
