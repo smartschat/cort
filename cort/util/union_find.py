@@ -108,6 +108,4 @@ class UnionFind:
                 repr_to_cluster[self[item]] = set()
             repr_to_cluster[self[item]].add(item)
 
-        return repr_to_cluster.values()
-
-
+        return sorted([x for x in repr_to_cluster.values() if len(x) > 1])

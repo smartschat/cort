@@ -356,10 +356,10 @@ class AntecedentTreePerceptronOvergeneratingKBest(perceptrons.Perceptron):
         """ Approximate k-best decoder for antecedent trees.
 
         Computes an approximation of the k highest-scoring antecedent trees
-        by also considering suboptimal antecedent choices for mentions. First
-        generates a list of k-best trees of the requested size and then, for each
-        coreference chain equivalence class, only retains the highest-scoring tree
-        that leads to this equivalence class. Should not be used during training.
+        by also considering suboptimal antecedent choices for mentions. Uses beam
+        search for overgenerating. Does not filter chains with same coreference chain
+        equivalence class during beam search. Filtering happens afterwards. Should not
+        be used during training.
 
         Args:
             substructure (list((Mention, Mention))): The list of mention pairs
@@ -403,44 +403,48 @@ class AntecedentTreePerceptronOvergeneratingKBest(perceptrons.Perceptron):
             number_mentions, substructure, arc_information
         )
 
-        solutions = []
-        coref_union_find = []
+        beam = []
 
         # compute 1-best solution
-        best_mapping, best_uf = self._compute_1_best_solution(mention_mapping)
-        solutions.append(best_mapping)
-        coref_union_find.append(best_uf)
+        best_mapping, _ = self._compute_1_best_solution(mention_mapping)
+        _, best_scores = self._transform_from_mapping(best_mapping)
+        beam.append((sum(best_scores), best_mapping))
 
         # sort all choices in priority queue
         my_queue = self._generate_queue(mention_mapping, best_mapping)
 
-        # generate approximate k-best solutions
-        while True:
-            if len(solutions) >= k:
-                break
+        # generate approximate k-best solutions with beam search
+        score_of_lowest = sum(best_scores)
 
+        while my_queue:
             score, pair = my_queue.get()
 
             mention, ante = pair
 
-            new_solutions = []
+            new_beam = []
 
-            for sol in solutions:
-                new_solutions.append(sol)
+            for sol in beam:
+                new_beam.append(sol)
 
-            for sol in solutions:
-                if sol[mention][1] != ante:
-                    new_mapping, _ = self._compute_new_mapping_and_uf(sol, mention, ante, score)
-                    new_solutions.append(new_mapping)
+            for sol in beam:
+                tree_score, tree = sol
 
-            solutions = new_solutions
+                if tree[mention][1] != ante:
+                    new_mapping, total_score = self._compute_new_mapping_and_total_score(tree, mention, ante, score)
+                    new_beam.append((total_score, new_mapping))
 
-        solutions = solutions[:k]
+            beam = sorted(new_beam, reverse=True)[:k]
+            new_score_of_lowest = beam[-1][0]
+
+            if len(beam) > 1 and new_score_of_lowest == score_of_lowest:
+                break
+
+            score_of_lowest = new_score_of_lowest
 
         # transform into correct output format
         temp_output = []
 
-        for map in solutions:
+        for map_score, map in beam:
             arcs, arcs_scores = self._transform_from_mapping(map)
             temp_output.append((sum(arcs_scores), (arcs, [], arcs_scores)))
 
@@ -465,7 +469,14 @@ class AntecedentTreePerceptronOvergeneratingKBest(perceptrons.Perceptron):
                 final_output.append(tree_description)
                 coref_for_computing_whether_equivalence_class_already_seen.append(coref_chain)
 
-        print(len(final_output))
+        output_length = len(final_output)
+
+        if output_length < k:
+            for i in range(output_length, k):
+                final_output.append(final_output[output_length - 1])
+
+            logging.warning("Less than " + str(k) + " trees included in k-best list. "
+                            "Padded list with lowest-scoring.")
 
         return final_output
 
@@ -515,27 +526,20 @@ class AntecedentTreePerceptronOvergeneratingKBest(perceptrons.Perceptron):
 
         return my_queue
 
-    def _compute_new_mapping_and_uf(self, base_mapping, mention, ante, score):
-        my_uf = UnionFind()
-
+    def _compute_new_mapping_and_total_score(self, base_mapping, mention, ante, score):
+        total_score = 0
         new_mapping = {}
+
         for m in base_mapping:
             if m != mention:
                 new_mapping[m] = base_mapping[m]
-                old_ante = base_mapping[m][1]
-                if not old_ante.is_dummy():
-                    my_uf.union(m, base_mapping[m][1])
-                else:
-                    my_uf.union(m, m)
+                total_score += new_mapping[m][0]
             else:
                 best_score = base_mapping[m][0]
                 new_mapping[m] = (best_score - score, ante)
-                if not ante.is_dummy():
-                    my_uf.union(m, ante)
-                else:
-                    my_uf.union(m, m)
+                total_score += best_score - score
 
-        return new_mapping, my_uf
+        return new_mapping, total_score
 
     def _compute_uf_from_arcs(self, arcs):
         my_uf = UnionFind()
