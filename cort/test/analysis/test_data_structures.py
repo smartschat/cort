@@ -41,20 +41,21 @@ test2	0	6	.   NN   *)	-   -   -   -   -   -
             annotated_mentions[4]: [annotated_mentions[2],
                                     annotated_mentions[0]],
             annotated_mentions[2]: [annotated_mentions[0]]
-        })
+        }, {})
 
         second_graph = data_structures.EntityGraph({
             annotated_mentions[3]: [annotated_mentions[1]]
-        })
+        }, {})
 
         third_graph = data_structures.EntityGraph({
             annotated_mentions[6]: [annotated_mentions[5]]
-        })
+        }, {})
 
         self.assertEqual(
             [first_graph, second_graph, third_graph],
             data_structures.EntityGraph.from_mentions(annotated_mentions,
-                                                       "annotated_set_id"))
+                                                       "annotated_set_id",
+                                                      {}))
 
     def test_entity_graph_partition(self):
         annotated_mentions = \
@@ -64,7 +65,7 @@ test2	0	6	.   NN   *)	-   -   -   -   -   -
             annotated_mentions[4]: [annotated_mentions[2],
                                     annotated_mentions[0]],
             annotated_mentions[2]: [annotated_mentions[0]]
-        })
+        }, {})
 
         system_output = [
             mentions.Mention(
@@ -87,12 +88,12 @@ test2	0	6	.   NN   *)	-   -   -   -   -   -
 
         expected_edges = defaultdict(list)
         expected_edges[annotated_mentions[4]].append(annotated_mentions[0])
-        expected = data_structures.EntityGraph(expected_edges)
+        expected = data_structures.EntityGraph(expected_edges, {})
 
         self.assertEqual(expected,
                          graph.partition(
                              data_structures.EntityGraph.from_mentions(
-                                 system_output, "set_id")))
+                                 system_output, "set_id", {})))
 
 
 if __name__ == '__main__':

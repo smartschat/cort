@@ -69,12 +69,11 @@ def parse_args():
                         help='The file containing the list of features. If not'
                              'provided, defaults to a standard set of'
                              'features.')
-    parser.add_argument('-k',
-                        dest='k',
-                        help='k for k-best decoding. If set, perform k-best '
-                             'decoding, otherwise perform 1-best decoding. If set,'
-                             'create output files for each solution (index is appended,'
-                             'i.e. -1 is best solution, -2 is second-best solution, ...).')
+    parser.add_argument('-include_singletons',
+                        dest='include_singletons',
+                        action='store_true',
+                        help='If provided, include singleton mentions in the'
+                             'output.')
 
     return parser.parse_args()
 
@@ -143,7 +142,7 @@ else:
         features.gender,
         features.number,
         features.sem_class,
-        features.deprel,
+        features.gr_func,
         features.head_ner,
         features.length,
         features.head,
@@ -151,8 +150,6 @@ else:
         features.last,
         features.preceding_token,
         features.next_token,
-        features.governor,
-        features.ancestry
     ]
 
     pairwise_features = [
@@ -168,13 +165,16 @@ else:
         features.token_distance
     ]
 
+cluster_features = []
+
 logging.info("Loading model.")
 priors, weights = pickle.load(open(args.model, "rb"))
 
 perceptron = import_helper.import_from_path(args.perceptron)(
     priors=priors,
     weights=weights,
-    cost_scaling=0
+    cost_scaling=0,
+    cluster_features=cluster_features,
 )
 
 extractor = instance_extractors.InstanceExtractor(
@@ -194,60 +194,26 @@ logging.info("Extracting system mentions.")
 for doc in testing_corpus:
     doc.system_mentions = mention_extractor.extract_system_mentions(doc)
 
-if args.k:
-    k = int(args.k)
+mention_entity_mapping, antecedent_mapping = experiments.predict(
+    testing_corpus,
+    extractor,
+    perceptron,
+    import_helper.import_from_path(args.clusterer)
+)
 
-    coref_info = experiments.predict_kbest(
-        testing_corpus,
-        extractor,
-        perceptron,
-        import_helper.import_from_path(args.clusterer),
-        k
-    )
+testing_corpus.read_coref_decisions(mention_entity_mapping, antecedent_mapping)
 
-    for i, (mention_entity_mapping, antecedent_mapping) in enumerate(coref_info, 1):
-        logging.info("\tRemoving coreference annotations from corpus.")
-        for doc in testing_corpus:
-            doc.antecedent_decisions = {}
-            for mention in doc.system_mentions:
-                mention.attributes["antecedent"] = None
-                mention.attributes["set_id"] = None
 
-        testing_corpus.read_coref_decisions(mention_entity_mapping, antecedent_mapping)
+logging.info("Write corpus to file.")
+testing_corpus.write_to_file(codecs.open(args.output_filename, "w", "utf-8"),
+                             args.include_singletons)
 
-        logging.info("Now considering " + str(i) + "-best solution.")
+if args.ante:
+    logging.info("Write antecedent decisions to file")
+    testing_corpus.write_antecedent_decisions_to_file(open(args.ante, "w"))
 
-        logging.info("\tWrite corpus to file.")
-        testing_corpus.write_to_file(codecs.open(args.output_filename + "-" + str(i),
-                                                 "w", "utf-8"))
-
-        if args.ante:
-            logging.info("\tWrite antecedent decisions to file")
-            testing_corpus.write_antecedent_decisions_to_file(open(args.ante + "-"
-                                                                   + str(i), "w"))
-
-        if args.gold:
-            logging.info("\tEvaluate.")
-            print(get_scores(args.output_filename + "-" + str(i), args.gold))
-else:
-    mention_entity_mapping, antecedent_mapping = experiments.predict(
-        testing_corpus,
-        extractor,
-        perceptron,
-        import_helper.import_from_path(args.clusterer)
-    )
-
-    testing_corpus.read_coref_decisions(mention_entity_mapping, antecedent_mapping)
-
-    logging.info("Write corpus to file.")
-    testing_corpus.write_to_file(codecs.open(args.output_filename, "w", "utf-8"))
-
-    if args.ante:
-        logging.info("Write antecedent decisions to file")
-        testing_corpus.write_antecedent_decisions_to_file(open(args.ante, "w"))
-
-    if args.gold:
-        logging.info("Evaluate.")
-        print(get_scores(args.output_filename, args.gold))
+if args.gold:
+    logging.info("Evaluate.")
+    print(get_scores(args.output_filename, args.gold))
 
 logging.info("Done.")

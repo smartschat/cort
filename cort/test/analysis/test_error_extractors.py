@@ -94,6 +94,8 @@ class TestErrorExtractor(unittest.TestCase):
                 {"tokens": ["k"], "annotated_set_id": 1})
         ]
 
+
+
         self.maxDiff = None
 
     def test_compute_errors(self):

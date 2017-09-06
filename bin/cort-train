@@ -86,7 +86,7 @@ else:
         features.gender,
         features.number,
         features.sem_class,
-        features.deprel,
+        features.gr_func,
         features.head_ner,
         features.length,
         features.head,
@@ -94,8 +94,6 @@ else:
         features.last,
         features.preceding_token,
         features.next_token,
-        features.governor,
-        features.ancestry
     ]
 
     pairwise_features = [
@@ -111,11 +109,13 @@ else:
         features.token_distance
     ]
 
+cluster_features = []
 
 perceptron = import_helper.import_from_path(args.perceptron)(
     cost_scaling=int(args.cost_scaling),
     n_iter=int(args.n_iter),
-    seed=int(args.seed)
+    seed=int(args.seed),
+    cluster_features=cluster_features
 )
 
 extractor = instance_extractors.InstanceExtractor(
@@ -127,9 +127,10 @@ extractor = instance_extractors.InstanceExtractor(
 )
 
 logging.info("Reading in data.")
-training_corpus = corpora.Corpus.from_file("training",
-                                           codecs.open(args.input_filename,
-                                                       "r", "utf-8"))
+
+training_corpus = corpora.Corpus.from_file(
+    "training",
+    codecs.open(args.input_filename, "r", "utf-8"))
 
 logging.info("Extracting system mentions.")
 for doc in training_corpus:

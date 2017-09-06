@@ -73,8 +73,13 @@ mz/sinorama/10/ectb_1050        6       12      ?       .       *))     -       
 #end	document"""
 
         self.real_document = documents.CoNLLDocument(self.real_example)
+        self.real_document.enrich_with_parse_trees()
+        self.real_document.enrich_with_dependency_trees()
+
         self.another_real_document = documents.CoNLLDocument(
             self.another_real_example)
+        self.another_real_document.enrich_with_parse_trees()
+        self.another_real_document.enrich_with_dependency_trees()
 
         self.tree = nltk.ParentedTree.fromstring(
             "(NP (NP (NP (PRP$ his) (NN brother) (POS 's)) (NN wedding)) "
@@ -147,6 +152,17 @@ mz/sinorama/10/ectb_1050        6       12      ?       .       *))     -       
                           mention in mention_extractor.extract_system_mentions(
                              self.another_real_document,
                              filter_mentions=True)[1:]])
+
+    def test_first_in_gold_entity_correctly_set(self):
+        mentions = [mention for
+                          mention in mention_extractor.extract_system_mentions(
+                             self.real_document,
+                             filter_mentions=False)[1:]]
+
+        self.assertEqual(False, mentions[3].attributes["first_in_gold_entity"])
+        self.assertEqual(True, mentions[7].attributes["first_in_gold_entity"])
+        self.assertEqual(False, mentions[-1].attributes["first_in_gold_entity"])
+
 
     def test_post_process_same_head_largest_span(self):
         all_mentions = {

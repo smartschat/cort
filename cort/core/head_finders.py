@@ -1,16 +1,13 @@
 """ Compute heads of mentions. """
 
-import logging
 import re
 
 from cort.core import spans
 
-logger = logging.getLogger(__name__)
-
 __author__ = 'smartschat'
 
 
-class HeadFinder:
+class EnglishHeadFinder:
     """Compute heads of mentions.
 
     This class provides functions to compute heads of mentions via modified
@@ -167,8 +164,7 @@ class HeadFinder:
             current_tree = current_tree[-1]
 
     @staticmethod
-    def adjust_head_for_nam(tokens, pos, ner_type, in_mention_span_old_head,
-                            old_head):
+    def adjust_head_for_nam(tokens, pos, ner_type):
         """
         Adjust head for proper names via heuristics.
 
@@ -187,13 +183,9 @@ class HeadFinder:
                 one of PERSON, ORG, GPE, FAC, NORP, PRODUCT, EVENT, MONEY,
                 WORK_OF_ART, LOC, LAW, LANGUAGE, DATE, TIME, ORDINAL,
                 CARDINAL, QUANTITY, PERCENT or NONE.
-            in_mention_span_old_head (spans.Span): The in-mention span of the
-                old head.
-            old_head (list(str)): The tokens of the old head.
 
         Returns:
-            (Span, list(str)): The in-mention span of the adjusted head and
-                the tokens of the adjusted head.
+            (Span, list(str)):
         """
         # TODO: get rid of this ugly hack
         if len(pos) == 0:
@@ -219,9 +211,7 @@ class HeadFinder:
         elif ner_type == "NONE":
             start_regex = re.compile("NN(S)?|NNP(S)?|CD")
         else:
-            logger.warning("No head adjustment rule defined for NER class " +
-                           ner_type + ".")
-            return in_mention_span_old_head, old_head
+            raise Exception("Unknown named entity annotation: " + ner_type)
 
         head_start = -1
 

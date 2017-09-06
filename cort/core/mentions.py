@@ -1,13 +1,13 @@
 """ Manage mentions and their attributes. """
 
-from cort.core import mention_property_computer
+from cort.core import mixins
 from cort.core import spans
 
 
 __author__ = 'smartschat'
 
 
-class Mention:
+class Mention(mixins.ComparableMixin):
     """ A mention is an expression in a document which is potentially referring.
 
     Attributes:
@@ -16,14 +16,38 @@ class Mention:
             the span is (3, 4), then the mention starts at the 3rd token in
             the document and ends at the 4th (inclusive).
         attributes (dict(str, object)): A mapping of attribute names to
-            attribute values. When creating a document from a text, The
-            following attributes are used:
+            attribute values. Attributes are set when running the
+            `from_document` method and when applying the `set_properties`
+            function of a `MentionPropertyComputer` instance to a mention.
+
+            These are the attributes set when running the `from_document`method:
 
                 - tokens (list(str)): the tokens of the mention,
                 - head (list(str)): the head words of the mention,
                 - pos (list(str)): the part-of-speech tags of the mention,
                 - ner (list(str)): the named entity tags of the mention,
                   as found in the data,
+                - sentence_id (int): the sentence id of the mention's sentence
+                  (starting at 0),
+                - parse_tree (nltk.ParentedTree): the parse tree of the mention,
+                - speaker (str): the speaker of the mention,
+                - antecedent (Mention): the antecedent of the mention
+                  (initially None),
+                - annotated_set_id (str): the set id of the mention as found
+                  in the data,
+                - set_id (str): the set id of the mention computed by a
+                  coreference resolution approach (initially None),
+                - tokens_as_lowercase_string (str): all tokens of the mention
+                  lowercased and as a string,
+                - first_in_gold_entity (bool): whether the mention is the first
+                  mention in its gold entity (for system mentions, this is
+                  also true if no preceding mention in the same entity was
+                  found by the mention extractor),
+
+            The attributes set when applying the `set_properties`function depend
+            on the `MentionPropertyComputer` instance. For convenience,
+            we list the attribute set by the `EnglishMentionPropertyComputer`:
+
                 - type (str): the mention type, one of
 
                     - NAM (proper name),
@@ -49,20 +73,11 @@ class Mention:
                 - citation_form (str): only set if the mention is a pronoun,
                   then the canonical form of the pronoun, i.e. one of
                   i, you, he, she, it, we, they,
+                - parse_tree (nltk.ParentedTree): the parse tree of the mention,
                 - grammatical_function (str): either SUBJECT, OBJECT or OTHER,
                 - number (str): either SINGULAR, PLURAL or UNKNOWN,
                 - gender (str): either MALE, FEMALE, NEUTRAL, PLURAL or UNKNOWN,
                 - semantic_class (str): either PERSON, OBJECT or UNKNOWN,
-                - sentence_id (int): the sentence id of the mention's sentence
-                  (starting at 0),
-                - parse_tree (nltk.ParentedTree): the parse tree of the mention,
-                - speaker (str): the speaker of the mention,
-                - antecedent (Mention): the antecedent of the mention
-                  (intially None),
-                - annotated_set_id (str): the set id of the mention as found
-                  in the data,
-                - set_id (str): the set id of the mention computed by a
-                  coreference resolution approach (initially None),
                 - head_span (Span): the span of the head (in the document),
                 - head_index (int): the mention-internal index of the start of
                   the head,
@@ -70,13 +85,12 @@ class Mention:
                   apposition,
                 - head_as_lowercase_string (str): the head lowercased and as a
                   string,
-                - tokens_as_lowercase_string (str): all tokens of the mention
-                  lowercased and as a string,
-                - first_in_gold_entity (bool): whether the mention is the first
-                  mention in its gold entity (for system mentions, this is
-                  also true if no preceding mention in the same entity was
-                  found by the mention extractor),
-
+                - governor (str): the governor of the mention
+                - ancestry (str): the ancestry of the mention as defined in
+                  Durrett and Klein:  "Easy Victories and Uphill Battles in
+                  Coreference Resolution" (EMNLP 2013)
+                - deprel (str): the dependency relation of the mention to its
+                  governor
     """
     def __init__(self, document, span, attributes):
         """ Initialize a mention in a document.
@@ -93,19 +107,6 @@ class Mention:
         self.attributes = attributes
 
     @staticmethod
-    def dummy_from_document(document):
-
-        return Mention(document, None, {
-            "is_dummy": True,
-            "annotated_set_id": None,
-            "tokens": [],
-            "first_in_gold_entity": True
-        })
-
-    def is_dummy(self):
-        return "is_dummy" in self.attributes and self.attributes["is_dummy"]
-
-    @staticmethod
     def from_document(span, document, first_in_gold_entity=False):
         """
         Create a mention from a span in a document.
@@ -117,6 +118,8 @@ class Mention:
         Args:
             document (CoNLLDocument): The document the mention belongs to.
             span (Span): The span of the mention in the document.
+            first_in_gold_entity (bool): Whether the mention is the first
+                in its gold entity. Defeaults to false.
 
         Returns:
             Mention: A mention extracted from the input span in the input
@@ -130,10 +133,8 @@ class Mention:
             "pos": document.pos[span.begin:span.end + 1],
             "ner": document.ner[span.begin:span.end + 1],
             "sentence_id": i,
-            "parse_tree": mention_property_computer.get_relevant_subtree(
-                span, document),
             "speaker": document.speakers[span.begin],
-            "antecedent": None,
+            "antecedent": [],
             "set_id": None,
             "first_in_gold_entity": first_in_gold_entity
         }
@@ -143,81 +144,38 @@ class Mention:
         else:
             attributes["annotated_set_id"] = None
 
-        attributes["is_apposition"] = \
-            mention_property_computer.is_apposition(attributes)
-
-        attributes["grammatical_function"] = \
-            mention_property_computer.get_grammatical_function(attributes)
-
-        (head, in_mention_span, head_index) = \
-            mention_property_computer.compute_head_information(attributes)
-
-        attributes["head"] = head
-        attributes["head_span"] = spans.Span(
-            span.begin + in_mention_span.begin,
-            span.begin + in_mention_span.end
-        )
-        attributes["head_index"] = head_index
-
-        attributes["type"] = mention_property_computer.get_type(attributes)
-        attributes["fine_type"] = mention_property_computer.get_fine_type(
-            attributes)
-
-        if attributes["type"] == "PRO":
-            attributes["citation_form"] = \
-                mention_property_computer.get_citation_form(
-                    attributes)
-
-        attributes["number"] = \
-            mention_property_computer.compute_number(attributes)
-        attributes["gender"] = \
-            mention_property_computer.compute_gender(attributes)
-
-        attributes["semantic_class"] = \
-            mention_property_computer.compute_semantic_class(attributes)
-
-        attributes["head_as_lowercase_string"] = " ".join(attributes[
-            "head"]).lower()
-
         attributes["tokens_as_lowercase_string"] = " ".join(attributes[
             "tokens"]).lower()
-
-        dep_tree = document.dep[i]
-
-        index = span.begin + head_index - sentence_span.begin
-
-        governor_id = dep_tree[index].head - 1
-
-        if governor_id == -1:
-            attributes["governor"] = "NONE"
-        else:
-            attributes["governor"] = dep_tree[governor_id].form.lower()
-
-        attributes["ancestry"] = Mention._get_ancestry(dep_tree, index)
-
-        attributes["deprel"] = dep_tree[index].deprel
 
         return Mention(document, span, attributes)
 
     @staticmethod
-    def _get_ancestry(dep_tree, index, level=0):
-        if level >= 2:
-            return ""
-        else:
-            governor_id = dep_tree[index].head - 1
+    def dummy_from_document(document):
+        """ Create a dummy mention for the document.
 
-            direction = "L"
+        The dummy mention has no annotated set id and its span is set to
+        (-1, -1).
 
-            if governor_id > index:
-                direction = "R"
+        Args:
+            document (CoNLLDocument): The document the dummy mention belongs to.
 
-            if governor_id == -1:
-                return  "-" + direction + "-NONE"
-            else:
-                return "-" + direction + "-" + dep_tree[governor_id].pos + \
-                    Mention._get_ancestry(dep_tree, governor_id, level+1)
+        Returns:
+            Mention: A "dummy" mention for the document.
+        """
+        return Mention(document, spans.Span(-1,-1), {
+            "is_dummy": True,
+            "annotated_set_id": None,
+            "tokens": [],
+            "first_in_gold_entity": True
+        })
 
+    def is_dummy(self):
+        """ Returns whether this mention is dummy mention.
 
+        Returns:
+            bool: True if the mention is a dummy mention, false otherwise.
+        """
+        return "is_dummy" in self.attributes and self.attributes["is_dummy"]
 
     def __lt__(self, other):
         """ Check whether this mention is less than another mention.

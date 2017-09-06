@@ -28,13 +28,8 @@ Reference:
 
 from __future__ import division
 
-from queue import PriorityQueue
-from collections import defaultdict
-
-import logging
-
 from cort.coreference import perceptrons
-from cort.util.union_find import UnionFind
+
 
 __author__ = 'martscsn'
 
@@ -42,7 +37,7 @@ __author__ = 'martscsn'
 def extract_substructures(doc):
     """ Extract the search space for the antecedent tree model,
 
-    The mention ranking model consists in computing the optimal antecedent for
+    The antecedent tree model consists in computing the optimal antecedent for
     each anaphor. These decisions are represented as edges in a tree of
     anaphor-antecedent decisions. This functions extracts the search space for
     the tree.
@@ -54,7 +49,6 @@ def extract_substructures(doc):
 
     The list contains all potential (anaphor, antecedent) pairs in the
     following order: (m_1, m_0), (m_2, m_1), (m_2, m_0), (m_3, m_2), ...,
-    where m_j is the jth mention in the document.
 
     Args:
         doc (CoNLLDocument): The document to extract substructures from.
@@ -85,8 +79,8 @@ class AntecedentTreePerceptron(perceptrons.Perceptron):
 
         Args:
             substructure (list((Mention, Mention))): The list of mention pairs
-                which define the search space for one substructure. For mention
-                ranking, this list contains all potential anaphor-antecedent
+                which define the search space for one substructure. For antecedent
+                trees, this list contains all potential anaphor-antecedent
                 pairs in the following order:
                 (m_1, m_0), (m_2, m_1), (m_2, m_0), (m_3, m_2), ...
             arc_information (dict((Mention, Mention),
@@ -101,7 +95,7 @@ class AntecedentTreePerceptron(perceptrons.Perceptron):
                 are represented as integers via feature hashing.
 
         Returns:
-            A 7-tuple describing the highest-scoring antecedent tree, and the
+            A 9-tuple describing the highest-scoring antecedent tree, and the
             highest-scoring antecedent tree consistent with the gold
             annotation. The tuple consists of:
 
@@ -111,6 +105,8 @@ class AntecedentTreePerceptron(perceptrons.Perceptron):
                   approach does not employ any labels,
                 - **best_scores** (*list(float)*): the scores of the
                   arcs in the highest-scoring antecedent tree,
+                - **best_additional_features** (*array(int)*): empty, the
+                  antecedent tree approach does not employ any additional features.
                 - **best_cons_arcs** (*list((Mention, Mention))*): the arcs
                   constituting the highest-scoring antecedent tree consistent
                   with the gold annotation.
@@ -119,11 +115,13 @@ class AntecedentTreePerceptron(perceptrons.Perceptron):
                 - **best_cons_scores** (*list(float)*): the scores of the
                   arcs in the highest-scoring antecedent tree consistent with
                   the gold annotation,
+                - **best_cons_additional_features** (*array(int)*): empty, the
+                  antecedent tree approach does not employ any additional features.
                 - **is_consistent** (*bool*): whether the highest-scoring
                   antecedent tree is consistent with the gold annotation.
         """
         if not substructure:
-            return [], [], [], [], [], [], True
+            return [], [], [], [], [], [], [], [], True
 
         number_mentions = len(substructure[0][0].document.system_mentions)
 
@@ -154,415 +152,10 @@ class AntecedentTreePerceptron(perceptrons.Perceptron):
             arcs,
             [],
             arcs_scores,
+            [],
             coref_arcs,
             [],
             coref_arcs_scores,
+            [],
             is_consistent
         )
-
-
-class AntecedentTreePerceptronAgendaBasedKBest(perceptrons.Perceptron):
-    def kbest(self, substructure, arc_information, k):
-        """ Approximate k-best decoder for antecedent trees.
-
-        Computes an approximation of the k highest-scoring antecedent trees
-        by also considering suboptimal antecedent choices for mentions. Filters
-        out trees that lead to the same coreference chains as trees that were
-        already constructed and does so while generating the list.
-
-        Should
-        not be used during training.
-
-        Args:
-            substructure (list((Mention, Mention))): The list of mention pairs
-                which define the search space for one substructure. For mention
-                ranking, this list contains all potential anaphor-antecedent
-                pairs in the following order:
-                (m_1, m_0), (m_2, m_1), (m_2, m_0), (m_3, m_2), ...
-            arc_information (dict((Mention, Mention),
-                                  ((array, array, array), list(int), bool)):
-                A mapping of arcs (= mention pairs) to information about these
-                arcs. The information consists of the features, the costs for
-                the arc (for each label), and whether predicting the arc to be
-                coreferent is consistent with the gold annotation). The features
-                are divided in three arrays: the first array contains the non-
-                numeric features, the second array the numeric features, and the
-                third array the values for the numeric features. The features
-                are represented as integers via feature hashing.
-            k (int): Number of antecedent trees to include in the output.
-
-        Returns:
-            A list of 3-tuples describing the (approximately) k highest-scoring
-            antecedent trees, ordered by decreasing total score. If less than k
-            trees were created, pad the list with the lowest-scoring tree included and
-            log a warning.
-
-            Each tuple consists of:
-
-                - **best_arcs** (*list((Mention, Mention))*): the arcs
-                  constituting the antecedent tree,
-                - **best_labels** (*list(str)*): empty, the antecedent tree
-                  approach does not employ any labels,
-                - **best_scores** (*list(float)*): the scores of the
-                  arcs in the antecedent tree.
-        """
-        if not substructure:
-            return [], []
-
-        number_mentions = len(substructure[0][0].document.system_mentions)
-
-        # first compute mapping mention to (score, ante) pair
-        mention_mapping = self._compute_mention_to_score_ante_mapping(
-            number_mentions, substructure, arc_information
-        )
-
-        solutions = []
-        coref_union_find = []
-
-        # compute 1-best solution
-
-        best_mapping, best_uf = self._compute_1_best_solution(mention_mapping)
-        solutions.append(best_mapping)
-        coref_union_find.append(best_uf)
-
-        # sort all choices in priority queue
-        my_queue = self._generate_queue(mention_mapping, best_mapping)
-
-        # generate approximate k-best solutions
-        while not my_queue.empty():
-            if len(solutions) == k:
-                break
-
-            score, (mention, ante) = my_queue.get()
-
-            novel = True
-
-            for uf in coref_union_find:
-                if uf[mention] == uf[ante]:
-                    novel = False
-
-            if ante.is_dummy():
-                for sol in solutions:
-                    if sol[mention][1].is_dummy():
-                        novel = False
-
-            if novel:
-                new_mapping, new_uf = self._compute_new_mapping_and_uf(
-                    solutions[0], mention, ante, score)
-
-                solutions.append(new_mapping)
-                coref_union_find.append(new_uf)
-
-        # transform into correct output format
-        output = []
-
-        for map in solutions:
-            arcs, arcs_scores = self._transform_from_mapping(map)
-            output.append((arcs, [], arcs_scores))
-
-        output_length = len(output)
-
-        if output_length < k:
-            for i in range(output_length, k):
-                output.append(output[output_length - 1])
-
-            logging.warning("Less than " + str(k) + " trees included in k-best list. "
-                            "(Only " + str(output_length) + " trees.) "
-                            "Padded list with lowest-scoring.")
-
-        return output
-
-    def _compute_mention_to_score_ante_mapping(
-            self, number_mentions, substructure, arc_information):
-        # first compute mapping mention to (score, ante) pair
-        mention_mapping = defaultdict(list)
-
-        for ana_index in range(1, number_mentions):
-            first_arc = ana_index * (ana_index - 1) // 2
-            last_arc = first_arc + ana_index
-
-            mention = substructure[first_arc][0]
-
-            for arc in substructure[first_arc:last_arc]:
-                ante = arc[1]
-                score = self.score_arc(arc, arc_information)
-
-                mention_mapping[mention].append((score, ante))
-
-            mention_mapping[mention] = sorted(mention_mapping[mention])
-
-        return mention_mapping
-
-    def _compute_1_best_solution(self, mention_mapping):
-        mapping = {}
-        union_find = UnionFind()
-
-        for mention in sorted(mention_mapping.keys()):
-            score, antecedent = mention_mapping[mention][-1]
-            mapping[mention] = (score, antecedent)
-
-            if not antecedent.is_dummy():
-                union_find.union(mention, antecedent)
-            else:
-                union_find.union(mention, mention)
-
-        return mapping, union_find
-
-    def _generate_queue(self, mention_mapping, best_mapping):
-        my_queue = PriorityQueue()
-
-        for mention in sorted(mention_mapping.keys()):
-            best_score = best_mapping[mention][0]
-            for score, ante in mention_mapping[mention]:
-                my_queue.put((best_score - score, (mention, ante)))
-
-        return my_queue
-
-    def _compute_new_mapping_and_uf(self, base_mapping, mention, ante, score):
-        my_uf = UnionFind()
-
-        new_mapping = {}
-        for m in base_mapping:
-            if m != mention:
-                new_mapping[m] = base_mapping[m]
-                old_ante = base_mapping[m][1]
-                if not old_ante.is_dummy():
-                    my_uf.union(m, base_mapping[m][1])
-                else:
-                    my_uf.union(m, m)
-            else:
-                best_score = base_mapping[m][0]
-                new_mapping[m] = (best_score - score, ante)
-                if not ante.is_dummy():
-                    my_uf.union(m, ante)
-                else:
-                    my_uf.union(m, m)
-
-        return new_mapping, my_uf
-
-    def _transform_from_mapping(self, mapping):
-        arcs = []
-        arcs_scores = []
-
-        for mention in sorted(mapping.keys()):
-            score, ante = mapping[mention]
-            arcs.append((mention, ante))
-            arcs_scores.append(score)
-
-        return arcs, arcs_scores
-
-
-class AntecedentTreePerceptronOvergeneratingKBest(perceptrons.Perceptron):
-    def kbest(self, substructure, arc_information, k):
-        """ Approximate k-best decoder for antecedent trees.
-
-        Computes an approximation of the k highest-scoring antecedent trees
-        by also considering suboptimal antecedent choices for mentions. Uses beam
-        search for overgenerating. Does not filter chains with same coreference chain
-        equivalence class during beam search. Filtering happens afterwards. Should not
-        be used during training.
-
-        Args:
-            substructure (list((Mention, Mention))): The list of mention pairs
-                which define the search space for one substructure. For mention
-                ranking, this list contains all potential anaphor-antecedent
-                pairs in the following order:
-                (m_1, m_0), (m_2, m_1), (m_2, m_0), (m_3, m_2), ...
-            arc_information (dict((Mention, Mention),
-                                  ((array, array, array), list(int), bool)):
-                A mapping of arcs (= mention pairs) to information about these
-                arcs. The information consists of the features, the costs for
-                the arc (for each label), and whether predicting the arc to be
-                coreferent is consistent with the gold annotation). The features
-                are divided in three arrays: the first array contains the non-
-                numeric features, the second array the numeric features, and the
-                third array the values for the numeric features. The features
-                are represented as integers via feature hashing.
-            k (int): Number of antecedent trees created (actual k-best list may contain
-                fewer elements).
-
-        Returns:
-            A list of 3-tuples describing the highest-scoring trees leading to different
-            coreference chains, ordered by decreasing total score.
-
-            Each tuple consists of:
-
-                - **best_arcs** (*list((Mention, Mention))*): the arcs
-                  constituting the antecedent tree,
-                - **best_labels** (*list(str)*): empty, the antecedent tree
-                  approach does not employ any labels,
-                - **best_scores** (*list(float)*): the scores of the
-                  arcs in the antecedent tree.
-        """
-        if not substructure:
-            return [], []
-
-        number_mentions = len(substructure[0][0].document.system_mentions)
-
-        # first compute mapping mention to (score, ante) pair
-        mention_mapping = self._compute_mention_to_score_ante_mapping(
-            number_mentions, substructure, arc_information
-        )
-
-        beam = []
-
-        # compute 1-best solution
-        best_mapping, _ = self._compute_1_best_solution(mention_mapping)
-        _, best_scores = self._transform_from_mapping(best_mapping)
-        beam.append((sum(best_scores), best_mapping))
-
-        # sort all choices in priority queue
-        my_queue = self._generate_queue(mention_mapping, best_mapping)
-
-        # generate approximate k-best solutions with beam search
-        score_of_lowest = sum(best_scores)
-
-        while my_queue:
-            score, pair = my_queue.get()
-
-            mention, ante = pair
-
-            new_beam = []
-
-            for sol in beam:
-                new_beam.append(sol)
-
-            for sol in beam:
-                tree_score, tree = sol
-
-                if tree[mention][1] != ante:
-                    new_mapping, total_score = self._compute_new_mapping_and_total_score(tree, mention, ante, score)
-                    new_beam.append((total_score, new_mapping))
-
-            beam = sorted(new_beam, reverse=True)[:k]
-            new_score_of_lowest = beam[-1][0]
-
-            if len(beam) > 1 and new_score_of_lowest == score_of_lowest:
-                break
-
-            score_of_lowest = new_score_of_lowest
-
-        # transform into correct output format
-        temp_output = []
-
-        for map_score, map in beam:
-            arcs, arcs_scores = self._transform_from_mapping(map)
-            temp_output.append((sum(arcs_scores), (arcs, [], arcs_scores)))
-
-        sorted_descending_temp_output = sorted(temp_output, reverse=True)
-
-        final_output = []
-        coref_for_computing_whether_equivalence_class_already_seen = []
-
-        for sol in sorted_descending_temp_output:
-            _, tree_description = sol
-            arcs, _, _ = tree_description
-
-            coref_chain = self._compute_uf_from_arcs(arcs).get_representation_for_comparison()
-
-            already_added = False
-
-            for x in coref_for_computing_whether_equivalence_class_already_seen:
-                if coref_chain == x:
-                    already_added = True
-
-            if not already_added:
-                final_output.append(tree_description)
-                coref_for_computing_whether_equivalence_class_already_seen.append(coref_chain)
-
-        output_length = len(final_output)
-
-        if output_length < k:
-            for i in range(output_length, k):
-                final_output.append(final_output[output_length - 1])
-
-            logging.warning("Less than " + str(k) + " trees included in k-best list. "
-                            "(Only " + str(output_length) + " trees.) "
-                            "Padded list with lowest-scoring.")
-
-        return final_output
-
-    def _compute_mention_to_score_ante_mapping(
-            self, number_mentions, substructure, arc_information):
-        # first compute mapping mention to (score, ante) pair
-        mention_mapping = defaultdict(list)
-
-        for ana_index in range(1, number_mentions):
-            first_arc = ana_index * (ana_index - 1) // 2
-            last_arc = first_arc + ana_index
-
-            mention = substructure[first_arc][0]
-
-            for arc in substructure[first_arc:last_arc]:
-                ante = arc[1]
-                score = self.score_arc(arc, arc_information)
-
-                mention_mapping[mention].append((score, ante))
-
-            mention_mapping[mention] = sorted(mention_mapping[mention])
-
-        return mention_mapping
-
-    def _compute_1_best_solution(self, mention_mapping):
-        mapping = {}
-        union_find = UnionFind()
-
-        for mention in sorted(mention_mapping.keys()):
-            score, antecedent = mention_mapping[mention][-1]
-            mapping[mention] = (score, antecedent)
-
-            if not antecedent.is_dummy():
-                union_find.union(mention, antecedent)
-            else:
-                union_find.union(mention, mention)
-
-        return mapping, union_find
-
-    def _generate_queue(self, mention_mapping, best_mapping):
-        my_queue = PriorityQueue()
-
-        for mention in sorted(mention_mapping.keys()):
-            best_score = best_mapping[mention][0]
-            for score, ante in mention_mapping[mention]:
-                my_queue.put((best_score - score, (mention, ante)))
-
-        return my_queue
-
-    def _compute_new_mapping_and_total_score(self, base_mapping, mention, ante, score):
-        total_score = 0
-        new_mapping = {}
-
-        for m in base_mapping:
-            if m != mention:
-                new_mapping[m] = base_mapping[m]
-                total_score += new_mapping[m][0]
-            else:
-                best_score = base_mapping[m][0]
-                new_mapping[m] = (best_score - score, ante)
-                total_score += best_score - score
-
-        return new_mapping, total_score
-
-    def _compute_uf_from_arcs(self, arcs):
-        my_uf = UnionFind()
-
-        for arc in arcs:
-            ana, ante = arc
-
-            if not ante.is_dummy():
-                my_uf.union(ana, ante)
-            else:
-                my_uf.union(ana, ana)
-
-        return my_uf
-
-    def _transform_from_mapping(self, mapping):
-        arcs = []
-        arcs_scores = []
-
-        for mention in sorted(mapping.keys()):
-            score, ante = mapping[mention]
-            arcs.append((mention, ante))
-            arcs_scores.append(score)
-
-        return arcs, arcs_scores

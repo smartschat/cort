@@ -1,8 +1,9 @@
 """ Extract errors made by systems w.r.t. a reference corpus. """
-
+import codecs
+from collections import defaultdict
 
 from cort.analysis import data_structures
-
+from cort.core import spans
 
 __author__ = 'smartschat'
 
@@ -57,7 +58,10 @@ class ErrorExtractor:
         self.errors = {}
         self.corpora = {}
 
-    def add_system(self, system_corpus, which_mentions="annotated"):
+    def add_system(self,
+                   system_corpus,
+                   which_mentions="annotated",
+                   scores=None):
         """ Add a system to the error analysis.
 
         Error extraction for recall errors works as follows:
@@ -84,24 +88,30 @@ class ErrorExtractor:
             raise ValueError("which_mentions must be"
                              "either 'annotated' or 'extracted'.")
 
-        recall_errors, precision_errors = self.__compute_errors(system_corpus,
-                                                                which_mentions)
+        (recall_errors,
+         recall_edges,
+         precision_errors,
+         precision_edges) = self.__compute_errors(system_corpus,
+                                                  which_mentions,
+                                                  scores)
 
         self.errors[system_corpus.description] = {
             "recall_errors": {},
+            "recall_edges": {},
             "precision_errors": {},
-            "decisions": {}
+            "precision_edges": {},
         }
 
         self.errors[system_corpus.description]["recall_errors"]["all"] = \
             recall_errors
+        self.errors[system_corpus.description]["recall_edges"]["all"] = \
+            recall_edges
         self.errors[
             system_corpus.description]["precision_errors"]["all"] = \
             precision_errors
         self.errors[
-            system_corpus.description]["decisions"]["all"] = \
-            system_corpus.get_antecedent_decisions()[
-            system_corpus.description]["decisions"]["all"]
+            system_corpus.description]["precision_edges"]["all"] = \
+            precision_edges
 
         self.corpora[system_corpus.description] = system_corpus
 
@@ -125,51 +135,63 @@ class ErrorExtractor:
             self.errors, corpora=self.corpora,
             reference=self.reference_corpus)
 
-    def __compute_errors(self, system_corpus, which_mentions):
+    def __compute_errors(self, system_corpus, which_mentions, scores):
         gold_graphs = [data_structures.EntityGraph.from_mentions(
-            doc.annotated_mentions, "annotated_set_id")
+            doc.annotated_mentions, "annotated_set_id", scores)
             for doc in self.reference_corpus.documents]
 
         if which_mentions == 'annotated':
             system_graphs = [data_structures.EntityGraph.from_mentions(
-                doc.annotated_mentions, "annotated_set_id")
+                doc.annotated_mentions, "annotated_set_id", scores)
                 for doc in system_corpus.documents]
         else:
             system_graphs = [data_structures.EntityGraph.from_mentions(
-                doc.system_mentions, "set_id")
+                doc.system_mentions, "set_id", scores)
                 for doc in system_corpus.documents]
 
         recall_errors = []
+        recall_edges = []
         precision_errors = []
+        precision_edges = []
 
         for doc_gold_graphs, doc_system_graphs in zip(gold_graphs,
                                                       system_graphs):
-            recall_errors.extend(
-                self.__compute_errors_for_doc(
-                    doc_gold_graphs,
-                    doc_system_graphs,
-                    self.recall_spanning_tree_algorithm))
-            precision_errors.extend(
-                self.__compute_errors_for_doc(
-                    doc_system_graphs,
-                    doc_gold_graphs,
-                    self.precision_spanning_tree_algorithm))
+
+            doc_recall_errors, doc_recall_edges = \
+                self.__compute_errors_for_doc(doc_gold_graphs,
+                                              doc_system_graphs,
+                                              self.recall_spanning_tree_algorithm)
+
+            doc_precision_errors, doc_precision_edges = \
+                self.__compute_errors_for_doc(doc_system_graphs,
+                                              doc_gold_graphs,
+                                              self.precision_spanning_tree_algorithm)
+
+            recall_errors.extend(doc_recall_errors)
+            recall_edges.extend(doc_recall_edges)
+            precision_errors.extend(doc_precision_errors)
+            precision_edges.extend(doc_precision_edges)
 
         return (data_structures.EnhancedSet(recall_errors),
-                data_structures.EnhancedSet(precision_errors))
+                data_structures.EnhancedSet(recall_edges),
+                data_structures.EnhancedSet(precision_errors),
+                data_structures.EnhancedSet(precision_edges))
 
     @staticmethod
     def __compute_errors_for_doc(base_graphs,
                                  partitioning_graphs,
                                  spanning_tree_algorithm):
         errors = []
+        edges = []
 
         for graph in base_graphs:
-            errors.extend(
-                ErrorExtractor.__compute_errors_for_graph(
-                    graph, partitioning_graphs, spanning_tree_algorithm))
+            graph_errors, graph_edges =  ErrorExtractor.__compute_errors_for_graph(
+                    graph, partitioning_graphs, spanning_tree_algorithm)
 
-        return errors
+            errors.extend(graph_errors)
+            edges.extend(graph_edges)
+
+        return errors, edges
 
     @staticmethod
     def __compute_errors_for_graph(graph,
@@ -184,4 +206,4 @@ class ErrorExtractor:
         ]
 
         return [(anaphor, antecedent) for anaphor, antecedent in sorted(
-            extra_pairs)]
+            extra_pairs)], spanning_tree

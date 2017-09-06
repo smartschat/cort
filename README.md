@@ -1,8 +1,8 @@
-# cort kbest
+# cort v03
 
-This branch contains a variant of __cort__ implementing k-best extraction for coreference resolution, as described in Ji et al. (2015). k-best extraction can be performed by running `kbest_example.py`. If you have any questions, please write me a mail.
+This branch contains a version of __cort__ that will replace the current version. Its main features are more models and a better train/dev/test workflow. Due to missing documentation the code is not yet ready to replace the current version of __cort__. However, the scripts in the main directory can be used to replicate the results from my PhD thesis (Martschat (2017)).
 
 ## References
 
-Yangfeng Ji, Chenhao Tan, Sebastian Martschat, Yejin Choi and Noah A. Smith (2017). **Dynamic Entity Representations in Neural Language Models.** To appear in *Proceedings of the 2017 Conference on Empirical Methods in Natural Language Processing (EMNLP), Copenhagen, Denmark, 7-11 September 2017*.  
-[PDF](https://arxiv.org/abs/1708.00781)
+Sebastian Martschat (2017). **Structured Representations for Coreference Resolution.** PhD thesis, Heidelberg University.
+[PDF](http://www.ub.uni-heidelberg.de/archiv/23305)

@@ -24,31 +24,37 @@ class EntityGraph:
     Attributes:
         edges (dict(Mention, list(Mention))): A mapping from mentions to all
             mentions which have an incoming edge from that mention.
+        edge_scores (dict((Mention, Mention), float)): A mapping from edges
+            (mention pairs) to edge scores/weights.
 
     """
 
-    def __init__(self, edges):
+    def __init__(self, edges, edge_scores):
         """ Initialize an entity graph from edges.
 
         Args:
             edges (dict(Mention, list(Mention))): A mapping from mentions to all
                 mentions which have an incoming edge from that mention.
+            edge_scores (dict((Mention, Mention), float)): A mapping from edges
+                (mention pairs) to edge scores/weights.
         """
         self.edges = edges
+        self.edge_scores = edge_scores
 
     def __eq__(self, other):
         """ Compare graphs for equality.
 
-        Two graphs are equal if they have the same edges.
+        Two graphs are equal if they have the same edges and edge scores.
 
         Args:
             other (EntityGraph): An entity graph
 
         Returns:
-            True if the graphs have the same edges, False otherwise.
+            True if the graphs have the same edges and edge scores, False otherwise.
         """
         if isinstance(other, self.__class__):
-            return self.edges == other.edges
+            return self.edges == other.edges and \
+                   self.edge_scores == other.edge_scores
         else:
             return False
 
@@ -56,8 +62,10 @@ class EntityGraph:
         return not self.__eq__(other)
 
     def __hash__(self):
-        return hash(frozenset([(key, tuple(value))
-                    for key, value in self.edges.items()]))
+        for_edges = [(key, tuple(value)) for key, value in self.edges.items()]
+        for_scores = [(key, value) for key, value in self.edge_scores.items()]
+
+        return hash(frozenset([for_edges + for_scores]))
 
     def __repr__(self):
         return repr(self.edges)
@@ -66,7 +74,7 @@ class EntityGraph:
         return str(self.edges)
 
     @staticmethod
-    def from_mentions(mentions, id_attribute):
+    def from_mentions(mentions, id_attribute, scores):
         """ Construct a set of entity graphs from mentions.
 
         In particular, build a complete graph for every subset of mentions that
@@ -77,10 +85,13 @@ class EntityGraph:
             id_attribute (str): The mention attribute which should be used to
                 determine coreference. Possible values are "annotated_set_id"
                 and "set_id".
+            scores (dict((Mention, Mention), float)): A mapping from mention
+                pairs (m, n) (with m > n) to scores for the pairs.
 
         Returns:
             list(EntityGraph): A list of entity graphs. Two mentions are in one
-            entity graph if and only if they have the same id_attribute.
+                entity graph if and only if they have the same id_attribute. The
+                score of the edge is the corresponding score in `scores`.
         """
         id_to_mentions = defaultdict(list)
 
@@ -91,19 +102,25 @@ class EntityGraph:
                 id_to_mentions[
                     mention.attributes[id_attribute]].append(mention)
 
-        graphs = [EntityGraph.__create_complete(sorted(mention_list))
+        graphs = [EntityGraph.__create_complete(sorted(mention_list), scores)
                       for mention_list in id_to_mentions.values()
                       if len(mention_list) > 1]
 
         return graphs
 
     @staticmethod
-    def __create_complete(mentions):
+    def __create_complete(mentions, scores):
         edges = {}
+        edge_scores = {}
         for i in range(1, len(mentions)):
             edges[mentions[i]] = sorted(mentions[0:i], reverse=True)
-
-        return EntityGraph(edges)
+            if scores:
+                for n in mentions[0:i]:
+                    if (mentions[i], n) in scores:
+                        edge_scores[(mentions[i], n)] = scores[(mentions[i], n)]
+                    else:
+                        edge_scores[(mentions[i], n)] = float("-inf")
+        return EntityGraph(edges, edge_scores)
 
     def partition(self, entity_graphs):
         """ Partition the entity graph with respect to a set of entity graphs.
@@ -128,7 +145,7 @@ class EntityGraph:
                         edges[anaphor] = list()
                     edges[anaphor].append(antecedent)
 
-        return EntityGraph(edges)
+        return EntityGraph(edges, self.edge_scores)
 
     @staticmethod
     def __in_some_entity_graph(anaphor, antecedent, entity_graphs):
@@ -140,27 +157,6 @@ class EntityGraph:
     def __in_entity_graph(anaphor, antecedent, entity_graph):
         return anaphor in entity_graph.edges and \
             antecedent in entity_graph.edges[anaphor]
-
-    def difference(self, entity_graph):
-        """ Get all pairs of mention that are in this graph, but not in the
-        supplied entity graph.
-
-        Args:
-            entity_graph (EntityGraph): An entity graph
-
-        Returns:
-            list((Mention, Mention): Pairs of mentions describing edges that
-            can be found in this graph, but not in the supplied graph.
-        """
-        difference = []
-
-        for anaphor in self.edges:
-            for antecedent in self.edges[anaphor]:
-                if (anaphor not in entity_graph.edges or
-                        antecedent not in entity_graph.edges[anaphor]):
-                    difference.append((anaphor, antecedent))
-
-        return difference
 
 
 class EnhancedSet:
@@ -501,7 +497,7 @@ class StructuredCoreferenceAnalysis:
         all errors that can be found under
 
         ``self[corpus_name]["recall_errors"]["all"]`` and
-        ``self[corpus_name]["precision"]["all"]``,
+        ``self[corpus_name]["precision_errors"]["all"]``,
 
         or, if the errors are categorized, under
 

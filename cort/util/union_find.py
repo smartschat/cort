@@ -100,12 +100,10 @@ class UnionFind:
                 self.weights[heaviest] += self.weights[r]
                 self.parents[r] = heaviest
 
-    def get_representation_for_comparison(self):
-        repr_to_cluster = {}
+    def get_repr_to_cluster(self):
+        repr_to_cluster = defaultdict(set)
 
         for item in self:
-            if self[item] not in repr_to_cluster:
-                repr_to_cluster[self[item]] = set()
             repr_to_cluster[self[item]].add(item)
 
-        return sorted([x for x in repr_to_cluster.values() if len(x) > 1])
+        return repr_to_cluster

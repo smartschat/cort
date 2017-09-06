@@ -124,6 +124,7 @@ bn/abc/00/abc_0030      0       28      .       .       *))     -       -       
 """
 
         self.real_document = CoNLLDocument(self.real_example)
+        self.real_document.enrich_with_parse_trees()
         self.complicated_mention_document = CoNLLDocument(
             self.complicated_mention_example)
         self.another_real_document = CoNLLDocument(self.another_real_example)
@@ -191,7 +192,7 @@ bn/abc/00/abc_0030      0       28      .       .       *))     -       -       
             "(ADJP (JJ clear)) (SBAR (WHNP (WP who)) (S (VP (VBD was) "
             "(ADJP (JJ responsible) (PP (IN for) (NP (DT the) (NN "
             "massacre))))))))))) (. .)))")
-        self.assertEqual(expected, self.real_document.parse[1])
+        self.assertEqual(expected, self.real_document.parse_trees[1])
 
     def test_get_string_representation(self):
         expected = """#begin document (/test2); part 000

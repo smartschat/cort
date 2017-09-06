@@ -9,6 +9,7 @@ import logging
 
 from cort.core import mentions
 from cort.core import spans
+from cort.util import union_find
 
 import StanfordDependencies
 
@@ -25,24 +26,34 @@ class Document(object):
 
     Attributes:
         identifier (str): A unique identifier for the document.
-        in_sentence_ids (list(int)): In-sentence indicies of all tokens in the
+        in_sentence_ids (list(int)): In-sentence indices of all tokens in the
             document, for example [0, 1, 2, 0, 1, 2, 3, 4, ...]
+        sentence_spans(list((Span, Span))): Spans of all sentences in the
+            document.
         tokens (list(str)): All tokens.
         pos (list(str)): All part-of-speech tags.
         ner (list(str)): All named entity tags (if a token does not have a
             tag, the tag is set to NONE).
-        parse (list(nltk:ParentedTree)): All parse trees.
-        dep (list(list(StanfordDependencies.CoNLL.Token)): All dependencies
-            represented as lists of tokens with label information and pointers
-            to heads. One list for each sentence.
+        parse_as_string (list(str)): String representations of the parse trees
+            of all sentences (should be readable by nltk).
         speakers (list(str)): All speaker ids,
         coref (dict(span, int)): A mapping of mention spans to their
             coreference set id.
-        annotated_mentions list(Mention): All annotated mentions.
-        system_mentions list(Mention): The system mentions (initially empty).
+        parse_trees (list(nltk:ParentedTree)): All parse trees.
+        dep (list(list(StanfordDependencies.CoNLL.Token)): All dependencies
+            represented as lists of tokens with label information and pointers
+            to heads. One list for each sentence.
+        spans_to_annotated_mentions (dict(Span,Mention)): A mapping of spans
+            to annotated mentions.
+        annotated_mentions (list(Mention)): All annotated mentions.
+        system_mentions (list(Mention)): The system mentions (initially empty).
     """
     def __init__(self, identifier, sentences, coref):
         """ Construct a document from sentence and coreference information.
+
+        Initially, no explicit parse and dependency tree representation is
+        computed. If you need this information, run the `enrich_with_parse_trees`
+        or `enrich_with_dependency_trees` instance methods.
 
         Args:
             identifier (str): A unique identifier for the document.
@@ -58,11 +69,8 @@ class Document(object):
                 * speakers (list(str)): All speaker ids in the sentence.
                 * parse (str): A string representation of the sentence's parse
                   tree (should be readable by nltk)
-                * dep (list(StanfordDependencies.CoNLL.Token): All dependencies
-                  in the sentence represented as lists of tokens with label
-                  information and pointers to heads.
             coref (dict(span, int)): A mapping of mention spans to their
-            coreference set id.
+                coreference set id.
         """
         self.identifier = identifier
 
@@ -71,13 +79,15 @@ class Document(object):
         self.tokens = []
         self.pos = []
         self.ner = []
-        self.parse = []
-        self.dep = []
+        self.parse_as_string = []
         self.speakers = []
         self.coref = coref
 
+        self.parse_trees = None
+        self.dep = None
+
         for sentence in sentences:
-            tokens, pos, ner, speakers, parse, dep = sentence
+            tokens, pos, ner, speakers, parse = sentence
 
             offset = len(self.tokens)
 
@@ -90,30 +100,29 @@ class Document(object):
             self.tokens += tokens
             self.pos += pos
             self.ner += ner
-            self.parse.append(nltk.ParentedTree.fromstring(parse))
-            self.dep.append(dep)
+            self.parse_as_string.append(parse)
             self.speakers += speakers
 
-        self.annotated_mentions = self.__get_annotated_mentions()
+        self.spans_to_annotated_mentions = self.__get_spans_to_annotated_mentions()
+        self.annotated_mentions = sorted(self.spans_to_annotated_mentions.values())
         self.system_mentions = []
 
-    def __get_annotated_mentions(self):
+    def __get_spans_to_annotated_mentions(self):
         mention_spans = sorted(list(self.coref.keys()))
 
         seen = set()
 
-        annotated_mentions = []
+        spans_to_annotated_mentions = {}
 
         for span in mention_spans:
             set_id = self.coref[span]
-            annotated_mentions.append(
+            spans_to_annotated_mentions[span] = \
                 mentions.Mention.from_document(
                     span, self, first_in_gold_entity=set_id not in seen
                 )
-            )
             seen.add(set_id)
 
-        return annotated_mentions
+        return spans_to_annotated_mentions
 
     def __repr__(self):
         return self.identifier
@@ -172,12 +181,13 @@ class Document(object):
         """
 
         for mention in self.system_mentions:
-            ante = mention.attributes["antecedent"]
+            antes = mention.attributes["antecedent"]
 
-            if ante:
-                file.write(self.identifier + "\t" +
-                           str(mention.span) + "\t" +
-                           str(ante.span) + "\n")
+            if antes:
+                for ante in antes:
+                    file.write(self.identifier + "\t" +
+                               str(mention.span) + "\t" +
+                               str(ante.span) + "\n")
 
     def get_annotated_mentions_from_antecedent_decisions(self, span_pairs):
         """ Overwrite coreference attributes with information from span pairs.
@@ -193,36 +203,42 @@ class Document(object):
 
         spans_to_annotated_mentions = {}
 
+        union = union_find.UnionFind()
+
         for mention in self.annotated_mentions:
             spans_to_annotated_mentions[mention.span] = mention
+            mention.attributes["annotated_set_id"] = None
 
-        set_id = 0
         for span_anaphor, span_antecedent in span_pairs:
             if span_antecedent not in spans_to_annotated_mentions:
                 spans_to_annotated_mentions[span_antecedent] = \
                     mentions.Mention.from_document(span_antecedent, self)
-                spans_to_annotated_mentions[
-                    span_antecedent].attributes["annotated_set_id"] = set_id
-                set_id += 1
+
             if span_anaphor not in spans_to_annotated_mentions:
                 spans_to_annotated_mentions[span_anaphor] = \
                     mentions.Mention.from_document(span_anaphor, self)
-                spans_to_annotated_mentions[span_anaphor].attributes[
-                    "annotated_set_id"] = spans_to_annotated_mentions[
-                        span_antecedent].attributes["annotated_set_id"]
 
-            spans_to_annotated_mentions[span_anaphor].attributes[
-                "antecedent"] = spans_to_annotated_mentions[
-                    span_antecedent]
+            anaphor = spans_to_annotated_mentions[span_anaphor]
+            antecedent = spans_to_annotated_mentions[span_antecedent]
 
-            self.annotated_mentions = sorted(
-                list(spans_to_annotated_mentions.values()))
+            union.union(anaphor, antecedent)
 
-            self.coref.clear()
+            anaphor.attributes["antecedent"].append(antecedent)
 
-            for span in spans_to_annotated_mentions:
-                self.coref[span] = spans_to_annotated_mentions[
-                    span].attributes["annotated_set_id"]
+        representant_to_cluster = union.get_repr_to_cluster()
+
+        for i, cluster in enumerate(sorted(representant_to_cluster.values())):
+            for mention in cluster:
+                mention.attributes["annotated_set_id"] = i
+
+        self.annotated_mentions = sorted(
+            list(spans_to_annotated_mentions.values()))
+
+        self.coref.clear()
+
+        for span in spans_to_annotated_mentions:
+            self.coref[span] = spans_to_annotated_mentions[
+                span].attributes["annotated_set_id"]
 
     def get_antecedent_decisions(self, which_mentions="annotated"):
         """ Get all antecedent decisions in this document.
@@ -245,10 +261,10 @@ class Document(object):
             doc_mentions = self.system_mentions
 
         for mention in doc_mentions:
-            antecedent = mention.attributes["antecedent"]
+            antecedents = mention.attributes["antecedent"]
 
-            if antecedent:
-                antecedent_decisions[mention] = antecedent
+            if antecedents:
+                antecedent_decisions[mention] = antecedents
 
         return antecedent_decisions
 
@@ -331,9 +347,25 @@ class Document(object):
         for visualization.
 
         Returns:
-            str: The HTML/CSS-JS-friendly representation.
+            str: The HTML/CSS/JS-friendly representation.
         """
         return self.identifier.replace(".", "_").replace("/", "_")
+
+    def enrich_with_parse_trees(self):
+        """ Enrich the document representation with constituent parse tree objects,
+         i.e. set the `self.parse_trees` attribute.
+        """
+        self.parse_trees = [nltk.ParentedTree.fromstring(parse)
+                            for parse in self.parse_as_string]
+
+    def enrich_with_dependency_trees(self):
+        """ Enrich the document representation with dependency parse tree objects,
+         i.e. set the `self.dep` attribute.
+        """
+        sd = StanfordDependencies.get_instance()
+        self.dep = sd.convert_trees(
+            [parse.replace("NOPARSE", "S") for parse in self.parse_as_string],
+        )
 
 
 class CoNLLDocument(Document):
@@ -396,10 +428,7 @@ class CoNLLDocument(Document):
                                           temp_pos,
                                           temp_tokens)
                   for span in sentence_spans]
-        sd = StanfordDependencies.get_instance()
-        dep_trees = sd.convert_trees(
-            [parse.replace("NOPARSE", "S") for parse in parses],
-        )
+
         sentences = []
         for i, span in enumerate(sentence_spans):
             sentences.append(
@@ -407,8 +436,7 @@ class CoNLLDocument(Document):
                  temp_pos[span.begin:span.end + 1],
                  temp_ner[span.begin:span.end + 1],
                  temp_speakers[span.begin:span.end + 1],
-                 parses[i],
-                 dep_trees[i])
+                 parses[i])
             )
 
         super(CoNLLDocument, self).__init__(identifier, sentences, coref)
@@ -512,17 +540,25 @@ class CoNLLDocument(Document):
 
         return parse_tree.strip()
 
-    def get_string_representation(self):
+    def get_string_representation(self,
+                                  include_singletons=False):
         """ Get a string representation of the document.
+
+        Args:
+            include_singletons (bool): If True, include mentions which are not
+                assigned any set id in the output. Defaults to False.
 
         Returns:
             str: A string representation of the document which conforms to the
             CoNLL format specifications
             (http://conll.cemantix.org/2012/data.html).
         """
+        mentions_to_represent = [m for m in self.system_mentions if not m.is_dummy()]
+
         mention_string_representation = \
             CoNLLDocument.__get_string_representation_of_mentions(
-                len(self.document_table), self.system_mentions)
+                len(self.document_table), mentions_to_represent,
+                include_singletons)
 
         new_table = self.document_table
 
@@ -552,14 +588,29 @@ class CoNLLDocument(Document):
         return begin + content + end
 
     @staticmethod
-    def __get_string_representation_of_mentions(length, mentions_in_doc):
+    def __get_string_representation_of_mentions(length, mentions_in_doc,
+                                                include_singletons):
+
+        max_set_id = 0
+
+        set_ids = [int(mention.attributes["set_id"]) for mention
+                   in mentions_in_doc
+                   if mention.attributes["set_id"]]
+
+        if set_ids:
+            max_set_id = max(set_ids)
+
         index_to_strings = defaultdict(list)
 
         for mention in mentions_in_doc:
             set_id = mention.attributes["set_id"]
 
             if set_id is None:
-                continue
+                if include_singletons:
+                    set_id = max_set_id + 1
+                    max_set_id += 1
+                else:
+                    continue
 
             span = mention.span
 

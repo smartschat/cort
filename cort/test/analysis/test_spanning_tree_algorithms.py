@@ -1,4 +1,5 @@
 import unittest
+from collections import defaultdict
 
 from cort.analysis import data_structures
 from cort.analysis import spanning_tree_algorithms
@@ -15,34 +16,56 @@ class TestSpanningTreeAlgorithms(unittest.TestCase):
             mentions.Mention(
                 None,
                 spans.Span(0, 0),
-                {"tokens": ["a"], "type": "NOM", "annotated_set_id": 0}),
+                {"tokens": ["a", "rainbow"],
+                 "type": "NOM",
+                 "tokens_as_lowercase_string": "a rainbow",
+                 "head_as_lowercase_string": "rainbow",
+                 "annotated_set_id": 0}),
 
             mentions.Mention(
                 None,
                 spans.Span(1, 1),
-                {"tokens": ["US"], "type": "NAM", "annotated_set_id": 0}),
+                {"tokens": ["US"],
+                 "type": "NAM",
+                 "tokens_as_lowercase_string": "us",
+                 "head_as_lowercase_string": "us",
+                 "annotated_set_id": 0}),
 
             mentions.Mention(
                 None,
                 spans.Span(2, 3),
-                {"tokens": ["angry", "salesman"], "type": "PRO", "annotated_set_id": 0}),
+                {"tokens": ["angry", "salesman"],
+                 "type": "PRO",
+                 "tokens_as_lowercase_string": "angry salesman",
+                 "head_as_lowercase_string": "salesman",
+                 "annotated_set_id": 0}),
 
             mentions.Mention(
                 None,
                 spans.Span(4, 5),
-                {"tokens": ["the", "rainbow"], "type": "NAM",
+                {"tokens": ["the", "rainbow"],
+                 "type": "NAM",
+                 "tokens_as_lowercase_string": "the rainbow",
+                 "head_as_lowercase_string": "rainbow",
                  "annotated_set_id": 0}),
 
             mentions.Mention(
                 None,
                 spans.Span(5, 6),
-                {"tokens": ["and", "far"], "type": "NOM",
+                {"tokens": ["and", "far"],
+                 "type": "NOM",
+                 "tokens_as_lowercase_string": "and far",
+                 "head_as_lowercase_string": "and",
                  "annotated_set_id": 0}),
 
             mentions.Mention(
                 None,
                 spans.Span(7, 7),
-                {"tokens": ["neypmd"], "type": "NOM", "annotated_set_id": 0}),
+                {"tokens": ["neypmd"],
+                 "type": "NOM",
+                 "tokens_as_lowercase_string": "neypmd",
+                 "head_as_lowercase_string": "neypmd",
+                 "annotated_set_id": 0}),
         ]
 
         self.gold_second_cluster = [
@@ -93,17 +116,17 @@ class TestSpanningTreeAlgorithms(unittest.TestCase):
                 {"tokens": ["bar"], "set_id": 0}),
         ]
         self.system2_cluster[1].attributes["antecedent"] = \
-            self.system2_cluster[0]
+            [self.system2_cluster[0]]
         self.system2_cluster[2].attributes["antecedent"] = \
-            self.system2_cluster[0]
+            [self.system2_cluster[0]]
         self.system2_cluster[3].attributes["antecedent"] = \
-            self.system2_cluster[2]
+            [self.system2_cluster[2]]
 
         self.maxDiff = None
 
     def test_recall_closest(self):
         gold_graph = data_structures.EntityGraph.from_mentions(
-            self.gold_first_cluster, "annotated_set_id")[0]
+            self.gold_first_cluster, "annotated_set_id", {})[0]
 
         spanning_tree_edges = [
             (self.gold_first_cluster[1], self.gold_first_cluster[0]),
@@ -119,11 +142,11 @@ class TestSpanningTreeAlgorithms(unittest.TestCase):
                 gold_graph,
                 gold_graph.partition(
                     data_structures.EntityGraph.from_mentions(
-                        self.system1_mentions, "set_id"))))
+                        self.system1_mentions, "set_id", {}))))
 
-    def test_recall_type(self):
+    def test_recall_accessibility(self):
         gold_graph = data_structures.EntityGraph.from_mentions(
-            self.gold_first_cluster, "annotated_set_id")[0]
+            self.gold_first_cluster, "annotated_set_id", {})[0]
 
         spanning_tree_edges = [
             (self.gold_first_cluster[1], self.gold_first_cluster[0]),
@@ -139,11 +162,31 @@ class TestSpanningTreeAlgorithms(unittest.TestCase):
                 gold_graph,
                 gold_graph.partition(
                     data_structures.EntityGraph.from_mentions(
-                        self.system1_mentions, "set_id"))))
+                        self.system1_mentions, "set_id", {}))))
+
+    def test_recall_improved_accessibility(self):
+        gold_graph = data_structures.EntityGraph.from_mentions(
+            self.gold_first_cluster, "annotated_set_id", {})[0]
+
+        spanning_tree_edges = [
+            (self.gold_first_cluster[1], self.gold_first_cluster[0]),
+            (self.gold_first_cluster[2], self.gold_first_cluster[0]),
+            (self.gold_first_cluster[3], self.gold_first_cluster[0]),
+            (self.gold_first_cluster[4], self.gold_first_cluster[3]),
+            (self.gold_first_cluster[5], self.gold_first_cluster[3])
+        ]
+
+        self.assertEqual(
+            spanning_tree_edges,
+            spanning_tree_algorithms.recall_improved_accessibility(
+                gold_graph,
+                gold_graph.partition(
+                    data_structures.EntityGraph.from_mentions(
+                        self.system1_mentions, "set_id", {}))))
 
     def test_precision_system_output(self):
         gold_graph = data_structures.EntityGraph.from_mentions(
-            self.system2_cluster, "set_id")[0]
+            self.system2_cluster, "set_id", {})[0]
 
         spanning_tree_edges = [
             (self.system2_cluster[1], self.system2_cluster[0]),
@@ -157,7 +200,76 @@ class TestSpanningTreeAlgorithms(unittest.TestCase):
                 gold_graph,
                 gold_graph.partition(
                     data_structures.EntityGraph.from_mentions(
-                        self.gold_first_cluster, "annotated_set_id"))))
+                        self.gold_first_cluster, "annotated_set_id", {}))))
+
+    def test_precision_scores(self):
+        scores = defaultdict(float)
+
+        scores.update({
+            (self.system2_cluster[1], self.system2_cluster[0]): -1,
+            (self.system2_cluster[2], self.system2_cluster[0]): -2,
+            (self.system2_cluster[2], self.system2_cluster[1]): 2,
+            (self.system2_cluster[3], self.system2_cluster[0]): 3.5,
+            (self.system2_cluster[3], self.system2_cluster[1]): 3.5,
+            (self.system2_cluster[3], self.system2_cluster[2]): 1.2,
+        })
+
+        system_graph = data_structures.EntityGraph.from_mentions(
+            self.system2_cluster, "set_id", scores)[0]
+
+        spanning_tree_edges = [
+            (self.system2_cluster[1], self.system2_cluster[0]),
+            (self.system2_cluster[2], self.system2_cluster[1]),
+            (self.system2_cluster[3], self.system2_cluster[1])
+        ]
+
+        self.assertEqual(
+            spanning_tree_edges,
+            spanning_tree_algorithms.precision_scores(
+                system_graph,
+                system_graph.partition(
+                    data_structures.EntityGraph.from_mentions(
+                        self.gold_first_cluster, "annotated_set_id", scores))))
+
+    def test_recall_scores(self):
+        scores = defaultdict(float)
+
+        scores.update({
+            (self.gold_first_cluster[1], self.gold_first_cluster[0]): -1,
+            (self.gold_first_cluster[2], self.gold_first_cluster[0]): 0,
+            (self.gold_first_cluster[2], self.gold_first_cluster[1]): -1,
+            (self.gold_first_cluster[3], self.gold_first_cluster[0]): 0,
+            (self.gold_first_cluster[3], self.gold_first_cluster[1]): 0.5,
+            (self.gold_first_cluster[3], self.gold_first_cluster[2]): 0.25,
+            (self.gold_first_cluster[4], self.gold_first_cluster[0]): 1,
+            (self.gold_first_cluster[4], self.gold_first_cluster[1]): 3,
+            (self.gold_first_cluster[4], self.gold_first_cluster[2]): 1,
+            (self.gold_first_cluster[4], self.gold_first_cluster[3]): 1,
+            (self.gold_first_cluster[5], self.gold_first_cluster[0]): 1,
+            (self.gold_first_cluster[5], self.gold_first_cluster[1]): 2,
+            (self.gold_first_cluster[5], self.gold_first_cluster[2]): 3,
+            (self.gold_first_cluster[5], self.gold_first_cluster[3]): 4,
+            (self.gold_first_cluster[5], self.gold_first_cluster[4]): 5,
+        })
+
+        gold_graph = data_structures.EntityGraph.from_mentions(
+            self.gold_first_cluster, "annotated_set_id", scores)[0]
+
+        spanning_tree_edges = [
+            (self.gold_first_cluster[1], self.gold_first_cluster[0]),
+            (self.gold_first_cluster[2], self.gold_first_cluster[0]),
+            (self.gold_first_cluster[3], self.gold_first_cluster[1]),
+            (self.gold_first_cluster[4], self.gold_first_cluster[3]),
+            (self.gold_first_cluster[5], self.gold_first_cluster[4]),
+        ]
+
+        self.assertEqual(
+            spanning_tree_edges,
+            spanning_tree_algorithms.recall_scores(
+                gold_graph,
+                gold_graph.partition(
+                    data_structures.EntityGraph.from_mentions(
+                        self.system1_mentions, "set_id", scores))))
 
 
 if __name__ == '__main__':

@@ -79,8 +79,7 @@ class Pipeline():
                             cpos=None,
                             feats=None,
                             phead=None,
-                            pdeprel=None,
-                            extra=None
+                            pdeprel=None
                         )
                     )
                 else:
@@ -95,8 +94,7 @@ class Pipeline():
                             cpos=None,
                             feats=None,
                             phead=None,
-                            pdeprel=None,
-                            extra=None
+                            pdeprel=None
                         )
                     )
 

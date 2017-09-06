@@ -11,7 +11,7 @@ import numpy
 __author__ = 'martscsn'
 
 
-# for python 2 multiprocessing
+# for python 2 my_multiprocessing
 def unwrap_extract_doc(arg, **kwarg):
     return InstanceExtractor._extract_doc(*arg, **kwarg)
 
@@ -271,8 +271,9 @@ class InstanceExtractor:
             # mention features
             for mention in [anaphor, antecedent]:
                 if mention not in cache:
-                    cache[mention] = [feature(mention) for feature
-                                      in self.mention_features]
+                    cache[mention] = []
+                    for feature in self.mention_features:
+                        cache[mention].extend(feature(mention))
 
             ana_features = cache[anaphor]
             ante_features = cache[antecedent]
@@ -299,8 +300,10 @@ class InstanceExtractor:
                            zip(ana_features, ante_features)]
 
             # pairwise features
-            pairwise_features = [feature(anaphor, antecedent) for feature
-                                 in self.pairwise_features]
+            pairwise_features = []
+            for feature in self.pairwise_features:
+                pairwise_features.extend(feature(anaphor, antecedent))
+
             inst_feats += [feature + "=" +
                            self.convert_to_string_function(val) for feature, val
                            in pairwise_features

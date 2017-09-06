@@ -4,18 +4,25 @@ from collections import defaultdict
 import re
 
 from cort.core import mentions
+from cort.core import mention_property_computer
+from cort.core import head_finders
 from cort.core import spans
 
 
 __author__ = 'smartschat'
 
 
-def extract_system_mentions(document, filter_mentions=True):
+def extract_system_mentions(document,
+                            mention_property_computer=mention_property_computer.EnglishMentionPropertyComputer(head_finders.EnglishHeadFinder()),
+                            filter_mentions=True):
     """ Extract mentions from parse trees and named entity layers in a document.
 
     Args:
         document (ConLLDocument): The document from which mentions should be
             extracted.
+        mention_property_computer (MentionPropertyComputer): An `MentionPropertyComputer`
+            object that computes properties (such as number or gender) for mentions.
+            Defaults to EnglishMentionPropertyComputer initialized with Collins' head finder.
         filter_mentions (bool): Indicates whether extracted mentions should
             be filtered. If set to True, filters:
 
@@ -35,6 +42,9 @@ def extract_system_mentions(document, filter_mentions=True):
     system_mentions = [mentions.Mention.from_document(span, document)
                        for span in __extract_system_mention_spans(document)]
 
+    for i, mention in enumerate(system_mentions, 1):
+        mention_property_computer.compute_properties(mention, i)
+
     if filter_mentions:
         for post_processor in [
             post_process_same_head_largest_span,
@@ -49,19 +59,23 @@ def extract_system_mentions(document, filter_mentions=True):
 
     seen = set()
 
-    # update set id and whether it is the first mention in gold entity
-    for mention in system_mentions:
+    system_mentions = [mentions.Mention.dummy_from_document(document)] \
+                      + system_mentions
+
+    # update id, set id and whether it is the first mention in gold entity
+    for i, mention in enumerate(system_mentions):
+        mention.attributes["id"] = i
         mention.attributes["set_id"] = None
 
         annotated_set_id = mention.attributes["annotated_set_id"]
+
+        if annotated_set_id is None:
+            continue
 
         mention.attributes["first_in_gold_entity"] = \
             annotated_set_id not in seen
 
         seen.add(annotated_set_id)
-
-    system_mentions = [mentions.Mention.dummy_from_document(document)] \
-        + system_mentions
 
     return system_mentions
 
@@ -69,7 +83,7 @@ def extract_system_mentions(document, filter_mentions=True):
 def __extract_system_mention_spans(document):
     mention_spans = []
     for i, sentence_span in enumerate(document.sentence_spans):
-        sentence_tree = document.parse[i]
+        sentence_tree = document.parse_trees[i]
 
         in_sentence_spans = __extract_mention_spans_for_sentence(
             sentence_tree,

@@ -167,33 +167,6 @@ nw/wsj/24/wsj_2413   0   31             .      .               *))         -    
                 Span(33, 34),
                 self.real_document).attributes["tokens_as_lowercase_string"])
 
-    def test_mention_type(self):
-        self.assertEqual(
-            "NAM",
-            Mention.from_document(
-                Span(37, 37),
-                self.date_mention_document).attributes["type"])
-        self.assertEqual(
-            "NAM",
-            Mention.from_document(
-                Span(11, 12),
-                self.date_mention_document).attributes["type"])
-        self.assertEqual(
-            "NAM",
-            Mention.from_document(
-                Span(31, 32),
-                self.date_mention_document).attributes["type"])
-        self.assertEqual(
-            "NAM",
-            Mention.from_document(
-                Span(8, 8),
-                self.date_mention_document).attributes["type"])
-        self.assertEqual(
-            "NOM",
-            Mention.from_document(
-                Span(33, 34),
-                self.real_document).attributes["type"])
-
     def test_mention_set_id(self):
         self.assertEqual(
             0,
@@ -213,79 +186,6 @@ nw/wsj/24/wsj_2413   0   31             .      .               *))         -    
                 self.complicated_mention_document).attributes[
                     "annotated_set_id"])
 
-    def test_mention_get_head(self):
-        expected = ["massacre"]
-        self.assertEqual(
-            expected,
-            Mention.from_document(
-                Span(33, 34),
-                self.real_document).attributes["head"])
-
-        expected = ["Wedding"]
-        self.assertEqual(
-            expected,
-            Mention.from_document(
-                Span(3, 3),
-                self.for_head_document).attributes["head"])
-
-        expected = "wedding"
-        self.assertEqual(
-            expected,
-            Mention.from_document(
-                Span(3, 3),
-                self.for_head_document).attributes["head_as_lowercase_string"])
-
-    def test_mention_get_governor(self):
-        expected = "massacred"
-        self.assertEqual(
-            expected,
-            Mention.from_document(
-                Span(0, 1),
-                self.real_document).attributes["governor"])
-
-    def test_mention_get_ancestry(self):
-        expected = "-L-VBN-L-NONE"
-        self.assertEqual(
-            expected,
-            Mention.from_document(
-                Span(11, 11),
-                self.real_document).attributes["ancestry"])
-
-        expected = "-R-NNS-R-VBN"
-        self.assertEqual(
-            expected,
-            Mention.from_document(
-                Span(0, 0),
-                self.real_document).attributes["ancestry"])
-
-    def test_mention_get_head_span(self):
-        self.assertEqual(
-            Span(9, 10),
-            Mention.from_document(
-                Span(8, 10),
-                self.for_head_document).attributes["head_span"])
-
-    def test_mention_get_fine_type(self):
-        self.assertEqual(
-            "DEF",
-            Mention.from_document(
-                Span(33, 34),
-                self.real_document).attributes["fine_type"])
-        self.assertEqual(
-            "DEF",
-            Mention.from_document(
-                Span(21, 27),
-                self.date_mention_document).attributes["fine_type"])
-        self.assertEqual(
-            "INDEF",
-            Mention.from_document(
-                Span(22, 22),
-                self.date_mention_document).attributes["fine_type"])
-        self.assertEqual(
-            "POSS_ADJ",
-            Mention.from_document(
-                Span(45, 45),
-                self.date_mention_document).attributes["fine_type"])
 
     def test_mention_get_sentence_id(self):
         self.assertEqual(
@@ -322,7 +222,6 @@ nw/wsj/24/wsj_2413   0   31             .      .               *))         -    
                 self.date_mention_document).get_context(1000))
 
     def test_is_coreferent_with(self):
-
         self.assertEqual(True,
             Mention(
                 None, Span(0, 0), {"annotated_set_id": 1}

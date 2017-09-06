@@ -2,15 +2,11 @@ from __future__ import print_function
 
 import codecs
 import shutil
+import html
 import os
 import webbrowser
 from random import randint
 import collections
-
-try:
-    from html import escape as html_escape
-except ImportError:
-    from cgi import escape as html_escape
 
 import cort
 from cort.core import spans
@@ -103,7 +99,7 @@ class Visualizer:
                 self.corpus_name]["precision_errors"]["all"].filter(
                             lambda err: err[0].document == document)
             decisions = self.structured_coreference_analysis[
-                self.corpus_name]["decisions"]["all"].filter(
+                self.corpus_name]["precision_edges"]["all"].filter(
                             lambda err: err[0].document == document)
 
             if isinstance(recall_errors, data_structures.StructuredCoreferenceAnalysis):
@@ -214,7 +210,7 @@ class Visualizer:
         annotated_mentions = set(document.annotated_mentions)
 
         for token in document.tokens:
-            token = html_escape(token, True)
+            token = html.escape(token)
 
             mention_id = 0
 
@@ -230,14 +226,8 @@ class Visualizer:
                     mention_id += 1
                     continue
 
-                mention_tokens = html_escape(" ".join(mention.attributes[
+                mention_tokens = html.escape(" ".join(mention.attributes[
                     'tokens']), True)
-
-                mention_head = html_escape(" ".join(mention.attributes[
-                    'head']), True)
-
-                mention_type = html_escape("".join(mention.attributes[
-                    'type']), True)
 
                 mention_span = str(mention.span)
 
@@ -273,8 +263,6 @@ class Visualizer:
                 temp_text = "<span " \
                             "id=\"" + span_id + "\" " \
                             "class=\"" + chain_id + " mention\" " \
-                            "data-mentiontype=\"" + mention_type + "\" " \
-                            "data-mentionhead=\"" + mention_head + "\" " \
                             "data-span=\"" + mention_span + "\">"
 
                 if mention.span.begin == index and mention.span.end == index:
@@ -356,13 +344,11 @@ class Visualizer:
                     "annotated_set_id"])])
 
         for token in document.tokens:
-            token = html_escape(token, True)
+            token = html.escape(token)
 
             mention_id = 0
 
             mention_text = ""
-
-            processed_gold_mentions = set()
 
             for mention in mentions:
                 if mention.span.begin > index:
@@ -372,15 +358,8 @@ class Visualizer:
                     mention_id += 1
                     continue
 
-                mention_tokens = html_escape(" ".join(mention.attributes[
+                mention_tokens = html.escape(" ".join(mention.attributes[
                     'tokens']), True)
-
-                mention_head = html_escape(" ".join(mention.attributes[
-                    'head']), True)
-
-                mention_type = html_escape("".join(mention.attributes[
-                    'type']), True)
-
                 mention_span = str(mention.span)
 
                 system = "system"
@@ -417,8 +396,6 @@ class Visualizer:
                             "id=\"" + span_id + "\" " \
                             "class=\"" + chain_id + " mention\" "  + \
                             style + \
-                            "data-mentiontype=\"" + mention_type + "\" " \
-                            "data-mentionhead=\"" + mention_head + "\" " \
                             "data-span=\"" + mention_span + "\">"
 
                 if mention.span.begin == index and mention.span.end == index:

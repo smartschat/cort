@@ -1,6 +1,5 @@
 """ Read in and access data from external resources such as gender lists."""
 
-import os
 import pickle
 
 

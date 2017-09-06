@@ -1,6 +1,6 @@
 """ Implements instance extraction and decoding for mention-ranking models.
 
-This module implements two variants of the mention ranking model within a
+This module implements variants of the mention ranking model within a
 framework that expresses coreference resolution as predicting latent structures,
 while performing learning using a latent structured perceptron with
 cost-augmented inference.
@@ -21,11 +21,14 @@ The two variants implemented here are
       learning weights, compare the prediction (m_j,m_i) with (m_j,m_k), where
       m_k is the closest antecedent of m_j.
 
-To implement these variants, this module contains a function that defines the
+To implement these variants, this module contains functions that define the
 search space for the graphs, and two decoders: one decoder computes the
 best-scoring antecedent prediction and the best-scoring coreferent antecedent,
 while the other computes the best-scoring antecedent prediction and the closest
 antecedent.
+
+Besides the function that defines the search space as described above, this module
+also contains functions that define more restricted search spaces.
 
 References:
 
@@ -62,7 +65,6 @@ def extract_substructures(doc):
     potential (mention, antecedent) pairs for the ith mention in the
     document. The antecedents are ordered by distance. For example,
     the third list contains the pairs (m_3, m_2), (m_3, m_1), (m_3, m_0),
-    where m_j is the jth mention in the document.
 
     Args:
         doc (CoNLLDocument): The document to extract substructures from.
@@ -75,6 +77,94 @@ def extract_substructures(doc):
 
     # iterate over mentions
     for i, ana in enumerate(doc.system_mentions):
+        for_anaphor_arcs = []
+
+        # iterate in reversed order over candidate antecedents
+        for ante in sorted(doc.system_mentions[:i], reverse=True):
+            for_anaphor_arcs.append((ana, ante))
+
+        substructures.append(for_anaphor_arcs)
+
+    return substructures
+
+
+def extract_training_substructures_mod_soon(doc):
+    """ Extract a restricted search space for training the mention ranking
+    model,
+
+    The mention ranking model consists in computing the optimal antecedent
+    for an anaphor, which corresponds to predicting an edge in graph. This
+    functions extracts the search space for each such substructure (one
+    substructure corresponds to one antecedent decision for an anaphor).
+
+    The search space is represented as a nested list of mention pairs. The
+    mention pairs are candidate arcs in the graph. In this variant, arcs
+     are filtered by a heuristic similar to Soon et al. (2001): for every
+    j >0, if the mention m_j is in some coreference chain, add a list of the
+    pairs (m_j, m_{j-1}), (m_j, m_{j-2}), ..., (m_j, m_i) to the outer list,
+    where m_i is the first mention preceding m_j which is coreferent with m_j.
+
+    Args:
+        doc (CoNLLDocument): The document to extract substructures from.
+
+    Returns:
+        (list(list((Mention, Mention)))): The nested list of mention pairs
+        describing the search space for the substructures.
+    """
+    substructures = []
+
+    # iterate over mentions
+    for i, ana in enumerate(doc.system_mentions):
+        if ana.attributes["annotated_set_id"] is None:
+            continue
+
+        for_anaphor_arcs = []
+
+        # iterate in reversed order over candidate antecedents
+        for ante in sorted(doc.system_mentions[:i], reverse=True):
+            for_anaphor_arcs.append((ana, ante))
+
+            if ana.is_coreferent_with(ante):
+                if not ante.is_dummy():
+                    # add dummy
+                    for_anaphor_arcs.append((ana, doc.system_mentions[0]))
+                break
+
+        substructures.append(for_anaphor_arcs)
+
+    return substructures
+
+
+def extract_training_substructures_all_ante(doc):
+    """ Extract a restricted search space for training the mention ranking
+    model,
+
+    The mention ranking model consists in computing the optimal antecedent
+    for an anaphor, which corresponds to predicting an edge in graph. This
+    functions extracts the search space for each such substructure (one
+    substructure corresponds to one antecedent decision for an anaphor).
+
+    The search space is represented as a nested list of mention pairs. The
+    mention pairs are candidate arcs in the graph. In this variant, only
+    mentions in coreference chains are considered as candidate anaphors:
+    for every j >0, if the mention m_j is in some coreference chain, add a
+    list of the pairs (m_j, m_{j-1}), (m_j, m_{j-2}), ..., (m_j, m_0) to the
+    outer list.
+
+    Args:
+        doc (CoNLLDocument): The document to extract substructures from.
+
+    Returns:
+        (list(list((Mention, Mention)))): The nested list of mention pairs
+        describing the search space for the substructures.
+    """
+    substructures = []
+
+    # iterate over mentions
+    for i, ana in enumerate(doc.system_mentions):
+        if ana.attributes["annotated_set_id"] is None:
+            continue
+
         for_anaphor_arcs = []
 
         # iterate in reversed order over candidate antecedents
@@ -112,7 +202,7 @@ class RankingPerceptron(perceptrons.Perceptron):
                 are represented as integers via feature hashing.
 
         Returns:
-            A 7-tuple describing the highest-scoring anaphor-antecedent
+            A 9-tuple describing the highest-scoring anaphor-antecedent
             decision, and the highest-scoring anaphor-antecedent decision
             consistent with the gold annotation. The tuple consists of:
 
@@ -123,6 +213,8 @@ class RankingPerceptron(perceptrons.Perceptron):
                   does not employ any labels,
                 - **best_scores** (*list(float)*): the score of the
                   highest-scoring antecedent decision,
+                - **best_additional_features** (*array(int)*): empty, the
+                  mention ranking approach does not employ any additional features.
                 - **best_cons_arcs** (*list((Mention, Mention))*): the
                   highest-scoring antecedent decision consistent with the gold
                   annotation (the list contains only one arc),
@@ -131,6 +223,8 @@ class RankingPerceptron(perceptrons.Perceptron):
                 - **best_cons_scores** (*list(float)*): the score of the
                   highest-scoring antecedent decision consistent with the
                   gold information
+                - **best_cons_additional_features** (*array(int)*): empty, the
+                  mention ranking approach does not employ any additional features.
                 - **is_consistent** (*bool*): whether the highest-scoring
                   antecedent decision is consistent with the gold information.
         """
@@ -141,9 +235,11 @@ class RankingPerceptron(perceptrons.Perceptron):
             [best],
             [],
             [max_val],
+            [],
             [best_cons],
             [],
             [max_cons],
+            [],
             best_is_consistent
         )
 
@@ -175,7 +271,7 @@ class RankingPerceptronClosest(perceptrons.Perceptron):
                 are represented as integers via feature hashing.
 
         Returns:
-            A 7-tuple describing the highest-scoring anaphor-antecedent
+            A 9-tuple describing the highest-scoring anaphor-antecedent
             decision, and the anaphor-antecedent pair with the closest gold
             antecedent. The tuple consists of:
 
@@ -186,6 +282,8 @@ class RankingPerceptronClosest(perceptrons.Perceptron):
                   does not employ any labels,
                 - **best_scores** (*list(float)*): the score of the
                   highest-scoring antecedent decision,
+                - **best_additional_features** (*array(int)*): empty, the
+                  mention ranking approach does not employ any additional features.
                 - **best_cons_arcs** (*list((Mention, Mention))*): the
                   anaphor-antecedent pair with the closest gold antecedent (the
                   list contains only one arc),
@@ -193,6 +291,8 @@ class RankingPerceptronClosest(perceptrons.Perceptron):
                   approach does not employ any labels
                 - **best_cons_scores** (*list(float)*): the score of the
                   anaphor-antecedent pair with the closest gold antecedent
+                - **best_cons_additional_features** (*array(int)*): empty, the
+                  mention ranking approach does not employ any additional features.
                 - **is_consistent** (*bool*): whether the highest-scoring
                   antecedent decision is consistent with the gold information.
         """
@@ -222,8 +322,10 @@ class RankingPerceptronClosest(perceptrons.Perceptron):
             [best],
             [],
             [max_val],
+            [],
             [best_cons],
             [],
             [max_cons],
+            [],
             best_is_consistent
         )
