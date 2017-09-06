@@ -35,8 +35,7 @@ Dependencies (automatically installed by pip) are
 [jpype](https://pypi.python.org/pypi/jpype1) and
 [beautifulsoup](https://pypi.python.org/pypi/beautifulsoup4). It ships with 
 [stanford_corenlp_pywrapper](https://github.com/brendano/stanford_corenlp_pywrapper)
-and [the reference implementation of the CoNLL scorer]
-(https://github.com/conll/reference-coreference-scorers).
+and [the reference implementation of the CoNLL scorer](https://github.com/conll/reference-coreference-scorers).
 
 __cort__ is written for use on Linux with Python 3.3+. While __cort__ also runs under 
 Python 2.7, I strongly recommend running __cort__ with Python 3, since the Python 3 
@@ -48,7 +47,7 @@ Nafise Sadat Moosavi and Michael Strube (2016). **Search space pruning: A
 simple solution for better coreference resolvers**. In *Proceedings of the 2016 
 Conference of the North American Chapter of the Association for Computational 
 Linguistics: Human Language Technologies*, San Diego, Cal., 12-17 June 2016, 
-pages 1005-1011.
+pages 1005-1011.  
 [PDF](http://www.aclweb.org/anthology/N16-1115.pdf)
 
 Sebastian Martschat and Michael Strube (2015). **Latent Structures for 
