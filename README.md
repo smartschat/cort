@@ -7,10 +7,14 @@ devise approaches to coreference resolution, while the *error analysis* componen
 provides extensive functionality for analyzing and visualizing errors made by 
 coreference resolution systems.
 
-If you are interested in running __cort__ with the search space pruning described in Moosavi and Strube (2016), check out [Nafise Moosavi's fork of __cort__](https://github.com/ns-moosavi/cort/tree/singleton_feature).
-
 If you have any questions or comments, drop me an e-mail at 
 [sebastian.martschat@gmail.com](mailto:sebastian.martschat@gmail.com).
+
+## Branches/Forks
+
+* the [kbest branch](https://github.com/smartschat/cort/tree/kbest) contains code for kbest extraction of coreference information, as described in Ji et al. (2017)
+* the [v03 branch](https://github.com/smartschat/cort/tree/v03) contains a version of __cort__ with more models and a better train/dev/test workflow. However, I'm still working on the documentation. Eventually, this branch will replace the current version of __cort__. For more details on the models see Martschat (2017)
+* [Nafise Moosavi's fork of __cort__](https://github.com/ns-moosavi/cort/tree/singleton_feature) implements search space pruning on top of __cort__, as described in Moosavi and Strube (2016)
 
 ## Documentation
 
@@ -42,6 +46,12 @@ Python 2.7, I strongly recommend running __cort__ with Python 3, since the Pytho
 version is much more efficient.
 
 ## References
+
+Yangfeng Ji, Chenhao Tan, Sebastian Martschat, Yejin Choi and Noah A. Smith (2017). **Dynamic Entity Representations in Neural Language Models.** To appear in *Proceedings of the 2017 Conference on Empirical Methods in Natural Language Processing (EMNLP), Copenhagen, Denmark, 7-11 September 2017*.  
+[PDF](https://arxiv.org/abs/1708.00781)
+
+Sebastian Martschat (2017). **Structured Representations for Coreference Resolution.** PhD thesis, Heidelberg University.  
+[PDF](http://www.ub.uni-heidelberg.de/archiv/23305)
 
 Nafise Sadat Moosavi and Michael Strube (2016). **Search space pruning: A 
 simple solution for better coreference resolvers**. In *Proceedings of the 2016 
