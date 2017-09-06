@@ -1,4 +1,4 @@
-## cort kbest
+# cort kbest
 
 This branch contains a variant of __cort__ implementing k-best extraction for coreference resolution, as described in Ji et al. (2015). k-best extraction can be performed by running `kbest_example.py`. If you have any questions, please write me a mail.
 
