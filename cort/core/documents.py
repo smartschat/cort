@@ -27,6 +27,7 @@ class Document(object):
         identifier (str): A unique identifier for the document.
         in_sentence_ids (list(int)): In-sentence indicies of all tokens in the
             document, for example [0, 1, 2, 0, 1, 2, 3, 4, ...]
+        sentence_spans (list(Span)): Boundaries of all sentences in the document.
         tokens (list(str)): All tokens.
         pos (list(str)): All part-of-speech tags.
         ner (list(str)): All named entity tags (if a token does not have a
