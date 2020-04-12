@@ -13,7 +13,7 @@ If you have any questions or comments, drop me an e-mail at
 ## Branches/Forks
 
 * the [kbest branch](https://github.com/smartschat/cort/tree/kbest) contains code for kbest extraction of coreference information, as described in Ji et al. (2017)
-* the [v03 branch](https://github.com/smartschat/cort/tree/v03) contains a version of __cort__ with more models and a better train/dev/test workflow. However, I'm still working on the documentation. Eventually, this branch will replace the current version of __cort__. For more details on the models see Martschat (2017)
+* the [v03 branch](https://github.com/smartschat/cort/tree/v03) contains a version of __cort__ with more models and a better train/dev/test workflow. For more details on the models see Martschat (2017).
 * [Nafise Moosavi's fork of __cort__](https://github.com/ns-moosavi/cort/tree/singleton_feature) implements search space pruning on top of __cort__, as described in Moosavi and Strube (2016)
 
 ## Documentation
